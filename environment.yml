@@ -1,0 +1,17 @@
+name: drone
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - tensorflow
+  - librosa
+  - numpy
+  - scikit-learn
+  - matplotlib
+  - jupyter
+  - ipykernel
+  - joblib
+  - kaggle
+  - pip:
+    - soundfile
