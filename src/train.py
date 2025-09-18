@@ -1,94 +1,128 @@
+import os
+import numpy as np
 import tensorflow as tf
-from keras.models import Model
-from keras.layers import (
-    Input, Conv2D, BatchNormalization, Activation, MaxPooling2D, Dropout,
-    Permute, Reshape, Dense, LayerNormalization, Add, MultiHeadAttention,
-    GlobalAveragePooling1D, DepthwiseConv1D, Multiply, Lambda, Conv1D
+from keras.optimizers import Adam
+from keras.callbacks import ModelCheckpoint, EarlyStopping
+from model import build_model
+import matplotlib.pyplot as plt
+
+# --- 1. Define Paths and Parameters ---
+PROCESSED_DATA_PATH = "data/processed/"
+MODELS_PATH = "saved_models/"
+HISTORY_PATH = "saved_models/training_history.npy"
+PLOT_PATH = "training_history.png" # The plot will be saved in the project root directory
+
+# Training parameters
+EPOCHS = 50
+BATCH_SIZE = 32
+LEARNING_RATE = 0.0001
+
+# --- 2. Load Data ---
+def load_data(path):
+    """Load features and labels from a .npz file."""
+    with np.load(path) as data:
+        return data['features'], data['labels']
+
+print("Loading datasets...")
+X_train, y_train = load_data(os.path.join(PROCESSED_DATA_PATH, 'train_data.npz'))
+X_val, y_val = load_data(os.path.join(PROCESSED_DATA_PATH, 'val_data.npz'))
+X_test, y_test = load_data(os.path.join(PROCESSED_DATA_PATH, 'test_data.npz'))
+
+print(f"Training set shape: {X_train.shape}")
+print(f"Validation set shape: {X_val.shape}")
+
+# --- 3. Prepare Data for the Model ---
+
+# Get number of classes and input shape
+NUM_CLASSES = len(np.unique(y_train))
+INPUT_SHAPE = X_train.shape[1:]
+
+# Convert labels to one-hot encoding
+y_train_one_hot = tf.keras.utils.to_categorical(y_train, num_classes=NUM_CLASSES)
+y_val_one_hot = tf.keras.utils.to_categorical(y_val, num_classes=NUM_CLASSES)
+y_test_one_hot = tf.keras.utils.to_categorical(y_test, num_classes=NUM_CLASSES)
+
+print(f"Number of classes: {NUM_CLASSES}")
+print(f"Model input shape: {INPUT_SHAPE}")
+
+# --- 4. Build, Compile, and Train the Model ---
+
+# Build the model
+model = build_model(input_shape=INPUT_SHAPE, num_classes=NUM_CLASSES)
+
+# Compile the model
+model.compile(
+    optimizer=Adam(learning_rate=LEARNING_RATE),
+    loss='categorical_crossentropy',
+    metrics=['accuracy']
 )
 
-def branchformer_block(x, head_size, num_heads, ff_dim, dropout=0.1, kernel_size=31, block_idx=0):
-    """A single Branchformer block."""
-    prefix = f"branchformer{block_idx}"
+model.summary()
 
-    # FFN Module (first half)
-    ff1 = Dense(ff_dim, activation='relu', name=f"{prefix}_ff1_dense1")(x)
-    ff1 = Dropout(dropout, name=f"{prefix}_ff1_dropout")(ff1)
-    ff1 = Dense(x.shape[-1], name=f"{prefix}_ff1_dense2")(ff1)
-    x = Add(name=f"{prefix}_ff1_add")([x, Lambda(lambda z: 0.5 * z)(ff1)])
+# Define callbacks
+checkpoint_path = os.path.join(MODELS_PATH, "resnet_conformer_drone.keras")
+model_checkpoint = ModelCheckpoint(
+    filepath=checkpoint_path,
+    save_best_only=True,
+    monitor='val_accuracy',
+    mode='max',
+    verbose=1
+)
 
-    # Multi-Head Attention Branch
-    x_ln_attn = LayerNormalization(epsilon=1e-6, name=f"{prefix}_attn_ln")(x)
-    attn_out = MultiHeadAttention(
-        num_heads=num_heads,
-        key_dim=head_size,
-        dropout=dropout,
-        name=f"{prefix}_attn"
-    )(x_ln_attn, x_ln_attn)
-    attn_out = Dropout(dropout, name=f"{prefix}_attn_dropout")(attn_out)
+early_stopping = EarlyStopping(
+    monitor='val_accuracy',
+    patience=10,
+    verbose=1,
+    restore_best_weights=True
+)
 
-    # Convolution Branch
-    conv_input = LayerNormalization(epsilon=1e-6, name=f"{prefix}_conv_ln")(x)
-    conv_u = Conv1D(filters=x.shape[-1], kernel_size=1, padding='same', name=f"{prefix}_conv_u")(conv_input)
-    conv_v = Conv1D(filters=x.shape[-1], kernel_size=1, padding='same', activation='sigmoid', name=f"{prefix}_conv_v")(conv_input)
-    
-    conv_glu = Multiply(name=f"{prefix}_glu_out")([conv_u, conv_v])
-    conv_dw = DepthwiseConv1D(kernel_size=kernel_size, padding='same', name=f"{prefix}_depthwise")(conv_glu)
-    conv_dw = BatchNormalization(name=f"{prefix}_dw_bn")(conv_dw)
-    conv_dw = Activation('swish', name=f"{prefix}_swish")(conv_dw)
-    
-    conv_out = Conv1D(filters=x.shape[-1], kernel_size=1, padding='same', name=f"{prefix}_conv_pw2")(conv_dw)
-    conv_out = Dropout(dropout, name=f"{prefix}_conv_dropout")(conv_out)
-    
-    merged = Add(name=f"{prefix}_merge")([attn_out, conv_out])
-    x = Add(name=f"{prefix}_residual_merge")([x, merged])
+# Train the model
+print("\nStarting model training...")
+history = model.fit(
+    X_train,
+    y_train_one_hot,
+    epochs=EPOCHS,
+    batch_size=BATCH_SIZE,
+    validation_data=(X_val, y_val_one_hot),
+    callbacks=[model_checkpoint, early_stopping]
+)
 
-    # FFN Module (second half)
-    ff2 = Dense(ff_dim, activation='relu', name=f"{prefix}_ff2_dense1")(x)
-    ff2 = Dropout(dropout, name=f"{prefix}_ff2_dropout")(ff2)
-    ff2 = Dense(x.shape[-1], name=f"{prefix}_ff2_dense2")(ff2)
-    x = Add(name=f"{prefix}_ff2_add")([x, Lambda(lambda z: 0.5 * z)(ff2)])
+print("\n✅ Training complete.")
 
-    x = LayerNormalization(epsilon=1e-6, name=f"{prefix}_ln_out")(x)
-    return x
+# --- 5. Evaluate the Model ---
+print("\nEvaluating model performance on the test set...")
+test_loss, test_accuracy = model.evaluate(X_test, y_test_one_hot, verbose=0)
+print(f"Test Set Loss: {test_loss:.4f}")
+print(f"Test Set Accuracy: {test_accuracy:.4f}")
 
-def build_model(input_shape, num_classes, num_layers=1, head_size=32, num_heads=4, ff_dim=256, dropout_rate=0.15, fnn_units=[128]):
-    """Builds the full ResNet-Conformer model."""
-    spec_input = Input(shape=input_shape)
+# --- 6. Save and Plot Training History ---
+print("\nSaving training history and generating plots...")
 
-    # ResNet part
-    x = Conv2D(filters=64, kernel_size=(3, 3), padding='same')(spec_input)
-    x = BatchNormalization()(x)
-    x = Activation('relu')(x)
-    # *** 关键修改：在频率维度上进行池化 ***
-    x = MaxPooling2D(pool_size=(4, 1))(x)
+# Save history object
+np.save(HISTORY_PATH, history.history)
+print(f"Training history saved to: {HISTORY_PATH}")
 
-    x = Conv2D(filters=64, kernel_size=(3, 3), padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Activation('relu')(x)
-    # *** 关键修改：在频率维度上进行池化 ***
-    x = MaxPooling2D(pool_size=(4, 1))(x)
+# Plot accuracy and loss curves
+plt.style.use('seaborn-v0_8-whitegrid')
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
 
-    x = Conv2D(filters=64, kernel_size=(3, 3), padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Activation('relu')(x)
-    # *** 关键修改：在频率维度上进行池化 ***
-    x = MaxPooling2D(pool_size=(2, 1))(x)
-    
-    # Reshape 2D feature map to a sequence for the Branchformer
-    _, freq_dim, time_dim, channels = x.shape
-    x = Permute((2, 1, 3))(x)
-    x = Reshape((time_dim, freq_dim * channels))(x)
+# Plot training & validation accuracy values
+ax1.plot(history.history['accuracy'])
+ax1.plot(history.history['val_accuracy'])
+ax1.set_title('Model Accuracy')
+ax1.set_ylabel('Accuracy')
+ax1.set_xlabel('Epoch')
+ax1.legend(['Train', 'Validation'], loc='upper left')
 
-    # Branchformer part
-    for i in range(num_layers):
-        x = branchformer_block(x, head_size=head_size, num_heads=num_heads, ff_dim=ff_dim, dropout=dropout_rate, block_idx=i)
+# Plot training & validation loss values
+ax2.plot(history.history['loss'])
+ax2.plot(history.history['val_loss'])
+ax2.set_title('Model Loss')
+ax2.set_ylabel('Loss')
+ax2.set_xlabel('Epoch')
+ax2.legend(['Train', 'Validation'], loc='upper left')
 
-    x = GlobalAveragePooling1D(name='embedding_output')(x)
-
-    # Output classification head
-    x = Dense(fnn_units[0], activation='relu', name="final_dense")(x)
-    x = Dropout(dropout_rate, name="final_dropout")(x)
-    output = Dense(num_classes, activation='softmax', name='output')(x)
-
-    model = Model(inputs=spec_input, outputs=output)
-    return model
+# Save the figure
+plt.savefig(PLOT_PATH)
+print(f"Training plot saved to: {PLOT_PATH}")
+# plt.show() # You can uncomment this if you want the plot to pop up right after training

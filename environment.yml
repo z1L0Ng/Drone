@@ -4,7 +4,6 @@ channels:
   - defaults
 dependencies:
   - python=3.11
-  - tensorflow
   - librosa
   - numpy
   - scikit-learn
@@ -13,5 +12,9 @@ dependencies:
   - ipykernel
   - joblib
   - kaggle
+  - pip
   - pip:
+    # Let pip handle the TensorFlow installation. It will automatically
+    # fetch the correct version for your OS (macOS or Linux).
+    - tensorflow
     - soundfile
