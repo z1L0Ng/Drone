@@ -6,11 +6,14 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping
 from model import build_model
 import matplotlib.pyplot as plt
 
+#TODO: 数据集扩展，增加生成数据集代码
+#TODO： 迁移代码到服务器侧
+
 # --- 1. Define Paths and Parameters ---
 PROCESSED_DATA_PATH = "data/processed/"
 MODELS_PATH = "saved_models/"
 HISTORY_PATH = "saved_models/training_history.npy"
-PLOT_PATH = "training_history.png" # The plot will be saved in the project root directory
+PLOT_PATH = "result/training_history.png" # The plot will be saved in the project root directory
 
 # Training parameters
 EPOCHS = 50
@@ -125,4 +128,4 @@ ax2.legend(['Train', 'Validation'], loc='upper left')
 # Save the figure
 plt.savefig(PLOT_PATH)
 print(f"Training plot saved to: {PLOT_PATH}")
-# plt.show() # You can uncomment this if you want the plot to pop up right after training
+plt.show()
