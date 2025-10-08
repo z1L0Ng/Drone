@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 
 #TODO: 数据集扩展，增加生成数据集代码
 #TODO： 迁移代码到服务器侧
-
+#TODO: 更改noise dataset
+#TODO： 删除local branch
 # --- 1. Define Paths and Parameters ---
 PROCESSED_DATA_PATH = "data/processed/"
 MODELS_PATH = "saved_models/"
