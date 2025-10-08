@@ -7,8 +7,8 @@ import joblib
 
 # --- 1. 定义路径和参数 ---
 
-RAW_DATA_PATH = "data/raw/"
-PROCESSED_DATA_PATH = "data/processed/"
+RAW_DATA_PATH = "dataset/raw/"
+PROCESSED_DATA_PATH = "dataset/processed/"
 MODELS_PATH = "saved_models/"
 
 SAMPLE_RATE = 16000
