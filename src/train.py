@@ -8,10 +8,9 @@ import matplotlib.pyplot as plt
 
 #TODO: 数据集扩展，增加生成数据集代码
 #TODO： 迁移代码到服务器侧
-#TODO: 更改noise dataset
 #TODO： 删除local branch
 # --- 1. Define Paths and Parameters ---
-PROCESSED_DATA_PATH = "data/processed/"
+PROCESSED_DATA_PATH = "dataset/processed/"
 MODELS_PATH = "saved_models/"
 HISTORY_PATH = "saved_models/training_history.npy"
 PLOT_PATH = "result/training_history.png" # The plot will be saved in the project root directory
@@ -82,14 +81,18 @@ early_stopping = EarlyStopping(
 
 # Train the model
 print("\nStarting model training...")
+
 history = model.fit(
-    X_train,
-    y_train_one_hot,
+    X_train,     y_train_one_hot,
     epochs=EPOCHS,
     batch_size=BATCH_SIZE,
     validation_data=(X_val, y_val_one_hot),
     callbacks=[model_checkpoint, early_stopping]
 )
+
+
+
+
 
 print("\n✅ Training complete.")
 
