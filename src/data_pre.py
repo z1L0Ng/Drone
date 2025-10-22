@@ -1,124 +1,100 @@
+# src/data_pre.py
+
 import os
-import librosa
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 import joblib
 
-# --- 1. 定义路径和参数 ---
-
+# --- 1. 定义路径 ---
+# 原始音频文件所在的根目录
 RAW_DATA_PATH = "dataset/raw/"
+# 处理后的数据索引文件保存路径
 PROCESSED_DATA_PATH = "dataset/processed/"
+# 模型相关文件保存路径
 MODELS_PATH = "saved_models/"
 
-SAMPLE_RATE = 16000
-DURATION = 1.0
-N_MELS = 256
-DESIRED_FRAMES = 61
+# 确保输出目录存在
+os.makedirs(PROCESSED_DATA_PATH, exist_ok=True)
+os.makedirs(MODELS_PATH, exist_ok=True)
 
-# --- 2. 音频处理函数 ---
 
-def process_audio_file(file_path):
-    """加载音频文件，统一长度，并提取梅尔频谱图特征"""
-    try:
-        audio, _ = librosa.load(file_path, sr=SAMPLE_RATE, duration=DURATION)
-        if len(audio) < SAMPLE_RATE * DURATION:
-            audio = np.pad(audio, (0, int(SAMPLE_RATE * DURATION) - len(audio)), mode='constant')
-        else:
-            audio = audio[:int(SAMPLE_RATE * DURATION)]
+# --- 2. 递归收集所有音频文件的路径和标签 ---
+filepaths = []
+labels = []
 
-        mel_spec = librosa.feature.melspectrogram(y=audio, sr=SAMPLE_RATE, n_mels=N_MELS)
-        mel_spec_db = librosa.power_to_db(mel_spec, ref=np.max)
-        mel_spec_db = mel_spec_db / 80.0 + 1.0
-        return mel_spec_db
-    except Exception as e:
-        print(f"处理文件失败 {file_path}: {e}")
-        return None
+print(f"正在从 '{RAW_DATA_PATH}' 目录递归扫描所有子文件夹...")
 
-# --- 3. 数据加载与处理主流程 ---
+# 检查路径是否存在
+if not os.path.exists(RAW_DATA_PATH):
+    raise FileNotFoundError(f"错误：找不到指定的 RAW_DATA_PATH '{RAW_DATA_PATH}'。请确认路径是否正确。")
 
-def prepare_dataset():
-    """执行完整的数据准备流程"""
-    if not os.path.exists(PROCESSED_DATA_PATH):
-        os.makedirs(PROCESSED_DATA_PATH)
-    if not os.path.exists(MODELS_PATH):
-        os.makedirs(MODELS_PATH)
-
-    features = []
-    labels = []
+# 遍历 RAW_DATA_PATH 下的顶级目录 (emergency, movement, noise)
+for class_name in os.listdir(RAW_DATA_PATH):
+    class_dir = os.path.join(RAW_DATA_PATH, class_name)
     
-    categories = ["emergency", "movement", "noise"]
+    # 确保它是一个目录
+    if os.path.isdir(class_dir):
+        print(f"  - 正在处理类别: '{class_name}'")
+        # 使用 os.walk() 递归遍历该类别下的所有子文件夹
+        for root, dirs, files in os.walk(class_dir):
+            for filename in files:
+                # 确保是 .wav 音频文件
+                if filename.endswith(".wav"):
+                    filepath = os.path.join(root, filename)
+                    filepaths.append(filepath)
+                    # 标签是顶级的文件夹名
+                    labels.append(class_name)
 
-    print("开始加载和处理音频数据...")
-    for category in categories:
-        category_path = os.path.join(RAW_DATA_PATH, category)
-        if not os.path.isdir(category_path):
-            print(f"警告：找不到目录 {category_path}，跳过该类别。")
-            continue
-            
-        # *** 修改部分：使用 os.walk() 遍历所有子文件夹 ***
-        for root, _, files in os.walk(category_path):
-            for file_name in files:
-                if file_name.endswith(".wav"):
-                    file_path = os.path.join(root, file_name)
-                    
-                    mel_spec = process_audio_file(file_path)
-                    
-                    if mel_spec is not None:
-                        features.append(mel_spec)
-                        labels.append(category)
-    
-    print(f"音频处理完成。共加载了 {len(features)} 个文件。")
+print(f"\n成功找到 {len(filepaths)} 个音频文件。")
+if len(filepaths) == 0:
+    raise ValueError(f"在 '{RAW_DATA_PATH}' 的任何子目录下都没有找到 .wav 文件。请检查您的数据路径和文件结构。")
 
-    # --- 4. 标签编码 ---
-    
-    print("正在进行标签编码...")
-    label_encoder = LabelEncoder()
-    labels_encoded = label_encoder.fit_transform(labels)
-    
-    encoder_path = os.path.join(MODELS_PATH, 'label_encoder.joblib')
-    joblib.dump(label_encoder, encoder_path)
-    print(f"标签编码器已保存至: {encoder_path}")
-    print(f"类别: {label_encoder.classes_}")
+# --- 3. 标签编码 ---
+le = LabelEncoder()
+labels_encoded = le.fit_transform(labels)
+print(f"\n发现的标签类别映射: {list(zip(le.classes_, range(len(le.classes_))))}")
 
-    # --- 5. 数据塑形和划分 ---
-
-    X = np.array(features)
-    
-    current_frames = X.shape[2]
-    if current_frames < DESIRED_FRAMES:
-        pad_width = ((0, 0), (0, 0), (0, DESIRED_FRAMES - current_frames))
-        X = np.pad(X, pad_width, mode='constant')
-    elif current_frames > DESIRED_FRAMES:
-        X = X[:, :, :DESIRED_FRAMES]
-
-    X = X[..., np.newaxis]
-    y = labels_encoded
-    
-    print(f"最终特征形状: {X.shape}")
-
-    X_train, X_temp, y_train, y_temp = train_test_split(
-        X, y, test_size=0.3, random_state=42, stratify=y
-    )
-    
-    X_val, X_test, y_val, y_test = train_test_split(
-        X_temp, y_temp, test_size=0.5, random_state=42, stratify=y_temp
-    )
-
-    print(f"数据划分完成:")
-    print(f" - 训练集: {len(X_train)} 个样本")
-    print(f" - 验证集: {len(X_val)} 个样本")
-    print(f" - 测试集: {len(X_test)} 个样本")
-
-    # --- 6. 保存处理好的数据 ---
-    
-    print("正在保存处理好的数据集...")
-    np.savez_compressed(os.path.join(PROCESSED_DATA_PATH, 'train_data.npz'), features=X_train, labels=y_train)
-    np.savez_compressed(os.path.join(PROCESSED_DATA_PATH, 'val_data.npz'), features=X_val, labels=y_val)
-    np.savez_compressed(os.path.join(PROCESSED_DATA_PATH, 'test_data.npz'), features=X_test, labels=y_test)
-    
-    print("所有数据已成功处理并保存！")
+# 保存标签编码器，这在预测时非常重要
+encoder_path = os.path.join(MODELS_PATH, "label_encoder.joblib")
+joblib.dump(le, encoder_path)
+print(f"标签编码器已保存至: {encoder_path}")
 
 
-if __name__ == '__main__':
-    prepare_dataset()
+# --- 4. 划分训练集、验证集和测试集 ---
+# stratify=labels_encoded 确保在划分时，每个集合中的类别比例与原始数据集相同
+X_train, X_test, y_train, y_test = train_test_split(
+    filepaths, 
+    labels_encoded, 
+    test_size=0.2, 
+    random_state=42, 
+    stratify=labels_encoded
+)
+
+X_train, X_val, y_train, y_val = train_test_split(
+    X_train, 
+    y_train, 
+    test_size=0.25, # 0.25 * (1-0.2) = 0.2, 使得最终比例为 60% 训练, 20% 验证, 20% 测试
+    random_state=42, 
+    stratify=y_train
+)
+
+print(f"\n数据集划分结果:")
+print(f"训练集样本数: {len(X_train)}")
+print(f"验证集样本数: {len(X_val)}")
+print(f"测试集样本数: {len(X_test)}")
+
+
+# --- 5. 保存文件路径列表 ---
+output_npz_path = os.path.join(PROCESSED_DATA_PATH, 'data_paths.npz')
+np.savez(
+    output_npz_path,
+    X_train=X_train,
+    y_train=y_train,
+    X_val=X_val,
+    y_val=y_val,
+    X_test=X_test,
+    y_test=y_test
+)
+
+print(f"\n✅ 数据集索引文件已成功生成并保存至: {output_npz_path}")
