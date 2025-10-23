@@ -26,8 +26,8 @@ LEARNING_RATE = 0.0001
 
 # 音频处理参数
 SAMPLE_RATE = 16000 # 采样率
-DURATION = 2       # 音频时长（秒）
-N_MELS = 128       # Mel Spectrogram 的频带数
+DURATION = 1       # 音频时长（秒）
+N_MELS = 256       # Mel Spectrogram 的频带数
 # 根据librosa的帧计算方式 (n_fft - hop_length) // hop_length + 1，这里用一个通用估算
 # hop_length 通常是 n_fft // 4，这里假设 n_fft=2048, hop_length=512
 MAX_FRAMES = int(DURATION * SAMPLE_RATE / 512) + 1 # 帧数，用于统一输入尺寸

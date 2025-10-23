@@ -17,7 +17,7 @@ TEST_FOLDER_PATH = "test/"
 
 # 音频处理参数 (必须与 train.py 中的设置一模一样)
 SAMPLE_RATE = 16000 # 采样率
-DURATION = 2       # 音频时长（秒）
+DURATION = 1       # 音频时长（秒）
 N_MELS = 128       # Mel Spectrogram 的频带数
 MAX_FRAMES = int(DURATION * SAMPLE_RATE / 512) + 1 # 帧数
 
