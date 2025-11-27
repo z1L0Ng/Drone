@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, EarlyStopping
-from model import build_model
+from src.model import build_model
 import matplotlib.pyplot as plt
 
 #TODO: 数据集扩展，增加生成数据集代码
@@ -87,12 +87,9 @@ history = model.fit(
     epochs=EPOCHS,
     batch_size=BATCH_SIZE,
     validation_data=(X_val, y_val_one_hot),
-    callbacks=[model_checkpoint, early_stopping]
+    callbacks=[model_checkpoint, early_stopping],
+    verbose=2
 )
-
-
-
-
 
 print("\n✅ Training complete.")
 

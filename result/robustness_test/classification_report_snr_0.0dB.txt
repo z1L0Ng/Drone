@@ -1,0 +1,14 @@
+SNR: 0.0 dB
+Test Loss: 0.6827
+Test Accuracy: 0.8448
+
+              precision    recall  f1-score   support
+
+   emergency     0.9020    0.8300    0.8645      3336
+    movement     0.9285    0.7912    0.8544      6306
+       noise     0.4862    0.9936    0.6529      2341
+     unknown     0.9527    0.8483    0.8975     11349
+
+    accuracy                         0.8448     23332
+   macro avg     0.8173    0.8658    0.8173     23332
+weighted avg     0.8921    0.8448    0.8566     23332

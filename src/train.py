@@ -96,12 +96,40 @@ class MetricsCallback(Callback):
 
 # --- 3. 数据生成器 (DataGenerator) ---
 class DataGenerator(tf.keras.utils.Sequence):
-    def __init__(self, filepaths, labels, batch_size, num_classes, is_training=True):
+    def __init__(self, filepaths, labels, batch_size, num_classes, 
+                 is_training=True, 
+                 noise_filepaths=None, 
+                 noise_label_id=None, 
+                 noise_mix_prob=0.5,  
+                 min_snr_db=5,       
+                 max_snr_db=15):      
+        """
+        数据生成器
+        :param filepaths: 目标音频的文件路径列表
+        :param labels: 对应的标签列表
+        :param batch_size: 批次大小
+        :param num_classes: 类别总数
+        :param is_training: 是否为训练模式（True 会启用所有增强）
+        :param noise_filepaths: [新增] 独立的背景噪声文件路径列表
+        :param noise_label_id: [新增] 'noise' 类别在编码后的数字ID
+        :param noise_mix_prob: [新增] 应用噪声叠加的概率
+        :param min_snr_db: [新增] 混合噪声的最小信噪比
+        :param max_snr_db: [新增] 混合噪声的最大信噪比
+        """
         self.filepaths = filepaths
         self.labels = labels
         self.batch_size = batch_size
         self.num_classes = num_classes
         self.is_training = is_training
+        
+        self.noise_filepaths = noise_filepaths if noise_filepaths is not None else []
+        self.noise_label_id = noise_label_id
+        self.noise_mix_prob = noise_mix_prob
+        self.min_snr_db = min_snr_db
+        self.max_snr_db = max_snr_db
+        
+        self.target_length = DURATION * SAMPLE_RATE # 目标长度 (例如 16000)
+        
         self.on_epoch_end()
 
     def __len__(self):
@@ -119,16 +147,45 @@ class DataGenerator(tf.keras.utils.Sequence):
         if self.is_training:
             np.random.shuffle(self.indexes)
 
-    def _augment_audio(self, y):
-        if np.random.rand() < 0.5:
-            rate = np.random.uniform(0.9, 1.1)
-            y = librosa.effects.time_stretch(y=y, rate=rate)
-        if np.random.rand() < 0.5:
-            n_steps = np.random.randint(-2, 3)
-            y = librosa.effects.pitch_shift(y=y, sr=SAMPLE_RATE, n_steps=n_steps)
-        return y
+    def _load_random_noise(self):
+        """
+        随机选择一个噪声文件，加载并从中随机截取 1 秒的片段。
+        (完美契合您 5 秒噪声文件的需求)
+        """
+        if not self.noise_filepaths:
+            return None
+            
+        noise_path = np.random.choice(self.noise_filepaths)
+        try:
+            # 加载完整的 5 秒噪声
+            noise_audio, _ = librosa.load(noise_path, sr=SAMPLE_RATE)
+        except Exception as e:
+            print(f"警告：加载噪声文件失败 {noise_path}: {e}")
+            return None
+        
+        # 检查噪声是否足够长（至少 1 秒）
+        if len(noise_audio) < self.target_length:
+            # 不够长，循环平铺
+            padding = self.target_length - len(noise_audio)
+            return np.pad(noise_audio, (0, padding), mode='wrap')
+        else:
+            # 噪声足够长（例如 5 秒），随机截取 1 秒
+            start_idx = np.random.randint(0, len(noise_audio) - self.target_length + 1)
+            return noise_audio[start_idx : start_idx + self.target_length]
+
+    def _mix_audio(self, signal, noise, snr_db):
+        """根据 SNR (dB) 将信号和噪声混合"""
+        signal_rms = np.sqrt(np.mean(signal**2)) + 1e-8
+        noise_rms = np.sqrt(np.mean(noise**2)) + 1e-8
+        
+        scale = 10**(snr_db / 20)
+        desired_noise_rms = signal_rms / scale
+        gain = desired_noise_rms / noise_rms
+        
+        return signal + (noise * gain)
 
     def _extract_features(self, y):
+        """（不变）特征提取"""
         mel_spec = librosa.feature.melspectrogram(y=y, sr=SAMPLE_RATE, n_mels=N_MELS)
         mel_spec_db = librosa.power_to_db(mel_spec, ref=np.max)
         
@@ -140,17 +197,62 @@ class DataGenerator(tf.keras.utils.Sequence):
         return mel_spec_db
 
     def __data_generation(self, batch_filepaths, batch_labels):
+        """
+        [重大更新]
+        实现了 50% 噪声, 20% 变调, 20% 拉伸 的独立增强逻辑。
+        """
         X = np.empty((self.batch_size, N_MELS, MAX_FRAMES, 1))
         y = np.empty((self.batch_size), dtype=int)
+        
         for i, filepath in enumerate(batch_filepaths):
-            audio, _ = librosa.load(filepath, sr=SAMPLE_RATE, duration=DURATION)
-            if len(audio) < DURATION * SAMPLE_RATE:
-                 audio = np.pad(audio, (0, DURATION * SAMPLE_RATE - len(audio)))
+            # 1. 加载干净的音频
+            try:
+                audio, _ = librosa.load(filepath, sr=SAMPLE_RATE, duration=DURATION)
+                if len(audio) < self.target_length:
+                     audio = np.pad(audio, (0, self.target_length - len(audio)))
+            except Exception as e:
+                print(f"错误：加载音频文件失败 {filepath}: {e}")
+                audio = np.zeros(self.target_length)
+            
+            current_label = batch_labels[i]
+            
+            # --- 【开始数据增强 (仅训练时)】 ---
             if self.is_training:
-                audio = self._augment_audio(audio)
+                
+                # time stretch, pitch shift, noise addition
+                if np.random.rand() < 0.2:
+                    rate = np.random.uniform(0.9, 1.1)
+                    audio = librosa.effects.time_stretch(y=audio, rate=rate)
+                    # 拉伸后需要重新对齐长度
+                    if len(audio) < self.target_length:
+                         audio = np.pad(audio, (0, self.target_length - len(audio)))
+                    else:
+                         audio = audio[:self.target_length]
+                
+                # 【增强 2：音高变换 (20% 概率)】
+                if np.random.rand() < 0.2:
+                    n_steps = np.random.randint(-2, 3)
+                    audio = librosa.effects.pitch_shift(y=audio, sr=SAMPLE_RATE, n_steps=n_steps)
+                
+                # 【增强 3：噪声叠加 (50% 概率)】
+                # 仅在当前样本*不是* 'noise' 类别时执行
+                if current_label != self.noise_label_id and np.random.rand() < self.noise_mix_prob:
+                    # 随机选择一个 SNR
+                    snr_db = np.random.uniform(self.min_snr_db, self.max_snr_db)
+                    
+                    # 加载并准备 1 秒的噪声片段
+                    noise_audio = self._load_random_noise()
+                    
+                    if noise_audio is not None:
+                        # 混合音频
+                        audio = self._mix_audio(audio, noise_audio, snr_db)
+            # --- 【数据增强结束】 ---
+            
+            # 3. 提取特征
             features = self._extract_features(audio)
             X[i,] = np.expand_dims(features, axis=-1)
-            y[i] = batch_labels[i]
+            y[i] = current_label
+            
         return X, tf.keras.utils.to_categorical(y, num_classes=self.num_classes)
 
 # --- 4. 加载数据索引并创建生成器 ---
@@ -166,13 +268,51 @@ class_names = le.classes_
 NUM_CLASSES = len(class_names)
 INPUT_SHAPE = (N_MELS, MAX_FRAMES, 1)
 
-print(f"类别数量: {NUM_CLASSES}")
-print(f"类别名称: {class_names}")
-print(f"模型输入尺寸: {INPUT_SHAPE}")
 
-train_generator = DataGenerator(X_train_paths, y_train, BATCH_SIZE, NUM_CLASSES, is_training=True)
+# --- 【修改】准备噪声数据 ---
+# 从您指定的 "background/" 文件夹加载
+BACKGROUND_NOISE_PATH = "background/"  # <--- 修改点：指向您的文件夹
+noise_source_paths = []
+
+if os.path.exists(BACKGROUND_NOISE_PATH):
+    print(f"Load Background Noise: {BACKGROUND_NOISE_PATH}")
+    for root, _, files in os.walk(BACKGROUND_NOISE_PATH):
+        for f in files:
+            # 确保是音频文件 (您可以根据需要添加 .mp3, .flac 等)
+            if f.endswith('.wav'):
+                noise_source_paths.append(os.path.join(root, f))
+    if noise_source_paths:
+        print(f"Load {len(noise_source_paths)} files for background noise augmentation.")
+    else:
+        print(f"警告：在 {BACKGROUND_NOISE_PATH} 中未找到 .wav 文件。")
+else:
+    print(f"警告：未找到背景增强噪声目录: {BACKGROUND_NOISE_PATH}。")
+
+# 我们仍然需要 "noise" 类的 ID，以 *避免* 往 "noise" 样本上添加背景噪声
+try:
+    noise_label_id = le.transform(['noise'])[0]
+except ValueError:
+    print("警告：在标签编码器中未找到 'noise' 类别。")
+    noise_label_id = -1 # 设置一个不可能的 ID
+# --- 修改结束 ---
+
+
+print(f"Class number: {NUM_CLASSES}")
+print(f"Class name: {class_names}")
+print(f"Model input shape: {INPUT_SHAPE}")
+
+# --- 【修改】实例化生成器 ---
+# (我们使用 DataGenerator 的默认值：
+#  noise_mix_prob=0.5, min_snr_db=5, max_snr_db=15)
+train_generator = DataGenerator(
+    X_train_paths, y_train, BATCH_SIZE, NUM_CLASSES, 
+    is_training=True,
+    noise_filepaths=noise_source_paths, # 传入 *独立* 的噪声路径
+    noise_label_id=noise_label_id       # 传入 'noise' 类别 ID
+)
 val_generator = DataGenerator(X_val_paths, y_val, BATCH_SIZE, NUM_CLASSES, is_training=False)
 test_generator = DataGenerator(X_test_paths, y_test, BATCH_SIZE, NUM_CLASSES, is_training=False)
+# --- 修改结束 ---
 
 # --- 5. 构建、编译和训练模型 ---
 model = build_model(input_shape=INPUT_SHAPE, num_classes=NUM_CLASSES)
@@ -195,15 +335,16 @@ history = model.fit(
     train_generator,
     validation_data=val_generator,
     epochs=EPOCHS,
-    callbacks=[model_checkpoint, early_stopping, metrics_callback]
+    callbacks=[model_checkpoint, early_stopping, metrics_callback],
+    verbose=2
 )
 print("\n✅ 训练完成。")
 
 # --- 6. 在测试集上进行最终评估 ---
 print("\n在测试集上评估模型最终性能...")
 test_loss, test_accuracy = model.evaluate(test_generator, verbose=1)
-print(f"测试集损失: {test_loss:.4f}")
-print(f"测试集准确率: {test_accuracy:.4f}")
+print(f"Test set loss: {test_loss:.4f}")
+print(f"Test set accuracy: {test_accuracy:.4f}")
 
 # 生成分类报告和混淆矩阵
 y_pred_test_probs = model.predict(test_generator)
