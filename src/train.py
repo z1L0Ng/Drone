@@ -101,8 +101,8 @@ class DataGenerator(tf.keras.utils.Sequence):
                  noise_filepaths=None, 
                  noise_label_id=None, 
                  noise_mix_prob=0.5,  
-                 min_snr_db=5,       
-                 max_snr_db=15):      
+                 min_snr_db=-30,       
+                 max_snr_db=-20):      
         """
         数据生成器
         :param filepaths: 目标音频的文件路径列表
