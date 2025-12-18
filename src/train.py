@@ -188,7 +188,7 @@ class DataGenerator(tf.keras.utils.Sequence):
         """（不变）特征提取"""
         mel_spec = librosa.feature.melspectrogram(y=y, sr=SAMPLE_RATE, n_mels=N_MELS)
         mel_spec_db = librosa.power_to_db(mel_spec, ref=np.max)
-        
+            
         if mel_spec_db.shape[1] < MAX_FRAMES:
             pad_width = MAX_FRAMES - mel_spec_db.shape[1]
             mel_spec_db = np.pad(mel_spec_db, ((0, 0), (0, pad_width)), mode='constant')
