@@ -2,19 +2,27 @@ name: drone
 channels:
   - conda-forge
   - defaults
+  - nvidia/label/main
+
 dependencies:
-  - python=3.11
-  - librosa
-  - numpy
+  - python=3.10
+  - cudatoolkit=11.8
+  - cudnn=8.9
+
+  - pip
+  - ipykernel
+  - jupyter
+
+  # 科学计算尽量 conda（稳定）
+  - numpy<2.0
+  - scipy
   - scikit-learn
   - matplotlib
-  - jupyter
-  - ipykernel
   - joblib
-  - kaggle
-  - pip
+
+  # 音频相关改 pip（避免 conda 包名/依赖问题）
   - pip:
-    # Let pip handle the TensorFlow installation. It will automatically
-    # fetch the correct version for your OS (macOS or Linux).
-    - tensorflow
-    - soundfile
+      - tensorflow==2.14.0
+      - keras==2.14.0
+      - librosa
+      - soundfile
