@@ -37,7 +37,7 @@ ENCODER_PATH = os.path.join(MODELS_PATH, "label_encoder.joblib")
 os.makedirs(MODELS_PATH, exist_ok=True)
 os.makedirs(RESULT_PATH, exist_ok=True)
 
-EPOCHS = 15
+EPOCHS = 50
 BATCH_SIZE = 32
 SAMPLE_RATE = 16000
 DURATION = 1
