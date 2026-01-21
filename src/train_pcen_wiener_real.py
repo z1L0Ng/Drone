@@ -32,22 +32,22 @@ if gpus:
 # Choose ONE noise folder each run (for mixing)
 NOISE_DIR_OPEN = "dataset/raw/drone"          # open-source noise folder
 NOISE_DIR_OWN  = "dataset/raw/tellonoise"     # your collected noise folder
-NOISE_SOURCE_DIR = NOISE_DIR_OWN             # <- switch here
+NOISE_SOURCE_DIR = NOISE_DIR_OWN             # <- 统一使用 tellonoise
 
 NOISE_MIX_PROB = 1.0
-MIN_SNR_DB = -30.0
-MAX_SNR_DB = -20.0
+MIN_SNR_DB = -25.0
+MAX_SNR_DB = -10.0
 
 PROCESSED_DATA_PATH = "dataset/processed/data_paths.npz"
-MODELS_PATH = "saved_models/"
-RESULT_PATH = "result/pcen_wiener_real_bias/"
-ENCODER_PATH = os.path.join(MODELS_PATH, "label_encoder.joblib")
+MODELS_PATH = "saved_models/aligned/"
+RESULT_PATH = "result/aligned/"
+ENCODER_PATH = "saved_models/label_encoder.joblib"
 
 os.makedirs(MODELS_PATH, exist_ok=True)
 os.makedirs(RESULT_PATH, exist_ok=True)
 
 # Train params
-EPOCHS = 20
+EPOCHS = 50
 BATCH_SIZE = 32
 
 # Audio params
@@ -69,18 +69,18 @@ PCEN_KWARGS = dict(gain=0.98, bias=2.0, power=0.5, time_constant=0.06, eps=1e-6)
 
 # --- Realistic Wiener: fixed noise profile from a calibration noise wav ---
 # (simulate "first-use calibration")
-CALIB_NOISE_WAV = "/files1/Zilong/Drone/dataset/raw/tellonoise/19700101_000018.wav"
-CALIB_SECONDS = 3.0
+CALIB_NOISE_WAV = "dataset/raw/tellonoise/19700101_000018.wav"
+CALIB_SECONDS = 1.0
 PROFILE_METHOD = "mean"  # "mean" or "median"
 
 # -------------------------
 # 2) Controllable bias knobs (THIS is the key for "imperfect noise")
 # -------------------------
 ENABLE_GLOBAL_SCALE_BIAS = True
-SCALE_RANGE = (0.7, 1.4)          # mild; try (0.5, 2.0) for harsher
+SCALE_RANGE = (0.8, 1.2)          # mild; try (0.5, 2.0) for harsher
 
 ENABLE_SPECTRAL_TILT_BIAS = True
-TILT_DB_RANGE = (-6.0, 6.0)       # total tilt across freq bins in dB (power-domain applied)
+TILT_DB_RANGE = (-3.0, 3.0)       # total tilt across freq bins in dB (power-domain applied)
 
 # Optional: add small random jitter per-frequency (simulates messy estimation)
 ENABLE_PER_FREQ_JITTER = False
@@ -89,7 +89,7 @@ JITTER_STD_DB = 1.0               # std in dB, applied per freq bin (power-domai
 # -------------------------
 # 3) Noise profile & Wiener
 # -------------------------
-def build_noise_profile_from_wav(wav_path: str, seconds: float = 3.0, method: str = "mean") -> np.ndarray:
+def build_noise_profile_from_wav(wav_path: str, seconds: float = 1.0, method: str = "mean") -> np.ndarray:
     """
     Return average noise power spectrum profile Pn(f) from a calibration noise wav.
     Shape: [freq_bins]

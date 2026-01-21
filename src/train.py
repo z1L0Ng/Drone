@@ -23,16 +23,16 @@ if gpus:
 # --- 1. 核心配置 ---
 NOISE_DIR_OPEN = "dataset/raw/drone"          # 开源噪声
 NOISE_DIR_OWN  = "dataset/raw/tellonoise"     # 自采噪声
-NOISE_SOURCE_DIR = NOISE_DIR_OPEN             # <- 每次训练只选一个
+NOISE_SOURCE_DIR = NOISE_DIR_OWN              # <- 统一使用 tellonoise
 
 NOISE_MIX_PROB = 1.0
-MIN_SNR_DB = -30.0
-MAX_SNR_DB = -20.0
+MIN_SNR_DB = -25.0
+MAX_SNR_DB = -10.0
 
 PROCESSED_DATA_PATH = "dataset/processed/data_paths.npz"
-MODELS_PATH = "saved_models/"
-RESULT_PATH = "result/logmel/"
-ENCODER_PATH = os.path.join(MODELS_PATH, "label_encoder.joblib")
+MODELS_PATH = "saved_models/aligned/"
+RESULT_PATH = "result/aligned/"
+ENCODER_PATH = "saved_models/label_encoder.joblib"
 
 os.makedirs(MODELS_PATH, exist_ok=True)
 os.makedirs(RESULT_PATH, exist_ok=True)

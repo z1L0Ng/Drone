@@ -21,21 +21,21 @@ if gpus:
 
 NOISE_DIR_OPEN = "dataset/raw/drone"
 NOISE_DIR_OWN  = "dataset/raw/tellonoise"
-NOISE_SOURCE_DIR = NOISE_DIR_OPEN   # <- 切换
+NOISE_SOURCE_DIR = NOISE_DIR_OWN   # <- 统一使用 tellonoise
 
 NOISE_MIX_PROB = 1.0
-MIN_SNR_DB = -30.0
-MAX_SNR_DB = -20.0
+MIN_SNR_DB = -25.0
+MAX_SNR_DB = -10.0
 
 PROCESSED_DATA_PATH = "dataset/processed/data_paths.npz"
-MODELS_PATH = "saved_models/"
-RESULT_PATH = "result/pcen/"
-ENCODER_PATH = os.path.join(MODELS_PATH, "label_encoder.joblib")
+MODELS_PATH = "saved_models/aligned/"
+RESULT_PATH = "result/aligned/"
+ENCODER_PATH = "saved_models/label_encoder.joblib"
 
 os.makedirs(MODELS_PATH, exist_ok=True)
 os.makedirs(RESULT_PATH, exist_ok=True)
 
-EPOCHS = 20
+EPOCHS = 50
 BATCH_SIZE = 32
 SAMPLE_RATE = 16000
 DURATION = 1
