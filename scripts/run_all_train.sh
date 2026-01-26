@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_DIR="${ROOT_DIR}/logs"
-LOG_FILE="${LOG_DIR}/aligned_train.log"
+LOG_FILE="${LOG_DIR}/train.log"
 
 mkdir -p "${LOG_DIR}"
 
@@ -16,7 +16,7 @@ export PYTHONUNBUFFERED=1
   echo
 
   echo "[1/4] train.py"
-  python "${ROOT_DIR}/src/train.py"
+  python "${ROOT_DIR}/src/train_logmel.py"
   echo
 
   echo "[2/4] train_pcen.py"
@@ -30,6 +30,8 @@ export PYTHONUNBUFFERED=1
   echo "[4/4] train_pcen_wiener_real.py"
   python "${ROOT_DIR}/src/train_pcen_wiener_real.py"
   echo
+
+
 
   echo "=== Run end: $(date) ==="
 } 2>&1 | tee -a "${LOG_FILE}"
