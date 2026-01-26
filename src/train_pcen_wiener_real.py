@@ -39,8 +39,8 @@ MIN_SNR_DB = -25.0
 MAX_SNR_DB = -10.0
 
 PROCESSED_DATA_PATH = "dataset/processed/data_paths.npz"
-MODELS_PATH = "saved_models/aligned/"
-RESULT_PATH = "result/aligned/"
+MODELS_PATH = "saved_models/pcen_wiener/"
+RESULT_PATH = "result/pcen_wiener/"
 ENCODER_PATH = "saved_models/label_encoder.joblib"
 
 os.makedirs(MODELS_PATH, exist_ok=True)

@@ -31,8 +31,8 @@ NOISE_SOURCE_DIR = "dataset/raw/tellonoise"  # 训练时混合噪声的来源
 CALIB_NOISE_WAV = "dataset/raw/tellonoise/19700101_000018.wav" # Wiener 用的固定噪声 profile
 
 PROCESSED_DATA_PATH = "dataset/processed/data_paths.npz"
-MODELS_PATH = "saved_models/aligned/"
-RESULT_PATH = "result/aligned/"
+MODELS_PATH = "saved_models/logmel_wiener/"
+RESULT_PATH = "result/logmel_wiener/"
 ENCODER_PATH = "saved_models/label_encoder.joblib"
 
 os.makedirs(MODELS_PATH, exist_ok=True)
