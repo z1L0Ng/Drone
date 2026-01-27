@@ -15,28 +15,53 @@ export PYTHONUNBUFFERED=1
   echo "Working dir: ${ROOT_DIR}"
   echo
 
-  echo "[1/6] train_fft.py"
-  python "${ROOT_DIR}/src/train_fft.py"
+  # 已有结果（注释掉）
+  # echo "[1/6] train_fft.py"
+  # python "${ROOT_DIR}/src/train_fft.py"
+  # echo
+
+  # echo "[2/6] train_logmel.py"
+  # python "${ROOT_DIR}/src/train_logmel.py"
+  # echo
+
+  # echo "[3/6] train_logmel_wiener.py"
+  # python "${ROOT_DIR}/src/train_logmel_wiener.py"
+  # echo
+
+  # echo "[4/6] train_mfcc.py"
+  # python "${ROOT_DIR}/src/train_mfcc.py"
+  # echo
+
+  # echo "[5/6] train_pcen.py"
+  # python "${ROOT_DIR}/src/train_pcen.py"
+  # echo
+
+  # echo "[6/6] train_pcen_wiener_real.py"
+  # python "${ROOT_DIR}/src/train_pcen_wiener_real.py"
+  # echo
+
+  echo "[1/6] train_fft_specsub.py"
+  python "${ROOT_DIR}/src/train_fft_specsub.py"
   echo
 
-  echo "[2/6] train_logmel.py"
-  python "${ROOT_DIR}/src/train_logmel.py"
+  echo "[2/6] train_logmel_specsub.py"
+  python "${ROOT_DIR}/src/train_logmel_specsub.py"
   echo
 
-  echo "[3/6] train_logmel_wiener.py"
-  python "${ROOT_DIR}/src/train_logmel_wiener.py"
+  echo "[3/6] train_mfcc_specsub.py"
+  python "${ROOT_DIR}/src/train_mfcc_specsub.py"
   echo
 
-  echo "[4/6] train_mfcc.py"
-  python "${ROOT_DIR}/src/train_mfcc.py"
+  echo "[4/6] train_pcen_specsub.py"
+  python "${ROOT_DIR}/src/train_pcen_specsub.py"
   echo
 
-  echo "[5/6] train_pcen.py"
-  python "${ROOT_DIR}/src/train_pcen.py"
+  echo "[5/6] train_mfcc_wiener.py"
+  python "${ROOT_DIR}/src/train_mfcc_wiener.py"
   echo
 
-  echo "[6/6] train_pcen_wiener_real.py"
-  python "${ROOT_DIR}/src/train_pcen_wiener_real.py"
+  echo "[6/6] train_fft_wiener.py"
+  python "${ROOT_DIR}/src/train_fft_wiener.py"
   echo
 
   echo "=== Run end ==="
