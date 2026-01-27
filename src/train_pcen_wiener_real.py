@@ -6,6 +6,7 @@ import numpy as np
 import tensorflow as tf
 import librosa
 from model import build_model
+from model_config import MODEL_KWARGS
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 import matplotlib.pyplot as plt
@@ -310,7 +311,7 @@ test_gen = DataGenerator(data["X_test"], data["y_test"], BATCH_SIZE, NUM_CLASSES
 # -------------------------
 # 6) Train
 # -------------------------
-model = build_model((N_MELS, MAX_FRAMES, 1), NUM_CLASSES)
+model = build_model((N_MELS, MAX_FRAMES, 1), NUM_CLASSES, **MODEL_KWARGS)
 model.compile(optimizer=Adam(1e-4), loss="categorical_crossentropy", metrics=["accuracy"])
 
 ckpt_path = os.path.join(MODELS_PATH, "pcen_wiener_real_bias_best.weights.h5")

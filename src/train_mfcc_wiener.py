@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 import librosa
 from model import build_model
+from model_config import MODEL_KWARGS
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from sklearn.metrics import confusion_matrix, classification_report
@@ -290,7 +291,7 @@ if __name__ == '__main__':
         is_training=False
     )
 
-    model = build_model((N_MFCC, MAX_FRAMES, 1), NUM_CLASSES)
+    model = build_model((N_MFCC, MAX_FRAMES, 1), NUM_CLASSES, **MODEL_KWARGS)
     model.compile(
         optimizer=Adam(LEARNING_RATE),
         loss='categorical_crossentropy',

@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 import librosa
 from model import build_model
+from model_config import MODEL_KWARGS
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from sklearn.metrics import confusion_matrix, classification_report
@@ -184,7 +185,7 @@ train_gen = DataGenerator(data['X_train'], data['y_train'], BATCH_SIZE, NUM_CLAS
 val_gen = DataGenerator(data['X_val'], data['y_val'], BATCH_SIZE, NUM_CLASSES, is_training=False)
 test_gen = DataGenerator(data['X_test'], data['y_test'], BATCH_SIZE, NUM_CLASSES, is_training=False)
 
-model = build_model((N_MFCC, MAX_FRAMES, 1), NUM_CLASSES)
+model = build_model((N_MFCC, MAX_FRAMES, 1), NUM_CLASSES, **MODEL_KWARGS)
 model.compile(optimizer=Adam(1e-4), loss='categorical_crossentropy', metrics=['accuracy'])
 
 ckpt_path = os.path.join(MODELS_PATH, "mfcc_best.weights.h5")

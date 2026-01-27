@@ -11,6 +11,7 @@ import numpy as np
 import tensorflow as tf
 import librosa
 from model import build_model
+from model_config import MODEL_KWARGS
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 import matplotlib.pyplot as plt
@@ -380,7 +381,7 @@ if __name__ == '__main__':
 
     # 构建模型
     print("\n>>> 构建模型...")
-    model = build_model((N_MELS, MAX_FRAMES, 1), NUM_CLASSES)
+    model = build_model((N_MELS, MAX_FRAMES, 1), NUM_CLASSES, **MODEL_KWARGS)
     model.compile(
         optimizer=Adam(LEARNING_RATE),
         loss='categorical_crossentropy',
