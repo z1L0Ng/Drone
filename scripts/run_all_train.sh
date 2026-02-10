@@ -8,6 +8,7 @@ LOG_FILE="${LOG_DIR}/train_$(date +"%Y%m%d_%H%M%S").log"
 mkdir -p "${LOG_DIR}"
 
 export PYTHONUNBUFFERED=1
+export CUDA_VISIBLE_DEVICES=0
 
 {
   echo "=== Run start ==="

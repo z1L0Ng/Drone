@@ -1,4 +1,4 @@
-# --- MFCC + Realistic Wiener Filtering (Mild Bias), SNR -25dB to -10dB ---
+# --- MFCC + Realistic Wiener Filtering (Mild Bias), SNR -15dB to -5dB ---
 
 import os
 import numpy as np
@@ -38,8 +38,8 @@ LEARNING_RATE = 1e-4
 
 # ==================== 噪声参数 ====================
 NOISE_MIX_PROB = 1.0
-MIN_SNR_DB = -25.0
-MAX_SNR_DB = -10.0
+MIN_SNR_DB = -15.0
+MAX_SNR_DB = -5.0
 
 # ==================== 音频参数 ====================
 SAMPLE_RATE = 16000
@@ -142,7 +142,7 @@ else:
 
 class DataGenerator(tf.keras.utils.Sequence):
     def __init__(self, filepaths, labels, batch_size, num_classes,
-                 is_training=True, noise_paths=None, snr_range=(-30, -20)):
+                 is_training=True, noise_paths=None, snr_range=(-15, -5)):
         self.filepaths = filepaths
         self.labels = labels
         self.batch_size = batch_size

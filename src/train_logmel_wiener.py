@@ -3,7 +3,7 @@
 Log-Mel + Realistic Wiener Filtering (with mild bias)
 - Frontend: Log-Mel Spectrogram
 - Denoising: Realistic Wiener (使用预先录制的固定噪声 profile + 温和偏差)
-- SNR: -25dB ~ -10dB
+- SNR: -15dB ~ -5dB
 """
 
 import os
@@ -46,8 +46,8 @@ LEARNING_RATE = 1e-4
 
 # ==================== 噪声参数 ====================
 NOISE_MIX_PROB = 1.0      # 100% 样本添加噪声
-MIN_SNR_DB = -25.0
-MAX_SNR_DB = -10.0
+MIN_SNR_DB = -15.0
+MAX_SNR_DB = -5.0
 
 # ==================== 音频参数 ====================
 SAMPLE_RATE = 16000
@@ -200,7 +200,7 @@ def wiener_denoise_with_profile(y_mix, noise_profile, eps=1e-12):
 # ==================== 数据生成器 ====================
 class DataGenerator(tf.keras.utils.Sequence):
     def __init__(self, filepaths, labels, batch_size, num_classes, 
-                 is_training=True, noise_paths=None, snr_range=(-30, -20)):
+                 is_training=True, noise_paths=None, snr_range=(-15, -5)):
         self.filepaths = filepaths
         self.labels = labels
         self.batch_size = batch_size

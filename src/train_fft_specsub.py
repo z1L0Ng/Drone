@@ -1,4 +1,4 @@
-# --- FFT + Spectral Subtraction, SNR -25dB to -10dB ---
+# --- FFT + Spectral Subtraction, SNR -15dB to -5dB ---
 
 import os
 import numpy as np
@@ -27,8 +27,8 @@ NOISE_DIR_OWN = "dataset/raw/tellonoise"
 NOISE_SOURCE_DIR = NOISE_DIR_OWN
 
 NOISE_MIX_PROB = 1.0
-MIN_SNR_DB = -25.0
-MAX_SNR_DB = -10.0
+MIN_SNR_DB = -15.0
+MAX_SNR_DB = -5.0
 
 PROCESSED_DATA_PATH = "dataset/processed/data_paths.npz"
 MODELS_PATH = "saved_models/fft_specsub/"
@@ -85,7 +85,7 @@ def spectral_subtract(
 
 class DataGenerator(tf.keras.utils.Sequence):
     def __init__(self, filepaths, labels, batch_size, num_classes, is_training=True,
-                 noise_paths=None, snr_range=(-5, 5)):
+                 noise_paths=None, snr_range=(-15, -5)):
         self.filepaths = filepaths
         self.labels = labels
         self.batch_size = batch_size
