@@ -41,7 +41,7 @@ SPEC_SUB_PARAMS = dict(
     noise_est_percentile=0.2,
 )
 
-DEFAULT_CALIB_NOISE_WAV = "dataset/raw/tellonoise/19700101_000018.wav"
+DEFAULT_CALIB_NOISE_WAV = "/Users/zilongzeng/Research/DroneControl/tellonoise/20251029_190227.wav"
 
 # -------------------------
 # Frontend registry
