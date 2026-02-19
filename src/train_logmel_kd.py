@@ -395,6 +395,8 @@ teacher.load_weights(TEACHER_CKPT)
 print("\n[Stage 2] Distill noisy student from clean teacher...")
 student = build_model((N_MELS, MAX_FRAMES, 1), num_classes, **MODEL_KWARGS)
 
+student.load_weights(TEACHER_CKPT)
+
 teacher_probe = build_probe_model(teacher)
 teacher_probe.trainable = False
 
@@ -446,10 +448,19 @@ _ = distiller.fit(
 student.save_weights(STUDENT_CKPT)
 
 # ---------- Final evaluation ----------
+# ---------- Final evaluation ----------
 print("\n[Evaluation] Student on clean and noisy test sets...")
 clean_test_gen = CleanDataGenerator(data["X_test"], data["y_test"], BATCH_SIZE, num_classes, is_training=False)
 noisy_test_gen = NoisyEvalGenerator(data["X_test"], data["y_test"], BATCH_SIZE, num_classes, noise_files, snr_db=EVAL_SNR_DB)
 
+# 【核心修改】：在 evaluate 之前，给 student 随便配一个优化器（评估时其实用不到），但必须指定准确的 loss 和 metrics
+student.compile(
+    optimizer="adam", 
+    loss="categorical_crossentropy", 
+    metrics=["accuracy"]
+)
+
+# 现在 evaluate 就可以正常运行了
 clean_metrics = student.evaluate(clean_test_gen, verbose=0)
 noisy_metrics = student.evaluate(noisy_test_gen, verbose=0)
 print(f"Student clean test - loss: {clean_metrics[0]:.4f}, acc: {clean_metrics[1]:.4f}")
