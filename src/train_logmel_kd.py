@@ -13,6 +13,23 @@ from model import build_model
 from model_config import MODEL_KWARGS
 
 
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def _env_int(name: str, default: int) -> int:
+    raw = os.getenv(name)
+    return int(raw) if raw is not None else default
+
+
+def _env_float(name: str, default: float) -> float:
+    raw = os.getenv(name)
+    return float(raw) if raw is not None else default
+
+
 # ==================== GPU ====================
 gpus = tf.config.list_physical_devices("GPU")
 if gpus:
@@ -27,13 +44,15 @@ ENCODER_PATH = "saved_models/label_encoder.joblib"
 
 NOISE_SOURCE_DIR = "dataset/raw/tellonoise"
 
-MODEL_DIR = "saved_models/logmel_kd"
-RESULT_DIR = "result/logmel_kd"
+MODEL_DIR = os.getenv("KD_MODEL_DIR", "saved_models/logmel_kd")
+RESULT_DIR = os.getenv("KD_RESULT_DIR", "result/logmel_kd")
 os.makedirs(MODEL_DIR, exist_ok=True)
 os.makedirs(RESULT_DIR, exist_ok=True)
 
-TEACHER_CKPT = os.path.join(MODEL_DIR, "teacher_clean_best.weights.h5")
-STUDENT_CKPT = os.path.join(MODEL_DIR, "student_kd_best.weights.h5")
+TEACHER_CKPT = os.getenv("KD_TEACHER_CKPT", os.path.join(MODEL_DIR, "teacher_clean_best.weights.h5"))
+STUDENT_CKPT = os.getenv("KD_STUDENT_CKPT", os.path.join(MODEL_DIR, "student_kd_best.weights.h5"))
+os.makedirs(os.path.dirname(TEACHER_CKPT), exist_ok=True)
+os.makedirs(os.path.dirname(STUDENT_CKPT), exist_ok=True)
 
 
 # ==================== Audio / frontend ====================
@@ -52,21 +71,39 @@ MAX_FRAMES = int(DURATION * SAMPLE_RATE / HOP_LENGTH) + 1
 
 
 # ==================== Train config ====================
-BATCH_SIZE = 32
-TEACHER_EPOCHS = 50
-STUDENT_EPOCHS = 50
-LEARNING_RATE = 1e-4
+BATCH_SIZE = _env_int("KD_BATCH_SIZE", 32)
+TEACHER_EPOCHS = _env_int("KD_TEACHER_EPOCHS", 50)
+STUDENT_EPOCHS = _env_int("KD_STUDENT_EPOCHS", 50)
+LEARNING_RATE = _env_float("KD_LR", 1e-4)
+REUSE_TEACHER = _env_bool("KD_REUSE_TEACHER", False)
 
 NOISE_MIX_PROB = 1.0
 MIN_SNR_DB = -15.0
 MAX_SNR_DB = -5.0
 EVAL_SNR_DB = -10.0
 
-# distillation weights
-ALPHA_CE = 1.0      # supervised classification loss
-BETA_LOGITS = 1.0   # logits KD loss
-GAMMA_EMBED = 5.0   # embedding KD loss
-TEMPERATURE = 2.0
+# distillation config:
+#   ce_only / ce_logits / ce_embed / ce_logits_embed
+DISTILL_VARIANT = os.getenv("KD_DISTILL_VARIANT", "ce_logits_embed")
+ALPHA_CE = _env_float("KD_ALPHA_CE", 1.0)
+LOGITS_BETA = _env_float("KD_LOGITS_BETA", 1.0)
+EMBED_GAMMA_MAX = _env_float("KD_EMBED_GAMMA_MAX", 1.0)
+TEMPERATURE = _env_float("KD_TEMPERATURE", 2.0)
+USE_EMBED_PROJECTION = _env_bool("KD_USE_EMBED_PROJECTION", True)
+EMBED_WARMUP_EPOCHS = int(STUDENT_EPOCHS * 0.3)
+EMBED_RAMP_EPOCHS = max(1, STUDENT_EPOCHS - EMBED_WARMUP_EPOCHS)
+
+
+def resolve_distill_variant(variant: str):
+    v = variant.strip().lower()
+    valid = {"ce_only", "ce_logits", "ce_embed", "ce_logits_embed"}
+    if v not in valid:
+        raise ValueError(f"Unsupported DISTILL_VARIANT={variant}. Expected one of: {sorted(valid)}")
+    use_logits = v in {"ce_logits", "ce_logits_embed"}
+    use_embed = v in {"ce_embed", "ce_logits_embed"}
+    beta = LOGITS_BETA if use_logits else 0.0
+    gamma_max = EMBED_GAMMA_MAX if use_embed else 0.0
+    return use_logits, use_embed, beta, gamma_max
 
 
 # ==================== Helpers ====================
@@ -265,19 +302,44 @@ def build_probe_model(base_model: tf.keras.Model) -> tf.keras.Model:
 
 
 class Distiller(tf.keras.Model):
-    def __init__(self, student_probe, teacher_probe, alpha, beta, gamma, temperature):
+    def __init__(
+        self,
+        student_probe,
+        teacher_probe,
+        alpha,
+        beta,
+        gamma_max,
+        temperature,
+        use_logits_kd=True,
+        use_embed_kd=True,
+        use_embed_projection=True,
+    ):
         super().__init__()
         self.student_probe = student_probe
         self.teacher_probe = teacher_probe
-        self.alpha = alpha
-        self.beta = beta
-        self.gamma = gamma
-        self.temperature = temperature
+        self.alpha = float(alpha)
+        self.beta = float(beta)
+        self.gamma_max = float(gamma_max)
+        self.temperature = float(temperature)
+        self.use_logits_kd = bool(use_logits_kd)
+        self.use_embed_kd = bool(use_embed_kd)
+
+        teacher_embed_dim = teacher_probe.output_shape[1][-1]
+        self.student_embed_proj = None
+        if self.use_embed_kd and use_embed_projection and teacher_embed_dim is not None:
+            self.student_embed_proj = tf.keras.layers.Dense(
+                int(teacher_embed_dim),
+                use_bias=False,
+                name="student_embed_proj",
+            )
+
+        self.current_gamma = tf.Variable(0.0, trainable=False, dtype=tf.float32, name="gamma_embed_weight")
 
         self.loss_tracker = tf.keras.metrics.Mean(name="loss")
         self.ce_tracker = tf.keras.metrics.Mean(name="ce_loss")
         self.kd_logits_tracker = tf.keras.metrics.Mean(name="kd_logits")
         self.kd_embed_tracker = tf.keras.metrics.Mean(name="kd_embed")
+        self.gamma_tracker = tf.keras.metrics.Mean(name="gamma_embed_weight")
         self.acc_metric = tf.keras.metrics.CategoricalAccuracy(name="accuracy")
 
         self.ce_fn = tf.keras.losses.CategoricalCrossentropy()
@@ -291,6 +353,7 @@ class Distiller(tf.keras.Model):
             self.ce_tracker,
             self.kd_logits_tracker,
             self.kd_embed_tracker,
+            self.gamma_tracker,
             self.acc_metric,
         ]
 
@@ -311,23 +374,36 @@ class Distiller(tf.keras.Model):
 
             ce_loss = self.ce_fn(y, s_probs)
 
-            t_soft = self._temperature_soften(t_probs)
-            s_soft = self._temperature_soften(s_probs)
-            kd_logits = self.kld_fn(t_soft, s_soft) * (self.temperature ** 2)
+            kd_logits = tf.constant(0.0, dtype=tf.float32)
+            if self.use_logits_kd and self.beta > 0.0:
+                t_soft = self._temperature_soften(t_probs)
+                s_soft = self._temperature_soften(s_probs)
+                kd_logits = self.kld_fn(t_soft, s_soft) * (self.temperature ** 2)
 
-            t_norm = tf.math.l2_normalize(t_embed, axis=-1)
-            s_norm = tf.math.l2_normalize(s_embed, axis=-1)
-            kd_embed = self.mse_fn(t_norm, s_norm)
+            kd_embed = tf.constant(0.0, dtype=tf.float32)
+            if self.use_embed_kd and self.gamma_max > 0.0:
+                t_norm = tf.math.l2_normalize(tf.stop_gradient(t_embed), axis=-1)
+                s_aligned = s_embed
+                if self.student_embed_proj is not None:
+                    s_aligned = self.student_embed_proj(s_aligned)
+                s_norm = tf.math.l2_normalize(s_aligned, axis=-1)
+                kd_embed = self.mse_fn(t_norm, s_norm)
 
-            total_loss = self.alpha * ce_loss + self.beta * kd_logits + self.gamma * kd_embed
+            total_loss = self.alpha * ce_loss + self.beta * kd_logits + self.current_gamma * kd_embed
 
-        grads = tape.gradient(total_loss, self.student_probe.trainable_variables)
-        self.optimizer.apply_gradients(zip(grads, self.student_probe.trainable_variables))
+        train_vars = list(self.student_probe.trainable_variables)
+        if self.student_embed_proj is not None:
+            train_vars.extend(self.student_embed_proj.trainable_variables)
+        grads = tape.gradient(total_loss, train_vars)
+        grads_and_vars = [(g, v) for g, v in zip(grads, train_vars) if g is not None]
+        if grads_and_vars:
+            self.optimizer.apply_gradients(grads_and_vars)
 
         self.loss_tracker.update_state(total_loss)
         self.ce_tracker.update_state(ce_loss)
         self.kd_logits_tracker.update_state(kd_logits)
         self.kd_embed_tracker.update_state(kd_embed)
+        self.gamma_tracker.update_state(self.current_gamma)
         self.acc_metric.update_state(y, s_probs)
 
         return {m.name: m.result() for m in self.metrics}
@@ -343,9 +419,37 @@ class Distiller(tf.keras.Model):
         self.ce_tracker.update_state(ce_loss)
         self.kd_logits_tracker.update_state(0.0)
         self.kd_embed_tracker.update_state(0.0)
+        self.gamma_tracker.update_state(self.current_gamma)
         self.acc_metric.update_state(y, s_probs)
 
         return {m.name: m.result() for m in self.metrics}
+
+
+class EmbedWeightScheduler(tf.keras.callbacks.Callback):
+    def __init__(self, distiller, enabled, gamma_max, warmup_epochs, ramp_epochs):
+        super().__init__()
+        self.distiller = distiller
+        self.enabled = bool(enabled)
+        self.gamma_max = float(gamma_max)
+        self.warmup_epochs = int(max(0, warmup_epochs))
+        self.ramp_epochs = int(max(1, ramp_epochs))
+
+    def _calc_gamma(self, epoch):
+        if (not self.enabled) or self.gamma_max <= 0.0:
+            return 0.0
+        if epoch < self.warmup_epochs:
+            return 0.0
+        progress = (epoch - self.warmup_epochs + 1) / float(self.ramp_epochs)
+        progress = np.clip(progress, 0.0, 1.0)
+        return self.gamma_max * progress
+
+    def on_train_begin(self, logs=None):
+        self.distiller.current_gamma.assign(0.0)
+
+    def on_epoch_begin(self, epoch, logs=None):
+        gamma = self._calc_gamma(epoch)
+        self.distiller.current_gamma.assign(gamma)
+        print(f"[KD] epoch={epoch + 1}, gamma_embed={gamma:.4f}")
 
 
 # ==================== Main ====================
@@ -360,36 +464,45 @@ if os.path.exists(NOISE_SOURCE_DIR):
     for root, _, files in os.walk(NOISE_SOURCE_DIR):
         noise_files.extend([os.path.join(root, f) for f in files if f.lower().endswith(".wav")])
 print(f"Noise dir: {NOISE_SOURCE_DIR}, files={len(noise_files)}")
+print(
+    "[Paths] "
+    f"MODEL_DIR={MODEL_DIR}, RESULT_DIR={RESULT_DIR}, "
+    f"TEACHER_CKPT={TEACHER_CKPT}, STUDENT_CKPT={STUDENT_CKPT}"
+)
 
 # ---------- Stage 1: train clean teacher ----------
 print("\n[Stage 1] Train clean teacher...")
 teacher = build_model((N_MELS, MAX_FRAMES, 1), num_classes, **MODEL_KWARGS)
-teacher.compile(optimizer=Adam(LEARNING_RATE), loss="categorical_crossentropy", metrics=["accuracy"])
+if REUSE_TEACHER and os.path.exists(TEACHER_CKPT):
+    print(f"[Stage 1] Reusing existing teacher checkpoint: {TEACHER_CKPT}")
+    teacher.load_weights(TEACHER_CKPT)
+else:
+    teacher.compile(optimizer=Adam(LEARNING_RATE), loss="categorical_crossentropy", metrics=["accuracy"])
 
-teacher_train_gen = CleanDataGenerator(data["X_train"], data["y_train"], BATCH_SIZE, num_classes, is_training=True)
-teacher_val_gen = CleanDataGenerator(data["X_val"], data["y_val"], BATCH_SIZE, num_classes, is_training=False)
+    teacher_train_gen = CleanDataGenerator(data["X_train"], data["y_train"], BATCH_SIZE, num_classes, is_training=True)
+    teacher_val_gen = CleanDataGenerator(data["X_val"], data["y_val"], BATCH_SIZE, num_classes, is_training=False)
 
-class_weights = class_weight.compute_class_weight(
-    class_weight="balanced",
-    classes=np.unique(data["y_train"]),
-    y=data["y_train"],
-)
-class_weight_dict = dict(enumerate(class_weights))
+    class_weights = class_weight.compute_class_weight(
+        class_weight="balanced",
+        classes=np.unique(data["y_train"]),
+        y=data["y_train"],
+    )
+    class_weight_dict = dict(enumerate(class_weights))
 
-teacher_callbacks = [
-    ModelCheckpoint(TEACHER_CKPT, save_best_only=True, monitor="val_accuracy", save_weights_only=True, verbose=1),
-    EarlyStopping(patience=10, restore_best_weights=True, verbose=1),
-]
+    teacher_callbacks = [
+        ModelCheckpoint(TEACHER_CKPT, save_best_only=True, monitor="val_accuracy", save_weights_only=True, verbose=1),
+        EarlyStopping(patience=10, restore_best_weights=True, verbose=1),
+    ]
 
-teacher.fit(
-    teacher_train_gen,
-    validation_data=teacher_val_gen,
-    epochs=TEACHER_EPOCHS,
-    callbacks=teacher_callbacks,
-    class_weight=class_weight_dict,
-)
+    teacher.fit(
+        teacher_train_gen,
+        validation_data=teacher_val_gen,
+        epochs=TEACHER_EPOCHS,
+        callbacks=teacher_callbacks,
+        class_weight=class_weight_dict,
+    )
 
-teacher.load_weights(TEACHER_CKPT)
+    teacher.load_weights(TEACHER_CKPT)
 
 # ---------- Stage 2: distill noisy student ----------
 print("\n[Stage 2] Distill noisy student from clean teacher...")
@@ -402,13 +515,29 @@ teacher_probe.trainable = False
 
 student_probe = build_probe_model(student)
 
+use_logits_kd, use_embed_kd, beta_logits, gamma_embed_max = resolve_distill_variant(DISTILL_VARIANT)
+print(
+    "[KD config] "
+    f"variant={DISTILL_VARIANT}, "
+    f"use_logits={use_logits_kd}, "
+    f"use_embed={use_embed_kd}, "
+    f"beta={beta_logits}, "
+    f"gamma_max={gamma_embed_max}, "
+    f"embed_proj={USE_EMBED_PROJECTION}, "
+    f"warmup_epochs={EMBED_WARMUP_EPOCHS}, "
+    f"ramp_epochs={EMBED_RAMP_EPOCHS}"
+)
+
 distiller = Distiller(
     student_probe=student_probe,
     teacher_probe=teacher_probe,
     alpha=ALPHA_CE,
-    beta=BETA_LOGITS,
-    gamma=GAMMA_EMBED,
+    beta=beta_logits,
+    gamma_max=gamma_embed_max,
     temperature=TEMPERATURE,
+    use_logits_kd=use_logits_kd,
+    use_embed_kd=use_embed_kd,
+    use_embed_projection=USE_EMBED_PROJECTION,
 )
 distiller.compile(optimizer=Adam(LEARNING_RATE))
 
@@ -435,6 +564,13 @@ student_val_gen = PairedKDGenerator(
 )
 
 student_callbacks = [
+    EmbedWeightScheduler(
+        distiller=distiller,
+        enabled=use_embed_kd,
+        gamma_max=gamma_embed_max,
+        warmup_epochs=EMBED_WARMUP_EPOCHS,
+        ramp_epochs=EMBED_RAMP_EPOCHS,
+    ),
     EarlyStopping(patience=10, restore_best_weights=True, verbose=1),
 ]
 
