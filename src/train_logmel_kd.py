@@ -76,11 +76,30 @@ TEACHER_EPOCHS = _env_int("KD_TEACHER_EPOCHS", 50)
 STUDENT_EPOCHS = _env_int("KD_STUDENT_EPOCHS", 50)
 LEARNING_RATE = _env_float("KD_LR", 1e-4)
 REUSE_TEACHER = _env_bool("KD_REUSE_TEACHER", False)
+RANDOM_SEED = _env_int("KD_SEED", 42)
 
 NOISE_MIX_PROB = 1.0
 MIN_SNR_DB = -15.0
 MAX_SNR_DB = -5.0
 EVAL_SNR_DB = -10.0
+
+# class-conditional prosody augmentation (for training only):
+# emergency -> higher pitch + higher loudness
+# other classes -> normal tone by default
+ENABLE_CLASS_PROSODY_AUG = _env_bool("KD_ENABLE_CLASS_PROSODY_AUG", True)
+EMERGENCY_CLASS_NAME = os.getenv("KD_EMERGENCY_CLASS_NAME", "emergency").strip().lower()
+EMERGENCY_PROSODY_PROB = _env_float("KD_EMERGENCY_PROSODY_PROB", 1.0)
+EMERGENCY_PITCH_MIN = _env_float("KD_EMERGENCY_PITCH_MIN", 1.5)
+EMERGENCY_PITCH_MAX = _env_float("KD_EMERGENCY_PITCH_MAX", 4.0)
+EMERGENCY_GAIN_DB_MIN = _env_float("KD_EMERGENCY_GAIN_DB_MIN", 3.0)
+EMERGENCY_GAIN_DB_MAX = _env_float("KD_EMERGENCY_GAIN_DB_MAX", 8.0)
+
+NON_EMERGENCY_PROSODY_PROB = _env_float("KD_NON_EMERGENCY_PROSODY_PROB", 0.0)
+NON_EMERGENCY_PITCH_MIN = _env_float("KD_NON_EMERGENCY_PITCH_MIN", 0.0)
+NON_EMERGENCY_PITCH_MAX = _env_float("KD_NON_EMERGENCY_PITCH_MAX", 0.0)
+NON_EMERGENCY_GAIN_DB_MIN = _env_float("KD_NON_EMERGENCY_GAIN_DB_MIN", 0.0)
+NON_EMERGENCY_GAIN_DB_MAX = _env_float("KD_NON_EMERGENCY_GAIN_DB_MAX", 0.0)
+PROSODY_LOG_SAMPLES = _env_int("KD_PROSODY_LOG_SAMPLES", 8)
 
 # distillation config:
 #   ce_only / ce_logits / ce_embed / ce_logits_embed
@@ -92,6 +111,9 @@ TEMPERATURE = _env_float("KD_TEMPERATURE", 2.0)
 USE_EMBED_PROJECTION = _env_bool("KD_USE_EMBED_PROJECTION", True)
 EMBED_WARMUP_EPOCHS = int(STUDENT_EPOCHS * 0.3)
 EMBED_RAMP_EPOCHS = max(1, STUDENT_EPOCHS - EMBED_WARMUP_EPOCHS)
+
+np.random.seed(RANDOM_SEED)
+tf.random.set_seed(RANDOM_SEED)
 
 
 def resolve_distill_variant(variant: str):
@@ -143,6 +165,64 @@ def mix_with_noise(clean, noise, snr_db):
     return noisy.astype(np.float32)
 
 
+def _normalize_label_name(name) -> str:
+    return str(name).strip().lower()
+
+
+def _ensure_target_len(audio: np.ndarray) -> np.ndarray:
+    if len(audio) < TARGET_LEN:
+        audio = np.pad(audio, (0, TARGET_LEN - len(audio)))
+    elif len(audio) > TARGET_LEN:
+        audio = audio[:TARGET_LEN]
+    return audio.astype(np.float32)
+
+
+def _sample_uniform(min_v: float, max_v: float) -> float:
+    lo = float(min(min_v, max_v))
+    hi = float(max(min_v, max_v))
+    if np.isclose(lo, hi):
+        return lo
+    return float(np.random.uniform(lo, hi))
+
+
+def apply_class_conditional_prosody(audio: np.ndarray, label_idx: int, class_names, is_training: bool):
+    audio = _ensure_target_len(audio)
+    class_name = ""
+    if class_names is not None and 0 <= int(label_idx) < len(class_names):
+        class_name = _normalize_label_name(class_names[int(label_idx)])
+    is_emergency = class_name == EMERGENCY_CLASS_NAME
+
+    if (not is_training) or (not ENABLE_CLASS_PROSODY_AUG):
+        return audio, class_name, is_emergency, 0.0, 0.0
+
+    if is_emergency:
+        aug_prob = EMERGENCY_PROSODY_PROB
+        pitch_min, pitch_max = EMERGENCY_PITCH_MIN, EMERGENCY_PITCH_MAX
+        gain_min, gain_max = EMERGENCY_GAIN_DB_MIN, EMERGENCY_GAIN_DB_MAX
+    else:
+        aug_prob = NON_EMERGENCY_PROSODY_PROB
+        pitch_min, pitch_max = NON_EMERGENCY_PITCH_MIN, NON_EMERGENCY_PITCH_MAX
+        gain_min, gain_max = NON_EMERGENCY_GAIN_DB_MIN, NON_EMERGENCY_GAIN_DB_MAX
+
+    if np.random.rand() > float(aug_prob):
+        return audio, class_name, is_emergency, 0.0, 0.0
+
+    pitch_steps = _sample_uniform(pitch_min, pitch_max)
+    gain_db = _sample_uniform(gain_min, gain_max)
+
+    augmented = audio
+    if not np.isclose(pitch_steps, 0.0):
+        augmented = librosa.effects.pitch_shift(y=augmented, sr=SAMPLE_RATE, n_steps=pitch_steps)
+
+    if not np.isclose(gain_db, 0.0):
+        gain_scale = float(10 ** (gain_db / 20.0))
+        augmented = augmented * gain_scale
+
+    augmented = np.clip(augmented, -1.0, 1.0)
+    augmented = _ensure_target_len(augmented)
+    return augmented, class_name, is_emergency, pitch_steps, gain_db
+
+
 def extract_logmel(y):
     mel = librosa.feature.melspectrogram(
         y=y,
@@ -167,13 +247,15 @@ def extract_logmel(y):
 
 # ==================== Generators ====================
 class CleanDataGenerator(tf.keras.utils.Sequence):
-    def __init__(self, filepaths, labels, batch_size, num_classes, is_training=True):
+    def __init__(self, filepaths, labels, batch_size, num_classes, class_names=None, is_training=True):
         self.filepaths = filepaths
         self.labels = labels
         self.batch_size = batch_size
         self.num_classes = num_classes
+        self.class_names = class_names
         self.is_training = is_training
         self.indexes = np.arange(len(self.filepaths))
+        self._prosody_log_budget = max(0, PROSODY_LOG_SAMPLES)
         self.on_epoch_end()
 
     def __len__(self):
@@ -190,9 +272,23 @@ class CleanDataGenerator(tf.keras.utils.Sequence):
 
         for i, idx in enumerate(idxs):
             clean = load_audio_1s(self.filepaths[idx])
+            label_idx = int(self.labels[idx])
+            clean, cls_name, is_emergency, pitch_steps, gain_db = apply_class_conditional_prosody(
+                clean,
+                label_idx,
+                self.class_names,
+                is_training=self.is_training,
+            )
+            if self.is_training and self._prosody_log_budget > 0 and (is_emergency or not np.isclose(pitch_steps, 0.0) or not np.isclose(gain_db, 0.0)):
+                print(
+                    "[ProsodyAug][Teacher] "
+                    f"class={cls_name or 'unknown'} emergency={is_emergency} "
+                    f"pitch_steps={pitch_steps:.2f} gain_db={gain_db:.2f}"
+                )
+                self._prosody_log_budget -= 1
             feat = extract_logmel(clean)
             x[i] = np.expand_dims(feat, axis=-1)
-            y[i] = self.labels[idx]
+            y[i] = label_idx
 
         return x, tf.keras.utils.to_categorical(y, num_classes=self.num_classes)
 
@@ -209,6 +305,7 @@ class PairedKDGenerator(tf.keras.utils.Sequence):
         labels,
         batch_size,
         num_classes,
+        class_names,
         noise_paths,
         is_training=True,
         snr_range=(-15.0, -5.0),
@@ -218,11 +315,13 @@ class PairedKDGenerator(tf.keras.utils.Sequence):
         self.labels = labels
         self.batch_size = batch_size
         self.num_classes = num_classes
+        self.class_names = class_names
         self.noise_paths = noise_paths
         self.is_training = is_training
         self.min_snr, self.max_snr = snr_range
         self.eval_snr_db = eval_snr_db
         self.indexes = np.arange(len(self.filepaths))
+        self._prosody_log_budget = max(0, PROSODY_LOG_SAMPLES)
         self.on_epoch_end()
 
     def __len__(self):
@@ -241,6 +340,20 @@ class PairedKDGenerator(tf.keras.utils.Sequence):
 
         for i, idx in enumerate(idxs):
             clean = load_audio_1s(self.filepaths[idx])
+            label_idx = int(self.labels[idx])
+            clean, cls_name, is_emergency, pitch_steps, gain_db = apply_class_conditional_prosody(
+                clean,
+                label_idx,
+                self.class_names,
+                is_training=self.is_training,
+            )
+            if self.is_training and self._prosody_log_budget > 0 and (is_emergency or not np.isclose(pitch_steps, 0.0) or not np.isclose(gain_db, 0.0)):
+                print(
+                    "[ProsodyAug][Student] "
+                    f"class={cls_name or 'unknown'} emergency={is_emergency} "
+                    f"pitch_steps={pitch_steps:.2f} gain_db={gain_db:.2f}"
+                )
+                self._prosody_log_budget -= 1
 
             noise = sample_noise_clip(self.noise_paths)
             if noise is not None:
@@ -257,7 +370,7 @@ class PairedKDGenerator(tf.keras.utils.Sequence):
 
             x_clean[i] = np.expand_dims(clean_feat, axis=-1)
             x_noisy[i] = np.expand_dims(noisy_feat, axis=-1)
-            y[i] = self.labels[idx]
+            y[i] = label_idx
 
         x = {"clean": x_clean, "noisy": x_noisy}
         y_onehot = tf.keras.utils.to_categorical(y, num_classes=self.num_classes)
@@ -469,6 +582,21 @@ print(
     f"MODEL_DIR={MODEL_DIR}, RESULT_DIR={RESULT_DIR}, "
     f"TEACHER_CKPT={TEACHER_CKPT}, STUDENT_CKPT={STUDENT_CKPT}"
 )
+print(
+    "[Seed] "
+    f"KD_SEED={RANDOM_SEED}"
+)
+print(
+    "[Prosody config] "
+    f"enabled={ENABLE_CLASS_PROSODY_AUG}, "
+    f"emergency_class={EMERGENCY_CLASS_NAME}, "
+    f"emergency_prob={EMERGENCY_PROSODY_PROB}, "
+    f"emergency_pitch=[{EMERGENCY_PITCH_MIN}, {EMERGENCY_PITCH_MAX}], "
+    f"emergency_gain_db=[{EMERGENCY_GAIN_DB_MIN}, {EMERGENCY_GAIN_DB_MAX}], "
+    f"non_emergency_prob={NON_EMERGENCY_PROSODY_PROB}, "
+    f"non_emergency_pitch=[{NON_EMERGENCY_PITCH_MIN}, {NON_EMERGENCY_PITCH_MAX}], "
+    f"non_emergency_gain_db=[{NON_EMERGENCY_GAIN_DB_MIN}, {NON_EMERGENCY_GAIN_DB_MAX}]"
+)
 
 # ---------- Stage 1: train clean teacher ----------
 print("\n[Stage 1] Train clean teacher...")
@@ -479,8 +607,22 @@ if REUSE_TEACHER and os.path.exists(TEACHER_CKPT):
 else:
     teacher.compile(optimizer=Adam(LEARNING_RATE), loss="categorical_crossentropy", metrics=["accuracy"])
 
-    teacher_train_gen = CleanDataGenerator(data["X_train"], data["y_train"], BATCH_SIZE, num_classes, is_training=True)
-    teacher_val_gen = CleanDataGenerator(data["X_val"], data["y_val"], BATCH_SIZE, num_classes, is_training=False)
+    teacher_train_gen = CleanDataGenerator(
+        data["X_train"],
+        data["y_train"],
+        BATCH_SIZE,
+        num_classes,
+        class_names=class_names,
+        is_training=True,
+    )
+    teacher_val_gen = CleanDataGenerator(
+        data["X_val"],
+        data["y_val"],
+        BATCH_SIZE,
+        num_classes,
+        class_names=class_names,
+        is_training=False,
+    )
 
     class_weights = class_weight.compute_class_weight(
         class_weight="balanced",
@@ -546,6 +688,7 @@ student_train_gen = PairedKDGenerator(
     data["y_train"],
     BATCH_SIZE,
     num_classes,
+    class_names=class_names,
     noise_paths=noise_files,
     is_training=True,
     snr_range=(MIN_SNR_DB, MAX_SNR_DB),
@@ -557,6 +700,7 @@ student_val_gen = PairedKDGenerator(
     data["y_val"],
     BATCH_SIZE,
     num_classes,
+    class_names=class_names,
     noise_paths=noise_files,
     is_training=False,
     snr_range=(MIN_SNR_DB, MAX_SNR_DB),
@@ -586,7 +730,14 @@ student.save_weights(STUDENT_CKPT)
 # ---------- Final evaluation ----------
 # ---------- Final evaluation ----------
 print("\n[Evaluation] Student on clean and noisy test sets...")
-clean_test_gen = CleanDataGenerator(data["X_test"], data["y_test"], BATCH_SIZE, num_classes, is_training=False)
+clean_test_gen = CleanDataGenerator(
+    data["X_test"],
+    data["y_test"],
+    BATCH_SIZE,
+    num_classes,
+    class_names=class_names,
+    is_training=False,
+)
 noisy_test_gen = NoisyEvalGenerator(data["X_test"], data["y_test"], BATCH_SIZE, num_classes, noise_files, snr_db=EVAL_SNR_DB)
 
 # 【核心修改】：在 evaluate 之前，给 student 随便配一个优化器（评估时其实用不到），但必须指定准确的 loss 和 metrics

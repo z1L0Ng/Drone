@@ -140,8 +140,16 @@ def build_feature_tensor(filepaths):
 def save_results(y_true, y_pred, class_names, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
+    labels = np.arange(len(class_names))
     acc = accuracy_score(y_true, y_pred)
-    report = classification_report(y_true, y_pred, target_names=[str(c) for c in class_names], digits=4)
+    report = classification_report(
+        y_true,
+        y_pred,
+        labels=labels,
+        target_names=[str(c) for c in class_names],
+        digits=4,
+        zero_division=0,
+    )
 
     report_path = os.path.join(output_dir, "classification_report.txt")
     with open(report_path, "w", encoding="utf-8") as f:
@@ -150,7 +158,7 @@ def save_results(y_true, y_pred, class_names, output_dir):
         f.write(f"Accuracy: {acc:.4f}\n\n")
         f.write(report)
 
-    cm = confusion_matrix(y_true, y_pred)
+    cm = confusion_matrix(y_true, y_pred, labels=labels)
     plt.figure(figsize=(10, 8))
     sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=class_names, yticklabels=class_names)
     plt.title("Confusion Matrix - LogMel KD Student")
