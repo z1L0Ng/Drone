@@ -10,7 +10,7 @@ from sklearn.utils import class_weight
 from sklearn.metrics import classification_report
 
 from model import build_model
-from model_config import MODEL_KWARGS
+from model_config import get_model_kwargs
 
 
 def _env_bool(name: str, default: bool) -> bool:
@@ -77,6 +77,10 @@ STUDENT_EPOCHS = _env_int("KD_STUDENT_EPOCHS", 50)
 LEARNING_RATE = _env_float("KD_LR", 1e-4)
 REUSE_TEACHER = _env_bool("KD_REUSE_TEACHER", False)
 RANDOM_SEED = _env_int("KD_SEED", 42)
+TEACHER_MODEL_PROFILE = os.getenv("KD_TEACHER_MODEL_PROFILE", "base").strip().lower()
+STUDENT_MODEL_PROFILE = os.getenv("KD_STUDENT_MODEL_PROFILE", "base").strip().lower()
+STUDENT_INIT_MODE = os.getenv("KD_STUDENT_INIT_MODE", "auto").strip().lower()
+STUDENT_INIT_CKPT = os.getenv("KD_STUDENT_INIT_CKPT", "").strip() or None
 
 NOISE_MIX_PROB = 1.0
 MIN_SNR_DB = -15.0
@@ -119,6 +123,11 @@ USE_EMBED_PROJECTION = _env_bool("KD_USE_EMBED_PROJECTION", True)
 EMBED_WARMUP_EPOCHS = int(STUDENT_EPOCHS * 0.3)
 EMBED_RAMP_EPOCHS = max(1, STUDENT_EPOCHS - EMBED_WARMUP_EPOCHS)
 
+TEACHER_MODEL_KWARGS = get_model_kwargs(TEACHER_MODEL_PROFILE)
+STUDENT_MODEL_KWARGS = get_model_kwargs(STUDENT_MODEL_PROFILE)
+if STUDENT_INIT_MODE not in {"auto", "teacher", "random"}:
+    raise ValueError("KD_STUDENT_INIT_MODE must be one of: auto, teacher, random")
+
 np.random.seed(RANDOM_SEED)
 tf.random.set_seed(RANDOM_SEED)
 
@@ -137,6 +146,46 @@ def resolve_distill_variant(variant: str):
     gamma_max = EMBED_GAMMA_MAX if use_embed else 0.0
     warmup_epochs = EMBED_WARMUP_EPOCHS if v != "embed_only" else 0
     return use_ce, use_logits, use_embed, alpha, beta, gamma_max, warmup_epochs
+
+
+def _fmt_model_kwargs(kwargs: dict) -> str:
+    keys = ["num_layers", "head_size", "num_heads", "ff_dim", "dropout_rate", "fnn_units"]
+    parts = []
+    for key in keys:
+        if key in kwargs:
+            parts.append(f"{key}={kwargs[key]}")
+    return ", ".join(parts)
+
+
+def initialize_student_weights(student_model: tf.keras.Model) -> str:
+    if STUDENT_INIT_CKPT:
+        if os.path.exists(STUDENT_INIT_CKPT):
+            student_model.load_weights(STUDENT_INIT_CKPT)
+            return f"student_ckpt:{STUDENT_INIT_CKPT}"
+        raise FileNotFoundError(f"KD_STUDENT_INIT_CKPT does not exist: {STUDENT_INIT_CKPT}")
+
+    same_profile = TEACHER_MODEL_PROFILE == STUDENT_MODEL_PROFILE
+
+    if STUDENT_INIT_MODE == "random":
+        return "random_init"
+
+    if STUDENT_INIT_MODE == "teacher":
+        if not same_profile:
+            raise ValueError(
+                "KD_STUDENT_INIT_MODE=teacher requires same teacher/student profile. "
+                f"Got teacher={TEACHER_MODEL_PROFILE}, student={STUDENT_MODEL_PROFILE}"
+            )
+        student_model.load_weights(TEACHER_CKPT)
+        return f"teacher_ckpt:{TEACHER_CKPT}"
+
+    # auto
+    if same_profile and os.path.exists(TEACHER_CKPT):
+        try:
+            student_model.load_weights(TEACHER_CKPT)
+            return f"teacher_ckpt:{TEACHER_CKPT}"
+        except Exception as exc:
+            print(f"[Stage 2] Auto teacher init failed, fallback to random init: {exc}")
+    return "random_init"
 
 
 # ==================== Helpers ====================
@@ -651,6 +700,13 @@ print(
     f"KD_SEED={RANDOM_SEED}"
 )
 print(
+    "[Model] "
+    f"teacher_profile={TEACHER_MODEL_PROFILE} ({_fmt_model_kwargs(TEACHER_MODEL_KWARGS)}), "
+    f"student_profile={STUDENT_MODEL_PROFILE} ({_fmt_model_kwargs(STUDENT_MODEL_KWARGS)}), "
+    f"student_init_mode={STUDENT_INIT_MODE}, "
+    f"student_init_ckpt={STUDENT_INIT_CKPT or 'None'}"
+)
+print(
     "[Prosody] "
     f"enabled={ENABLE_CLASS_PROSODY_AUG}, "
     f"teacher={TEACHER_ENABLE_PROSODY_AUG}, "
@@ -670,7 +726,8 @@ print(
 
 # ---------- Stage 1: train clean teacher ----------
 print("\n[Stage 1] Train clean teacher...")
-teacher = build_model((N_MELS, MAX_FRAMES, 1), num_classes, **MODEL_KWARGS)
+teacher = build_model((N_MELS, MAX_FRAMES, 1), num_classes, **TEACHER_MODEL_KWARGS)
+print(f"[Stage 1] teacher_params={teacher.count_params():,}")
 if REUSE_TEACHER and os.path.exists(TEACHER_CKPT):
     print(f"[Stage 1] Reusing existing teacher checkpoint: {TEACHER_CKPT}")
     teacher.load_weights(TEACHER_CKPT)
@@ -721,9 +778,10 @@ else:
 
 # ---------- Stage 2: distill noisy student ----------
 print("\n[Stage 2] Distill noisy student from clean teacher...")
-student = build_model((N_MELS, MAX_FRAMES, 1), num_classes, **MODEL_KWARGS)
-
-student.load_weights(TEACHER_CKPT)
+student = build_model((N_MELS, MAX_FRAMES, 1), num_classes, **STUDENT_MODEL_KWARGS)
+print(f"[Stage 2] student_params={student.count_params():,}")
+student_init_source = initialize_student_weights(student)
+print(f"[Stage 2] student_init={student_init_source}")
 
 teacher_probe = build_probe_model(teacher)
 teacher_probe.trainable = False

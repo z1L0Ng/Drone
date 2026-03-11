@@ -5,14 +5,53 @@ import os
 # -------------------------
 # Model architecture
 # -------------------------
-MODEL_KWARGS = dict(
-    num_layers=1,
-    head_size=32,
-    num_heads=4,
-    ff_dim=256,
-    dropout_rate=0.15,
-    fnn_units=[128],
-)
+MODEL_KWARGS_PRESETS = {
+    "base": dict(
+        num_layers=1,
+        head_size=32,
+        num_heads=4,
+        ff_dim=256,
+        dropout_rate=0.15,
+        fnn_units=[128],
+    ),
+    "large": dict(
+        num_layers=2,
+        head_size=48,
+        num_heads=6,
+        ff_dim=384,
+        dropout_rate=0.20,
+        fnn_units=[256, 128],
+    ),
+    "xlarge": dict(
+        num_layers=3,
+        head_size=64,
+        num_heads=8,
+        ff_dim=512,
+        dropout_rate=0.20,
+        fnn_units=[256, 128],
+    ),
+}
+
+# Backward-compatible default used by existing training/inference scripts.
+MODEL_KWARGS = dict(MODEL_KWARGS_PRESETS["base"])
+
+
+def get_model_kwargs(profile: str = "base"):
+    name = str(profile).strip().lower()
+    alias = {
+        "small": "base",
+        "medium": "large",
+        "xl": "xlarge",
+    }
+    name = alias.get(name, name)
+    if name not in MODEL_KWARGS_PRESETS:
+        raise ValueError(
+            f"Unknown model profile: {profile}. "
+            f"Supported: {sorted(MODEL_KWARGS_PRESETS.keys()) + sorted(alias.keys())}"
+        )
+    cfg = dict(MODEL_KWARGS_PRESETS[name])
+    cfg["fnn_units"] = list(cfg["fnn_units"])
+    return cfg
 
 # -------------------------
 # Audio / frontend params
