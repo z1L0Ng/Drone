@@ -4,28 +4,33 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT_DIR}"
 
-VARIANTS=(ce_only ce_logits ce_embed ce_logits_embed)
+VARIANTS=(embed_only ce_only ce_logits ce_embed ce_logits_embed)
 
-BASE_MODEL_DIR="${ROOT_DIR}/saved_models/logmel_kd_ablation"
-BASE_RESULT_DIR="${ROOT_DIR}/result/logmel_kd_ablation"
-BASE_FINETUNE_DIR="${ROOT_DIR}/result/finetune/logmel_kd_ablation"
+export TF_CPP_MIN_LOG_LEVEL="${TF_CPP_MIN_LOG_LEVEL:-3}"
+export KD_FIT_VERBOSE="${KD_FIT_VERBOSE:-2}"
+export KD_PROSODY_LOG_SAMPLES="${KD_PROSODY_LOG_SAMPLES:-0}"
+export KD_GAMMA_LOG_VERBOSE="${KD_GAMMA_LOG_VERBOSE:-0}"
+
+RUN_TAG="${KD_ABLATION_RUN_TAG:-$(date +%Y%m%d_%H%M%S)}"
+BASE_MODEL_DIR="${KD_ABLATION_MODEL_DIR:-${ROOT_DIR}/saved_models/logmel_kd_ablation_${RUN_TAG}}"
+BASE_RESULT_DIR="${KD_ABLATION_RESULT_DIR:-${ROOT_DIR}/result/logmel_kd_ablation_${RUN_TAG}}"
 
 SHARED_TEACHER_CKPT="${BASE_MODEL_DIR}/teacher_clean_best.weights.h5"
-SPLIT_CACHE="${ROOT_DIR}/result/finetune/logmel_kd_split_indices.npz"
 
-mkdir -p "${BASE_MODEL_DIR}" "${BASE_RESULT_DIR}" "${BASE_FINETUNE_DIR}"
+mkdir -p "${BASE_MODEL_DIR}" "${BASE_RESULT_DIR}"
 
 echo "[Ablation] root=${ROOT_DIR}"
+echo "[Ablation] run_tag=${RUN_TAG}"
 echo "[Ablation] shared_teacher=${SHARED_TEACHER_CKPT}"
-echo "[Ablation] split_cache=${SPLIT_CACHE}"
+echo "[Ablation] model_dir=${BASE_MODEL_DIR}"
+echo "[Ablation] result_dir=${BASE_RESULT_DIR}"
 
 for idx in "${!VARIANTS[@]}"; do
   variant="${VARIANTS[$idx]}"
   model_dir="${BASE_MODEL_DIR}/${variant}"
   result_dir="${BASE_RESULT_DIR}/${variant}"
-  finetune_dir="${BASE_FINETUNE_DIR}/${variant}"
 
-  mkdir -p "${model_dir}" "${result_dir}" "${finetune_dir}"
+  mkdir -p "${model_dir}" "${result_dir}"
 
   reuse_teacher="1"
   if [[ "${idx}" -eq 0 ]]; then
@@ -42,13 +47,9 @@ for idx in "${!VARIANTS[@]}"; do
   KD_TEACHER_CKPT="${SHARED_TEACHER_CKPT}" \
   KD_STUDENT_CKPT="${model_dir}/student_kd_best.weights.h5" \
   KD_REUSE_TEACHER="${reuse_teacher}" \
+  KD_TEACHER_ENABLE_PROSODY_AUG="0" \
+  KD_STUDENT_ENABLE_PROSODY_AUG="1" \
   python "${ROOT_DIR}/src/train_logmel_kd.py"
-
-  python "${ROOT_DIR}/scripts/run_finetune_logmel_kd.py" \
-    --weights "${model_dir}/student_kd_best.weights.h5" \
-    --finetuned-weights "${model_dir}/finetuned_best.weights.h5" \
-    --output "${finetune_dir}" \
-    --split-cache "${SPLIT_CACHE}"
 done
 
-echo "[Ablation] all variants completed"
+echo "[Ablation] training-only run completed"

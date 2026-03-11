@@ -89,20 +89,27 @@ EVAL_SNR_DB = -10.0
 ENABLE_CLASS_PROSODY_AUG = _env_bool("KD_ENABLE_CLASS_PROSODY_AUG", True)
 EMERGENCY_CLASS_NAME = os.getenv("KD_EMERGENCY_CLASS_NAME", "emergency").strip().lower()
 EMERGENCY_PROSODY_PROB = _env_float("KD_EMERGENCY_PROSODY_PROB", 1.0)
-EMERGENCY_PITCH_MIN = _env_float("KD_EMERGENCY_PITCH_MIN", 1.5)
-EMERGENCY_PITCH_MAX = _env_float("KD_EMERGENCY_PITCH_MAX", 4.0)
-EMERGENCY_GAIN_DB_MIN = _env_float("KD_EMERGENCY_GAIN_DB_MIN", 3.0)
-EMERGENCY_GAIN_DB_MAX = _env_float("KD_EMERGENCY_GAIN_DB_MAX", 8.0)
+EMERGENCY_PITCH_MIN = _env_float("KD_EMERGENCY_PITCH_MIN", 2.0)
+EMERGENCY_PITCH_MAX = _env_float("KD_EMERGENCY_PITCH_MAX", 5.0)
+EMERGENCY_GAIN_DB_MIN = _env_float("KD_EMERGENCY_GAIN_DB_MIN", 6.0)
+EMERGENCY_GAIN_DB_MAX = _env_float("KD_EMERGENCY_GAIN_DB_MAX", 10.0)
 
 NON_EMERGENCY_PROSODY_PROB = _env_float("KD_NON_EMERGENCY_PROSODY_PROB", 0.0)
 NON_EMERGENCY_PITCH_MIN = _env_float("KD_NON_EMERGENCY_PITCH_MIN", 0.0)
 NON_EMERGENCY_PITCH_MAX = _env_float("KD_NON_EMERGENCY_PITCH_MAX", 0.0)
 NON_EMERGENCY_GAIN_DB_MIN = _env_float("KD_NON_EMERGENCY_GAIN_DB_MIN", 0.0)
 NON_EMERGENCY_GAIN_DB_MAX = _env_float("KD_NON_EMERGENCY_GAIN_DB_MAX", 0.0)
-PROSODY_LOG_SAMPLES = _env_int("KD_PROSODY_LOG_SAMPLES", 8)
+PROSODY_LOG_SAMPLES = _env_int("KD_PROSODY_LOG_SAMPLES", 0)
+TEACHER_ENABLE_PROSODY_AUG = _env_bool("KD_TEACHER_ENABLE_PROSODY_AUG", False)
+STUDENT_ENABLE_PROSODY_AUG = _env_bool("KD_STUDENT_ENABLE_PROSODY_AUG", True)
+FIT_VERBOSE = _env_int("KD_FIT_VERBOSE", 2)
+GAMMA_LOG_VERBOSE = _env_bool("KD_GAMMA_LOG_VERBOSE", False)
+EARLYSTOP_PATIENCE = _env_int("KD_EARLYSTOP_PATIENCE", 10)
+TEACHER_MONITOR = os.getenv("KD_TEACHER_MONITOR", "val_accuracy")
+STUDENT_MONITOR = os.getenv("KD_STUDENT_MONITOR", "val_accuracy")
 
 # distillation config:
-#   ce_only / ce_logits / ce_embed / ce_logits_embed
+#   ce_only / ce_logits / ce_embed / ce_logits_embed / embed_only
 DISTILL_VARIANT = os.getenv("KD_DISTILL_VARIANT", "ce_logits_embed")
 ALPHA_CE = _env_float("KD_ALPHA_CE", 1.0)
 LOGITS_BETA = _env_float("KD_LOGITS_BETA", 1.0)
@@ -118,14 +125,18 @@ tf.random.set_seed(RANDOM_SEED)
 
 def resolve_distill_variant(variant: str):
     v = variant.strip().lower()
-    valid = {"ce_only", "ce_logits", "ce_embed", "ce_logits_embed"}
+    valid = {"ce_only", "ce_logits", "ce_embed", "ce_logits_embed", "embed_only"}
     if v not in valid:
         raise ValueError(f"Unsupported DISTILL_VARIANT={variant}. Expected one of: {sorted(valid)}")
+
+    use_ce = v in {"ce_only", "ce_logits", "ce_embed", "ce_logits_embed"}
     use_logits = v in {"ce_logits", "ce_logits_embed"}
-    use_embed = v in {"ce_embed", "ce_logits_embed"}
+    use_embed = v in {"ce_embed", "ce_logits_embed", "embed_only"}
+    alpha = ALPHA_CE if use_ce else 0.0
     beta = LOGITS_BETA if use_logits else 0.0
     gamma_max = EMBED_GAMMA_MAX if use_embed else 0.0
-    return use_logits, use_embed, beta, gamma_max
+    warmup_epochs = EMBED_WARMUP_EPOCHS if v != "embed_only" else 0
+    return use_ce, use_logits, use_embed, alpha, beta, gamma_max, warmup_epochs
 
 
 # ==================== Helpers ====================
@@ -185,14 +196,20 @@ def _sample_uniform(min_v: float, max_v: float) -> float:
     return float(np.random.uniform(lo, hi))
 
 
-def apply_class_conditional_prosody(audio: np.ndarray, label_idx: int, class_names, is_training: bool):
+def apply_class_conditional_prosody(
+    audio: np.ndarray,
+    label_idx: int,
+    class_names,
+    is_training: bool,
+    enable_aug: bool = True,
+):
     audio = _ensure_target_len(audio)
     class_name = ""
     if class_names is not None and 0 <= int(label_idx) < len(class_names):
         class_name = _normalize_label_name(class_names[int(label_idx)])
     is_emergency = class_name == EMERGENCY_CLASS_NAME
 
-    if (not is_training) or (not ENABLE_CLASS_PROSODY_AUG):
+    if (not is_training) or (not ENABLE_CLASS_PROSODY_AUG) or (not enable_aug):
         return audio, class_name, is_emergency, 0.0, 0.0
 
     if is_emergency:
@@ -247,13 +264,23 @@ def extract_logmel(y):
 
 # ==================== Generators ====================
 class CleanDataGenerator(tf.keras.utils.Sequence):
-    def __init__(self, filepaths, labels, batch_size, num_classes, class_names=None, is_training=True):
+    def __init__(
+        self,
+        filepaths,
+        labels,
+        batch_size,
+        num_classes,
+        class_names=None,
+        is_training=True,
+        enable_prosody_aug=True,
+    ):
         self.filepaths = filepaths
         self.labels = labels
         self.batch_size = batch_size
         self.num_classes = num_classes
         self.class_names = class_names
         self.is_training = is_training
+        self.enable_prosody_aug = enable_prosody_aug
         self.indexes = np.arange(len(self.filepaths))
         self._prosody_log_budget = max(0, PROSODY_LOG_SAMPLES)
         self.on_epoch_end()
@@ -278,8 +305,9 @@ class CleanDataGenerator(tf.keras.utils.Sequence):
                 label_idx,
                 self.class_names,
                 is_training=self.is_training,
+                enable_aug=self.enable_prosody_aug,
             )
-            if self.is_training and self._prosody_log_budget > 0 and (is_emergency or not np.isclose(pitch_steps, 0.0) or not np.isclose(gain_db, 0.0)):
+            if self.is_training and self._prosody_log_budget > 0 and (not np.isclose(pitch_steps, 0.0) or not np.isclose(gain_db, 0.0)):
                 print(
                     "[ProsodyAug][Teacher] "
                     f"class={cls_name or 'unknown'} emergency={is_emergency} "
@@ -308,6 +336,7 @@ class PairedKDGenerator(tf.keras.utils.Sequence):
         class_names,
         noise_paths,
         is_training=True,
+        enable_prosody_aug=True,
         snr_range=(-15.0, -5.0),
         eval_snr_db=-10.0,
     ):
@@ -318,6 +347,7 @@ class PairedKDGenerator(tf.keras.utils.Sequence):
         self.class_names = class_names
         self.noise_paths = noise_paths
         self.is_training = is_training
+        self.enable_prosody_aug = enable_prosody_aug
         self.min_snr, self.max_snr = snr_range
         self.eval_snr_db = eval_snr_db
         self.indexes = np.arange(len(self.filepaths))
@@ -341,13 +371,16 @@ class PairedKDGenerator(tf.keras.utils.Sequence):
         for i, idx in enumerate(idxs):
             clean = load_audio_1s(self.filepaths[idx])
             label_idx = int(self.labels[idx])
+            # Apply prosody once, then derive both teacher-clean and student-noisy from it
+            # to keep teacher/student aligned on the same underlying utterance.
             clean, cls_name, is_emergency, pitch_steps, gain_db = apply_class_conditional_prosody(
                 clean,
                 label_idx,
                 self.class_names,
                 is_training=self.is_training,
+                enable_aug=self.enable_prosody_aug,
             )
-            if self.is_training and self._prosody_log_budget > 0 and (is_emergency or not np.isclose(pitch_steps, 0.0) or not np.isclose(gain_db, 0.0)):
+            if self.is_training and self._prosody_log_budget > 0 and (not np.isclose(pitch_steps, 0.0) or not np.isclose(gain_db, 0.0)):
                 print(
                     "[ProsodyAug][Student] "
                     f"class={cls_name or 'unknown'} emergency={is_emergency} "
@@ -423,6 +456,7 @@ class Distiller(tf.keras.Model):
         beta,
         gamma_max,
         temperature,
+        use_ce=True,
         use_logits_kd=True,
         use_embed_kd=True,
         use_embed_projection=True,
@@ -434,6 +468,7 @@ class Distiller(tf.keras.Model):
         self.beta = float(beta)
         self.gamma_max = float(gamma_max)
         self.temperature = float(temperature)
+        self.use_ce = bool(use_ce)
         self.use_logits_kd = bool(use_logits_kd)
         self.use_embed_kd = bool(use_embed_kd)
 
@@ -485,7 +520,9 @@ class Distiller(tf.keras.Model):
         with tf.GradientTape() as tape:
             s_probs, s_embed = self.student_probe(x_noisy, training=True)
 
-            ce_loss = self.ce_fn(y, s_probs)
+            ce_loss = tf.constant(0.0, dtype=tf.float32)
+            if self.use_ce and self.alpha > 0.0:
+                ce_loss = self.ce_fn(y, s_probs)
 
             kd_logits = tf.constant(0.0, dtype=tf.float32)
             if self.use_logits_kd and self.beta > 0.0:
@@ -523,15 +560,41 @@ class Distiller(tf.keras.Model):
 
     def test_step(self, data):
         x, y = data
-        x_noisy = x["noisy"]
+        if isinstance(x, dict):
+            x_clean = x.get("clean", x.get("noisy"))
+            x_noisy = x["noisy"]
+        else:
+            x_clean = x
+            x_noisy = x
 
-        s_probs, _ = self.student_probe(x_noisy, training=False)
-        ce_loss = self.ce_fn(y, s_probs)
+        t_probs, t_embed = self.teacher_probe(x_clean, training=False)
+        s_probs, s_embed = self.student_probe(x_noisy, training=False)
 
-        self.loss_tracker.update_state(ce_loss)
+        ce_loss = tf.constant(0.0, dtype=tf.float32)
+        if self.use_ce and self.alpha > 0.0:
+            ce_loss = self.ce_fn(y, s_probs)
+
+        kd_logits = tf.constant(0.0, dtype=tf.float32)
+        if self.use_logits_kd and self.beta > 0.0:
+            t_soft = self._temperature_soften(t_probs)
+            s_soft = self._temperature_soften(s_probs)
+            kd_logits = self.kld_fn(t_soft, s_soft) * (self.temperature ** 2)
+
+        kd_embed = tf.constant(0.0, dtype=tf.float32)
+        if self.use_embed_kd and self.gamma_max > 0.0:
+            t_norm = tf.math.l2_normalize(tf.stop_gradient(t_embed), axis=-1)
+            s_aligned = s_embed
+            if self.student_embed_proj is not None:
+                s_aligned = self.student_embed_proj(s_aligned)
+            s_norm = tf.math.l2_normalize(s_aligned, axis=-1)
+            kd_embed = self.mse_fn(t_norm, s_norm)
+
+        total_loss = self.alpha * ce_loss + self.beta * kd_logits + self.current_gamma * kd_embed
+
+        self.loss_tracker.update_state(total_loss)
         self.ce_tracker.update_state(ce_loss)
-        self.kd_logits_tracker.update_state(0.0)
-        self.kd_embed_tracker.update_state(0.0)
+        self.kd_logits_tracker.update_state(kd_logits)
+        self.kd_embed_tracker.update_state(kd_embed)
         self.gamma_tracker.update_state(self.current_gamma)
         self.acc_metric.update_state(y, s_probs)
 
@@ -562,7 +625,8 @@ class EmbedWeightScheduler(tf.keras.callbacks.Callback):
     def on_epoch_begin(self, epoch, logs=None):
         gamma = self._calc_gamma(epoch)
         self.distiller.current_gamma.assign(gamma)
-        print(f"[KD] epoch={epoch + 1}, gamma_embed={gamma:.4f}")
+        if GAMMA_LOG_VERBOSE:
+            print(f"[KD] epoch={epoch + 1}, gamma_embed={gamma:.4f}")
 
 
 # ==================== Main ====================
@@ -587,15 +651,21 @@ print(
     f"KD_SEED={RANDOM_SEED}"
 )
 print(
-    "[Prosody config] "
+    "[Prosody] "
     f"enabled={ENABLE_CLASS_PROSODY_AUG}, "
-    f"emergency_class={EMERGENCY_CLASS_NAME}, "
-    f"emergency_prob={EMERGENCY_PROSODY_PROB}, "
-    f"emergency_pitch=[{EMERGENCY_PITCH_MIN}, {EMERGENCY_PITCH_MAX}], "
-    f"emergency_gain_db=[{EMERGENCY_GAIN_DB_MIN}, {EMERGENCY_GAIN_DB_MAX}], "
-    f"non_emergency_prob={NON_EMERGENCY_PROSODY_PROB}, "
-    f"non_emergency_pitch=[{NON_EMERGENCY_PITCH_MIN}, {NON_EMERGENCY_PITCH_MAX}], "
-    f"non_emergency_gain_db=[{NON_EMERGENCY_GAIN_DB_MIN}, {NON_EMERGENCY_GAIN_DB_MAX}]"
+    f"teacher={TEACHER_ENABLE_PROSODY_AUG}, "
+    f"student={STUDENT_ENABLE_PROSODY_AUG}, "
+    f"class={EMERGENCY_CLASS_NAME}, "
+    f"e_prob={EMERGENCY_PROSODY_PROB}, "
+    f"e_pitch=[{EMERGENCY_PITCH_MIN},{EMERGENCY_PITCH_MAX}], "
+    f"e_gain_db=[{EMERGENCY_GAIN_DB_MIN},{EMERGENCY_GAIN_DB_MAX}]"
+)
+print(f"[Train] fit_verbose={FIT_VERBOSE}, gamma_log_verbose={GAMMA_LOG_VERBOSE}")
+print(
+    "[EarlyStop] "
+    f"patience={EARLYSTOP_PATIENCE}, "
+    f"teacher_monitor={TEACHER_MONITOR}, "
+    f"student_monitor={STUDENT_MONITOR}"
 )
 
 # ---------- Stage 1: train clean teacher ----------
@@ -614,6 +684,7 @@ else:
         num_classes,
         class_names=class_names,
         is_training=True,
+        enable_prosody_aug=TEACHER_ENABLE_PROSODY_AUG,
     )
     teacher_val_gen = CleanDataGenerator(
         data["X_val"],
@@ -622,6 +693,7 @@ else:
         num_classes,
         class_names=class_names,
         is_training=False,
+        enable_prosody_aug=False,
     )
 
     class_weights = class_weight.compute_class_weight(
@@ -632,8 +704,8 @@ else:
     class_weight_dict = dict(enumerate(class_weights))
 
     teacher_callbacks = [
-        ModelCheckpoint(TEACHER_CKPT, save_best_only=True, monitor="val_accuracy", save_weights_only=True, verbose=1),
-        EarlyStopping(patience=10, restore_best_weights=True, verbose=1),
+        ModelCheckpoint(TEACHER_CKPT, save_best_only=True, monitor=TEACHER_MONITOR, save_weights_only=True, verbose=0),
+        EarlyStopping(monitor=TEACHER_MONITOR, patience=EARLYSTOP_PATIENCE, restore_best_weights=True, verbose=0),
     ]
 
     teacher.fit(
@@ -642,6 +714,7 @@ else:
         epochs=TEACHER_EPOCHS,
         callbacks=teacher_callbacks,
         class_weight=class_weight_dict,
+        verbose=FIT_VERBOSE,
     )
 
     teacher.load_weights(TEACHER_CKPT)
@@ -657,26 +730,30 @@ teacher_probe.trainable = False
 
 student_probe = build_probe_model(student)
 
-use_logits_kd, use_embed_kd, beta_logits, gamma_embed_max = resolve_distill_variant(DISTILL_VARIANT)
+use_ce_kd, use_logits_kd, use_embed_kd, alpha_ce, beta_logits, gamma_embed_max, embed_warmup_epochs = resolve_distill_variant(DISTILL_VARIANT)
+embed_ramp_epochs = max(1, STUDENT_EPOCHS - embed_warmup_epochs)
 print(
     "[KD config] "
     f"variant={DISTILL_VARIANT}, "
+    f"use_ce={use_ce_kd}, "
     f"use_logits={use_logits_kd}, "
     f"use_embed={use_embed_kd}, "
+    f"alpha={alpha_ce}, "
     f"beta={beta_logits}, "
     f"gamma_max={gamma_embed_max}, "
     f"embed_proj={USE_EMBED_PROJECTION}, "
-    f"warmup_epochs={EMBED_WARMUP_EPOCHS}, "
-    f"ramp_epochs={EMBED_RAMP_EPOCHS}"
+    f"warmup_epochs={embed_warmup_epochs}, "
+    f"ramp_epochs={embed_ramp_epochs}"
 )
 
 distiller = Distiller(
     student_probe=student_probe,
     teacher_probe=teacher_probe,
-    alpha=ALPHA_CE,
+    alpha=alpha_ce,
     beta=beta_logits,
     gamma_max=gamma_embed_max,
     temperature=TEMPERATURE,
+    use_ce=use_ce_kd,
     use_logits_kd=use_logits_kd,
     use_embed_kd=use_embed_kd,
     use_embed_projection=USE_EMBED_PROJECTION,
@@ -691,6 +768,7 @@ student_train_gen = PairedKDGenerator(
     class_names=class_names,
     noise_paths=noise_files,
     is_training=True,
+    enable_prosody_aug=STUDENT_ENABLE_PROSODY_AUG,
     snr_range=(MIN_SNR_DB, MAX_SNR_DB),
     eval_snr_db=EVAL_SNR_DB,
 )
@@ -703,6 +781,7 @@ student_val_gen = PairedKDGenerator(
     class_names=class_names,
     noise_paths=noise_files,
     is_training=False,
+    enable_prosody_aug=False,
     snr_range=(MIN_SNR_DB, MAX_SNR_DB),
     eval_snr_db=EVAL_SNR_DB,
 )
@@ -712,10 +791,10 @@ student_callbacks = [
         distiller=distiller,
         enabled=use_embed_kd,
         gamma_max=gamma_embed_max,
-        warmup_epochs=EMBED_WARMUP_EPOCHS,
-        ramp_epochs=EMBED_RAMP_EPOCHS,
+        warmup_epochs=embed_warmup_epochs,
+        ramp_epochs=embed_ramp_epochs,
     ),
-    EarlyStopping(patience=10, restore_best_weights=True, verbose=1),
+    EarlyStopping(monitor=STUDENT_MONITOR, patience=EARLYSTOP_PATIENCE, restore_best_weights=True, verbose=0),
 ]
 
 _ = distiller.fit(
@@ -723,6 +802,7 @@ _ = distiller.fit(
     validation_data=student_val_gen,
     epochs=STUDENT_EPOCHS,
     callbacks=student_callbacks,
+    verbose=FIT_VERBOSE,
 )
 
 student.save_weights(STUDENT_CKPT)
