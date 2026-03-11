@@ -83,3 +83,34 @@
 - [ ] Teacher clean / student noisy setting is explicitly enforced in code
 - [ ] Larger-teacher trial is completed if and only if baseline results are unsatisfactory
 - [ ] Local/server git sync checkpoints are followed and recorded
+
+## Status Audit (Updated: 2026-03-11, America/Chicago)
+- DONE: Emergency class-conditional prosody augmentation is implemented in `src/train_logmel_kd.py`
+  - configurable by env vars (`KD_EMERGENCY_PITCH_*`, `KD_EMERGENCY_GAIN_DB_*`, `KD_NON_EMERGENCY_*`)
+  - teacher defaults to clean/no prosody (`KD_TEACHER_ENABLE_PROSODY_AUG=false`)
+  - student defaults to noisy+prosody (`KD_STUDENT_ENABLE_PROSODY_AUG=true`)
+- DONE: Teacher/Student input setup is explicit in code
+  - teacher stage uses clean inputs
+  - student distillation stage uses noisy inputs from paired generator
+- DONE: KD variant comparisons are runnable and have been evaluated on `testset`
+  - outputs summarized in `result/finetune/logmel_kd_round_20260311/round_summary.md`
+- PARTIAL: augmentation verification tooling
+  - training/eval outputs exist
+  - standalone waveform/stat inspection script is still missing
+- NOT TRIGGERED YET: larger teacher fallback
+  - current best finetuned result: `embed_only` with accuracy `0.8194`
+  - if emergency-priority constraints are not satisfied, then trigger larger-teacher path
+- PARTIAL: git sync/clean commit structure
+  - old artifacts were archived under `archive/old_src_20260311_011527`
+  - current working tree still has move-related changes and needs commit planning
+
+## Thursday Plan (2026-03-12)
+- 1) Lock evaluation objective first (balanced accuracy vs emergency-priority)
+  - Balanced candidate: `embed_only` (best overall acc)
+  - Emergency-recall candidate: `embed_plus_ce` (higher emergency recall, lower overall acc)
+- 2) Produce final model selection note
+  - include overall acc + class-level recall/F1 + emergency tradeoff
+- 3) If objective is not met, run larger-teacher fallback experiment
+  - one candidate teacher + one distilled run + compare against `embed_only`
+- 4) Clean git state for reproducible sync
+  - separate commit for archive/move changes vs experiment result files vs code changes
