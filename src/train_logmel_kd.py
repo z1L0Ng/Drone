@@ -30,6 +30,14 @@ def _env_float(name: str, default: float) -> float:
     return float(raw) if raw is not None else default
 
 
+def _env_optional_int(name: str):
+    raw = os.getenv(name)
+    if raw is None:
+        return None
+    value = int(raw)
+    return value if value > 0 else None
+
+
 # ==================== GPU ====================
 gpus = tf.config.list_physical_devices("GPU")
 if gpus:
@@ -111,6 +119,12 @@ GAMMA_LOG_VERBOSE = _env_bool("KD_GAMMA_LOG_VERBOSE", False)
 EARLYSTOP_PATIENCE = _env_int("KD_EARLYSTOP_PATIENCE", 10)
 TEACHER_MONITOR = os.getenv("KD_TEACHER_MONITOR", "val_accuracy")
 STUDENT_MONITOR = os.getenv("KD_STUDENT_MONITOR", "val_accuracy")
+TEACHER_STEPS_PER_EPOCH = _env_optional_int("KD_TEACHER_STEPS_PER_EPOCH")
+TEACHER_VAL_STEPS = _env_optional_int("KD_TEACHER_VAL_STEPS")
+STUDENT_STEPS_PER_EPOCH = _env_optional_int("KD_STUDENT_STEPS_PER_EPOCH")
+STUDENT_VAL_STEPS = _env_optional_int("KD_STUDENT_VAL_STEPS")
+EVAL_STEPS = _env_optional_int("KD_EVAL_STEPS")
+SKIP_FINAL_EVAL = _env_bool("KD_SKIP_FINAL_EVAL", False)
 
 # distillation config:
 #   ce_only / ce_logits / ce_embed / ce_logits_embed / embed_only
@@ -122,6 +136,20 @@ TEMPERATURE = _env_float("KD_TEMPERATURE", 2.0)
 USE_EMBED_PROJECTION = _env_bool("KD_USE_EMBED_PROJECTION", True)
 EMBED_WARMUP_EPOCHS = int(STUDENT_EPOCHS * 0.3)
 EMBED_RAMP_EPOCHS = max(1, STUDENT_EPOCHS - EMBED_WARMUP_EPOCHS)
+
+# optional teacher-guided clean prewarm before noisy KD
+PREWARM_EPOCHS = _env_int("KD_PREWARM_EPOCHS", 0)
+PREWARM_LR = _env_float("KD_PREWARM_LR", LEARNING_RATE)
+PREWARM_ALPHA_CE = _env_float("KD_PREWARM_ALPHA_CE", 1.0)
+PREWARM_LOGITS_BETA = _env_float("KD_PREWARM_LOGITS_BETA", 1.0)
+PREWARM_TEMPERATURE = _env_float("KD_PREWARM_TEMPERATURE", 2.0)
+PREWARM_USE_CE = _env_bool("KD_PREWARM_USE_CE", True)
+PREWARM_USE_LOGITS = _env_bool("KD_PREWARM_USE_LOGITS", True)
+PREWARM_ENABLE_PROSODY_AUG = _env_bool("KD_PREWARM_ENABLE_PROSODY_AUG", False)
+PREWARM_PATIENCE = _env_int("KD_PREWARM_PATIENCE", 5)
+PREWARM_MONITOR = os.getenv("KD_PREWARM_MONITOR", "val_accuracy")
+PREWARM_STEPS_PER_EPOCH = _env_optional_int("KD_PREWARM_STEPS_PER_EPOCH")
+PREWARM_VAL_STEPS = _env_optional_int("KD_PREWARM_VAL_STEPS")
 
 TEACHER_MODEL_KWARGS = get_model_kwargs(TEACHER_MODEL_PROFILE)
 STUDENT_MODEL_KWARGS = get_model_kwargs(STUDENT_MODEL_PROFILE)
@@ -561,8 +589,12 @@ class Distiller(tf.keras.Model):
 
     def train_step(self, data):
         x, y = data
-        x_clean = x["clean"]
-        x_noisy = x["noisy"]
+        if isinstance(x, dict):
+            x_clean = x.get("clean", x.get("noisy"))
+            x_noisy = x["noisy"]
+        else:
+            x_clean = x
+            x_noisy = x
 
         t_probs, t_embed = self.teacher_probe(x_clean, training=False)
 
@@ -723,6 +755,26 @@ print(
     f"teacher_monitor={TEACHER_MONITOR}, "
     f"student_monitor={STUDENT_MONITOR}"
 )
+print(
+    "[Smoke knobs] "
+    f"teacher_steps={TEACHER_STEPS_PER_EPOCH or 'full'}, "
+    f"teacher_val_steps={TEACHER_VAL_STEPS or 'full'}, "
+    f"student_steps={STUDENT_STEPS_PER_EPOCH or 'full'}, "
+    f"student_val_steps={STUDENT_VAL_STEPS or 'full'}, "
+    f"eval_steps={EVAL_STEPS or 'full'}, "
+    f"skip_final_eval={SKIP_FINAL_EVAL}"
+)
+print(
+    "[Prewarm] "
+    f"epochs={PREWARM_EPOCHS}, "
+    f"use_ce={PREWARM_USE_CE}, "
+    f"use_logits={PREWARM_USE_LOGITS}, "
+    f"alpha={PREWARM_ALPHA_CE}, "
+    f"beta={PREWARM_LOGITS_BETA}, "
+    f"temperature={PREWARM_TEMPERATURE}, "
+    f"lr={PREWARM_LR}, "
+    f"prosody_aug={PREWARM_ENABLE_PROSODY_AUG}"
+)
 
 # ---------- Stage 1: train clean teacher ----------
 print("\n[Stage 1] Train clean teacher...")
@@ -765,6 +817,12 @@ else:
         EarlyStopping(monitor=TEACHER_MONITOR, patience=EARLYSTOP_PATIENCE, restore_best_weights=True, verbose=0),
     ]
 
+    teacher_fit_kwargs = {}
+    if TEACHER_STEPS_PER_EPOCH is not None:
+        teacher_fit_kwargs["steps_per_epoch"] = TEACHER_STEPS_PER_EPOCH
+    if TEACHER_VAL_STEPS is not None:
+        teacher_fit_kwargs["validation_steps"] = TEACHER_VAL_STEPS
+
     teacher.fit(
         teacher_train_gen,
         validation_data=teacher_val_gen,
@@ -772,12 +830,13 @@ else:
         callbacks=teacher_callbacks,
         class_weight=class_weight_dict,
         verbose=FIT_VERBOSE,
+        **teacher_fit_kwargs,
     )
 
     teacher.load_weights(TEACHER_CKPT)
 
-# ---------- Stage 2: distill noisy student ----------
-print("\n[Stage 2] Distill noisy student from clean teacher...")
+# ---------- Stage 2: student warm start + noisy KD ----------
+print("\n[Stage 2] Prepare student for distillation...")
 student = build_model((N_MELS, MAX_FRAMES, 1), num_classes, **STUDENT_MODEL_KWARGS)
 print(f"[Stage 2] student_params={student.count_params():,}")
 student_init_source = initialize_student_weights(student)
@@ -788,6 +847,66 @@ teacher_probe.trainable = False
 
 student_probe = build_probe_model(student)
 
+# ---------- Stage 2A: teacher-guided clean prewarm ----------
+if PREWARM_EPOCHS > 0 and (PREWARM_USE_CE or PREWARM_USE_LOGITS):
+    print("\n[Stage 2A] Teacher-guided clean prewarm...")
+    prewarm_distiller = Distiller(
+        student_probe=student_probe,
+        teacher_probe=teacher_probe,
+        alpha=PREWARM_ALPHA_CE if PREWARM_USE_CE else 0.0,
+        beta=PREWARM_LOGITS_BETA if PREWARM_USE_LOGITS else 0.0,
+        gamma_max=0.0,
+        temperature=PREWARM_TEMPERATURE,
+        use_ce=PREWARM_USE_CE,
+        use_logits_kd=PREWARM_USE_LOGITS,
+        use_embed_kd=False,
+        use_embed_projection=False,
+    )
+    prewarm_distiller.compile(optimizer=Adam(PREWARM_LR))
+
+    prewarm_train_gen = CleanDataGenerator(
+        data["X_train"],
+        data["y_train"],
+        BATCH_SIZE,
+        num_classes,
+        class_names=class_names,
+        is_training=True,
+        enable_prosody_aug=PREWARM_ENABLE_PROSODY_AUG,
+    )
+    prewarm_val_gen = CleanDataGenerator(
+        data["X_val"],
+        data["y_val"],
+        BATCH_SIZE,
+        num_classes,
+        class_names=class_names,
+        is_training=False,
+        enable_prosody_aug=False,
+    )
+
+    prewarm_callbacks = [
+        EarlyStopping(monitor=PREWARM_MONITOR, patience=PREWARM_PATIENCE, restore_best_weights=True, verbose=0),
+    ]
+
+    prewarm_fit_kwargs = {}
+    if PREWARM_STEPS_PER_EPOCH is not None:
+        prewarm_fit_kwargs["steps_per_epoch"] = PREWARM_STEPS_PER_EPOCH
+    if PREWARM_VAL_STEPS is not None:
+        prewarm_fit_kwargs["validation_steps"] = PREWARM_VAL_STEPS
+
+    _ = prewarm_distiller.fit(
+        prewarm_train_gen,
+        validation_data=prewarm_val_gen,
+        epochs=PREWARM_EPOCHS,
+        callbacks=prewarm_callbacks,
+        verbose=FIT_VERBOSE,
+        **prewarm_fit_kwargs,
+    )
+    print("[Stage 2A] Prewarm completed.")
+else:
+    print("\n[Stage 2A] Skipped clean prewarm.")
+
+# ---------- Stage 2B: distill noisy student ----------
+print("\n[Stage 2B] Distill noisy student from clean teacher...")
 use_ce_kd, use_logits_kd, use_embed_kd, alpha_ce, beta_logits, gamma_embed_max, embed_warmup_epochs = resolve_distill_variant(DISTILL_VARIANT)
 embed_ramp_epochs = max(1, STUDENT_EPOCHS - embed_warmup_epochs)
 print(
@@ -855,53 +974,74 @@ student_callbacks = [
     EarlyStopping(monitor=STUDENT_MONITOR, patience=EARLYSTOP_PATIENCE, restore_best_weights=True, verbose=0),
 ]
 
+student_fit_kwargs = {}
+if STUDENT_STEPS_PER_EPOCH is not None:
+    student_fit_kwargs["steps_per_epoch"] = STUDENT_STEPS_PER_EPOCH
+if STUDENT_VAL_STEPS is not None:
+    student_fit_kwargs["validation_steps"] = STUDENT_VAL_STEPS
+
 _ = distiller.fit(
     student_train_gen,
     validation_data=student_val_gen,
     epochs=STUDENT_EPOCHS,
     callbacks=student_callbacks,
     verbose=FIT_VERBOSE,
+    **student_fit_kwargs,
 )
 
 student.save_weights(STUDENT_CKPT)
 
 # ---------- Final evaluation ----------
 # ---------- Final evaluation ----------
-print("\n[Evaluation] Student on clean and noisy test sets...")
-clean_test_gen = CleanDataGenerator(
-    data["X_test"],
-    data["y_test"],
-    BATCH_SIZE,
-    num_classes,
-    class_names=class_names,
-    is_training=False,
-)
-noisy_test_gen = NoisyEvalGenerator(data["X_test"], data["y_test"], BATCH_SIZE, num_classes, noise_files, snr_db=EVAL_SNR_DB)
+if SKIP_FINAL_EVAL:
+    report_path = os.path.join(RESULT_DIR, "classification_report_noisy.txt")
+    with open(report_path, "w") as f:
+        f.write("Skipped final evaluation because KD_SKIP_FINAL_EVAL=true\n")
+    print("\n[Evaluation] Skipped final evaluation (KD_SKIP_FINAL_EVAL=true).")
+else:
+    print("\n[Evaluation] Student on clean and noisy test sets...")
+    clean_test_gen = CleanDataGenerator(
+        data["X_test"],
+        data["y_test"],
+        BATCH_SIZE,
+        num_classes,
+        class_names=class_names,
+        is_training=False,
+    )
+    noisy_test_gen = NoisyEvalGenerator(data["X_test"], data["y_test"], BATCH_SIZE, num_classes, noise_files, snr_db=EVAL_SNR_DB)
 
-# 【核心修改】：在 evaluate 之前，给 student 随便配一个优化器（评估时其实用不到），但必须指定准确的 loss 和 metrics
-student.compile(
-    optimizer="adam", 
-    loss="categorical_crossentropy", 
-    metrics=["accuracy"]
-)
+    # compile with explicit loss/metrics before evaluate()
+    student.compile(
+        optimizer="adam",
+        loss="categorical_crossentropy",
+        metrics=["accuracy"]
+    )
 
-# 现在 evaluate 就可以正常运行了
-clean_metrics = student.evaluate(clean_test_gen, verbose=0)
-noisy_metrics = student.evaluate(noisy_test_gen, verbose=0)
-print(f"Student clean test - loss: {clean_metrics[0]:.4f}, acc: {clean_metrics[1]:.4f}")
-print(f"Student noisy test (SNR={EVAL_SNR_DB}dB) - loss: {noisy_metrics[0]:.4f}, acc: {noisy_metrics[1]:.4f}")
+    clean_eval_kwargs = {"verbose": 0}
+    noisy_eval_kwargs = {"verbose": 0}
+    predict_kwargs = {"verbose": 0}
+    if EVAL_STEPS is not None:
+        clean_eval_kwargs["steps"] = EVAL_STEPS
+        noisy_eval_kwargs["steps"] = EVAL_STEPS
+        predict_kwargs["steps"] = EVAL_STEPS
 
-# Classification report on noisy test
-y_pred = np.argmax(student.predict(noisy_test_gen, verbose=0), axis=1)
-y_true = []
-for i in range(len(noisy_test_gen)):
-    _, yb = noisy_test_gen[i]
-    y_true.extend(np.argmax(yb, axis=1))
+    clean_metrics = student.evaluate(clean_test_gen, **clean_eval_kwargs)
+    noisy_metrics = student.evaluate(noisy_test_gen, **noisy_eval_kwargs)
+    print(f"Student clean test - loss: {clean_metrics[0]:.4f}, acc: {clean_metrics[1]:.4f}")
+    print(f"Student noisy test (SNR={EVAL_SNR_DB}dB) - loss: {noisy_metrics[0]:.4f}, acc: {noisy_metrics[1]:.4f}")
 
-report = classification_report(y_true, y_pred, target_names=class_names)
-report_path = os.path.join(RESULT_DIR, "classification_report_noisy.txt")
-with open(report_path, "w") as f:
-    f.write(report)
+    # Classification report on noisy test
+    y_pred = np.argmax(student.predict(noisy_test_gen, **predict_kwargs), axis=1)
+    y_true = []
+    max_batches = len(noisy_test_gen) if EVAL_STEPS is None else min(EVAL_STEPS, len(noisy_test_gen))
+    for i in range(max_batches):
+        _, yb = noisy_test_gen[i]
+        y_true.extend(np.argmax(yb, axis=1))
+
+    report = classification_report(y_true, y_pred, target_names=class_names)
+    report_path = os.path.join(RESULT_DIR, "classification_report_noisy.txt")
+    with open(report_path, "w") as f:
+        f.write(report)
 
 print(f"Saved: {TEACHER_CKPT}")
 print(f"Saved: {STUDENT_CKPT}")
