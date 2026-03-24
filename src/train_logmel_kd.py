@@ -1,4 +1,5 @@
 import os
+import json
 import numpy as np
 import tensorflow as tf
 import librosa
@@ -56,6 +57,8 @@ MODEL_DIR = os.getenv("KD_MODEL_DIR", "saved_models/logmel_kd")
 RESULT_DIR = os.getenv("KD_RESULT_DIR", "result/logmel_kd")
 os.makedirs(MODEL_DIR, exist_ok=True)
 os.makedirs(RESULT_DIR, exist_ok=True)
+HISTORY_DIR = os.getenv("KD_HISTORY_DIR", RESULT_DIR)
+os.makedirs(HISTORY_DIR, exist_ok=True)
 
 TEACHER_CKPT = os.getenv("KD_TEACHER_CKPT", os.path.join(MODEL_DIR, "teacher_clean_best.weights.h5"))
 STUDENT_CKPT = os.getenv("KD_STUDENT_CKPT", os.path.join(MODEL_DIR, "student_kd_best.weights.h5"))
@@ -125,6 +128,8 @@ STUDENT_STEPS_PER_EPOCH = _env_optional_int("KD_STUDENT_STEPS_PER_EPOCH")
 STUDENT_VAL_STEPS = _env_optional_int("KD_STUDENT_VAL_STEPS")
 EVAL_STEPS = _env_optional_int("KD_EVAL_STEPS")
 SKIP_FINAL_EVAL = _env_bool("KD_SKIP_FINAL_EVAL", False)
+SAVE_TRAIN_HISTORY = _env_bool("KD_SAVE_TRAIN_HISTORY", True)
+SAVE_RUN_CONFIG = _env_bool("KD_SAVE_RUN_CONFIG", True)
 
 # distillation config:
 #   ce_only / ce_logits / ce_embed / ce_logits_embed / embed_only
@@ -217,6 +222,102 @@ def initialize_student_weights(student_model: tf.keras.Model) -> str:
 
 
 # ==================== Helpers ====================
+def _save_history_csv(history_obj, out_path: str):
+    if history_obj is None:
+        return
+    hist = getattr(history_obj, "history", None)
+    if not hist:
+        return
+    keys = sorted(hist.keys())
+    n = max(len(hist[k]) for k in keys)
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write("epoch," + ",".join(keys) + "\n")
+        for i in range(n):
+            vals = []
+            for k in keys:
+                v = hist[k][i] if i < len(hist[k]) else ""
+                vals.append(str(float(v)) if v != "" else "")
+            f.write(f"{i + 1}," + ",".join(vals) + "\n")
+
+
+def _dump_run_config(out_path: str):
+    config = {
+        "paths": {
+            "processed_data_path": PROCESSED_DATA_PATH,
+            "encoder_path": ENCODER_PATH,
+            "noise_source_dir": NOISE_SOURCE_DIR,
+            "model_dir": MODEL_DIR,
+            "result_dir": RESULT_DIR,
+            "history_dir": HISTORY_DIR,
+            "teacher_ckpt": TEACHER_CKPT,
+            "student_ckpt": STUDENT_CKPT,
+        },
+        "train": {
+            "batch_size": BATCH_SIZE,
+            "teacher_epochs": TEACHER_EPOCHS,
+            "student_epochs": STUDENT_EPOCHS,
+            "learning_rate": LEARNING_RATE,
+            "reuse_teacher": REUSE_TEACHER,
+            "random_seed": RANDOM_SEED,
+            "teacher_model_profile": TEACHER_MODEL_PROFILE,
+            "student_model_profile": STUDENT_MODEL_PROFILE,
+            "student_init_mode": STUDENT_INIT_MODE,
+            "student_init_ckpt": STUDENT_INIT_CKPT,
+            "earlystop_patience": EARLYSTOP_PATIENCE,
+            "teacher_monitor": TEACHER_MONITOR,
+            "student_monitor": STUDENT_MONITOR,
+        },
+        "noise": {
+            "noise_mix_prob": NOISE_MIX_PROB,
+            "min_snr_db": MIN_SNR_DB,
+            "max_snr_db": MAX_SNR_DB,
+            "eval_snr_db": EVAL_SNR_DB,
+        },
+        "prosody": {
+            "enable_class_prosody_aug": ENABLE_CLASS_PROSODY_AUG,
+            "teacher_enable_prosody_aug": TEACHER_ENABLE_PROSODY_AUG,
+            "student_enable_prosody_aug": STUDENT_ENABLE_PROSODY_AUG,
+            "emergency_class_name": EMERGENCY_CLASS_NAME,
+            "emergency_prob": EMERGENCY_PROSODY_PROB,
+            "emergency_pitch_min": EMERGENCY_PITCH_MIN,
+            "emergency_pitch_max": EMERGENCY_PITCH_MAX,
+            "emergency_gain_db_min": EMERGENCY_GAIN_DB_MIN,
+            "emergency_gain_db_max": EMERGENCY_GAIN_DB_MAX,
+            "non_emergency_prob": NON_EMERGENCY_PROSODY_PROB,
+            "non_emergency_pitch_min": NON_EMERGENCY_PITCH_MIN,
+            "non_emergency_pitch_max": NON_EMERGENCY_PITCH_MAX,
+            "non_emergency_gain_db_min": NON_EMERGENCY_GAIN_DB_MIN,
+            "non_emergency_gain_db_max": NON_EMERGENCY_GAIN_DB_MAX,
+        },
+        "distillation": {
+            "variant": DISTILL_VARIANT,
+            "alpha_ce": ALPHA_CE,
+            "logits_beta": LOGITS_BETA,
+            "embed_gamma_max": EMBED_GAMMA_MAX,
+            "temperature": TEMPERATURE,
+            "use_embed_projection": USE_EMBED_PROJECTION,
+            "embed_warmup_epochs": EMBED_WARMUP_EPOCHS,
+            "embed_ramp_epochs": EMBED_RAMP_EPOCHS,
+        },
+        "prewarm": {
+            "prewarm_epochs": PREWARM_EPOCHS,
+            "prewarm_lr": PREWARM_LR,
+            "prewarm_alpha_ce": PREWARM_ALPHA_CE,
+            "prewarm_logits_beta": PREWARM_LOGITS_BETA,
+            "prewarm_temperature": PREWARM_TEMPERATURE,
+            "prewarm_use_ce": PREWARM_USE_CE,
+            "prewarm_use_logits": PREWARM_USE_LOGITS,
+            "prewarm_enable_prosody_aug": PREWARM_ENABLE_PROSODY_AUG,
+            "prewarm_patience": PREWARM_PATIENCE,
+            "prewarm_monitor": PREWARM_MONITOR,
+        },
+    }
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(config, f, ensure_ascii=True, indent=2)
+
+
 def load_audio_1s(path: str) -> np.ndarray:
     try:
         audio, _ = librosa.load(path, sr=SAMPLE_RATE, mono=True, duration=DURATION)
@@ -775,6 +876,19 @@ print(
     f"lr={PREWARM_LR}, "
     f"prosody_aug={PREWARM_ENABLE_PROSODY_AUG}"
 )
+print(
+    "[Artifacts] "
+    f"save_run_config={SAVE_RUN_CONFIG}, "
+    f"save_train_history={SAVE_TRAIN_HISTORY}, "
+    f"history_dir={HISTORY_DIR}"
+)
+
+if SAVE_RUN_CONFIG:
+    _dump_run_config(os.path.join(RESULT_DIR, "run_config.json"))
+
+teacher_history = None
+prewarm_history = None
+student_history = None
 
 # ---------- Stage 1: train clean teacher ----------
 print("\n[Stage 1] Train clean teacher...")
@@ -823,7 +937,7 @@ else:
     if TEACHER_VAL_STEPS is not None:
         teacher_fit_kwargs["validation_steps"] = TEACHER_VAL_STEPS
 
-    teacher.fit(
+    teacher_history = teacher.fit(
         teacher_train_gen,
         validation_data=teacher_val_gen,
         epochs=TEACHER_EPOCHS,
@@ -893,7 +1007,7 @@ if PREWARM_EPOCHS > 0 and (PREWARM_USE_CE or PREWARM_USE_LOGITS):
     if PREWARM_VAL_STEPS is not None:
         prewarm_fit_kwargs["validation_steps"] = PREWARM_VAL_STEPS
 
-    _ = prewarm_distiller.fit(
+    prewarm_history = prewarm_distiller.fit(
         prewarm_train_gen,
         validation_data=prewarm_val_gen,
         epochs=PREWARM_EPOCHS,
@@ -980,7 +1094,7 @@ if STUDENT_STEPS_PER_EPOCH is not None:
 if STUDENT_VAL_STEPS is not None:
     student_fit_kwargs["validation_steps"] = STUDENT_VAL_STEPS
 
-_ = distiller.fit(
+student_history = distiller.fit(
     student_train_gen,
     validation_data=student_val_gen,
     epochs=STUDENT_EPOCHS,
@@ -988,6 +1102,11 @@ _ = distiller.fit(
     verbose=FIT_VERBOSE,
     **student_fit_kwargs,
 )
+
+if SAVE_TRAIN_HISTORY:
+    _save_history_csv(teacher_history, os.path.join(HISTORY_DIR, "teacher_history.csv"))
+    _save_history_csv(prewarm_history, os.path.join(HISTORY_DIR, "prewarm_history.csv"))
+    _save_history_csv(student_history, os.path.join(HISTORY_DIR, "student_history.csv"))
 
 student.save_weights(STUDENT_CKPT)
 

@@ -1,0 +1,7 @@
+{
+  "run_id": "drone_2026w13_local_eval",
+  "exp_id": "best_embed_kd",
+  "status": "pending",
+  "reason": "local TensorFlow unavailable or server baseline checkpoint not evaluated yet",
+  "checkpoint": "saved_models/logmel_kd_ablation_20260310_142641/embed_only/finetuned_best.weights.h5"
+}

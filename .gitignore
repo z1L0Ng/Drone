@@ -216,3 +216,8 @@ logs/
 result/
 
 testset/
+
+# Generated weekly KD artifacts (keep git status clean for server/local handoff)
+saved_models/logmel_kd_ablation_*/
+saved_models/**/finetuned_best.weights.h5
+experiments/**/best_model.ckpt

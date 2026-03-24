@@ -1,0 +1,13 @@
+class,language,style,noise_condition,target_count
+emergency,en,normal,clean,120
+emergency,en,shouted,drone_noise,120
+emergency,zh,normal,clean,120
+emergency,zh,shouted,drone_noise,120
+movement,en,normal,clean,120
+movement,en,normal,drone_noise,120
+movement,zh,normal,clean,120
+movement,zh,normal,drone_noise,120
+unknown,en,normal,clean,120
+unknown,en,normal,drone_noise,120
+unknown,zh,normal,clean,120
+unknown,zh,normal,drone_noise,120
