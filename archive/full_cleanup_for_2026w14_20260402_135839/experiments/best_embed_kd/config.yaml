@@ -1,0 +1,8 @@
+weekly_tag: drone_2026w13
+run_id: drone_2026w13_local_eval
+model_profile: base
+checkpoint: saved_models/logmel_kd_ablation_20260310_142641/embed_only/finetuned_best.weights.h5
+teacher_student: clean_teacher_noisy_student
+distillation: embed_only
+augmentation: emergency_pitch_volume_on
+selection_rule: overall_acc_then_emergency_metrics

@@ -17,4 +17,4 @@
 ## Sync Log
 | Date | Overleaf Section | Updated From | Notes |
 |---|---|---|---|
-| 2026-04-02 | setup | project docs reorganization | initialize writing board |
+| 2026-04-02 | setup | week reset to `2026w14` | initialize new-week writing tracking |

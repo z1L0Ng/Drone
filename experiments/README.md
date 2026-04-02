@@ -1,8 +1,10 @@
-# Weekly Experiment Outputs
+# Experiments Workspace
 
-This folder stores week-scoped outputs for Drone week 2026w13.
+This directory stores current-week experiment summaries and comparison tables.
 
-- `best_embed_kd/`
-- `ablation_embed_vs_aug/`
-- `prewarm_curriculum/`
-- `logits_kd_recheck/`
+Recommended per-experiment layout:
+- `experiments/<exp_name>/config.yaml`
+- `experiments/<exp_name>/metrics.json`
+- `experiments/<exp_name>/summary.md`
+
+Previous-week experiment outputs have been archived under `archive/`.

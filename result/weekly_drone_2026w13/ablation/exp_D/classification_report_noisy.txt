@@ -1,9 +1,0 @@
-              precision    recall  f1-score   support
-
-   emergency       0.34      0.29      0.31      3327
-    movement       0.56      0.78      0.65      3329
-     unknown       0.71      0.54      0.61      3328
-
-    accuracy                           0.54      9984
-   macro avg       0.54      0.54      0.52      9984
-weighted avg       0.54      0.54      0.52      9984

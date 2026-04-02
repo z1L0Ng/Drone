@@ -1,4 +1,4 @@
-# Server/Local Sync Protocol (Drone Week 2026w13)
+# Server/Local Sync Protocol (Drone Weekly)
 
 ## Scope
 - Drone project only.
@@ -6,7 +6,7 @@
 - Local: coding, evaluation, plotting, reporting.
 
 ## Fixed Contract
-- `WEEKLY_TAG=drone_2026w13`
+- `WEEKLY_TAG=drone_<year>w<week>` (example: `drone_2026w14`)
 - Evaluation schema fields:
   - `run_id, exp_id, kd_variant, aug_flag, prewarm_flag, overall_acc, emergency_recall, emergency_f1, movement_recall`
 - Handoff log table schema:
