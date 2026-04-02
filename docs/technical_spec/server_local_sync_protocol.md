@@ -16,13 +16,13 @@
 1. `git fetch --prune origin`
 2. `git status`
 3. Commit only scripts/docs/summaries (avoid large checkpoints)
-4. Append handoff row in `docs/handoff_log.md`
+4. Append handoff row in `docs/weekly_todo/handoff_log.md`
 5. Push branch and include commit SHA in handoff row
 
 ## Before Server -> Local Handoff
 1. Record active training commands and log path
 2. Record finished artifacts (model/result dirs)
-3. Append handoff row in `docs/handoff_log.md`
+3. Append handoff row in `docs/weekly_todo/handoff_log.md`
 4. Push result summaries only (no large checkpoints)
 
 ## Recommended Log Naming

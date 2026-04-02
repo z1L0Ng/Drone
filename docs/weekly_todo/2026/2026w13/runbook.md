@@ -45,6 +45,6 @@ python scripts/analyze_cross_language_emergency.py \
 ```
 
 ## 4) Handoff Steps
-1. Update `TODO_THIS_WEEK.md`.
-2. Append a row to `docs/handoff_log.md`.
+1. Update `docs/weekly_todo/2026/2026w13/todo.md`.
+2. Append a row to `docs/weekly_todo/handoff_log.md`.
 3. Record exact command + output path + next owner/action.

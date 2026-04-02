@@ -2,6 +2,7 @@
 
 import os
 import argparse
+import random
 import numpy as np
 import tensorflow as tf
 import joblib
@@ -49,6 +50,16 @@ def setup_gpu():
         print(f"GPU ready: {len(gpus)} devices")
     else:
         print("No GPU detected, using CPU")
+
+
+def setup_reproducibility(seed: int):
+    random.seed(seed)
+    np.random.seed(seed)
+    tf.keras.utils.set_random_seed(seed)
+    try:
+        tf.config.experimental.enable_op_determinism()
+    except Exception:
+        pass
 
 
 def normalize_label_name(name: str) -> str:
@@ -141,13 +152,16 @@ def build_feature_tensor(filepaths):
 
 
 class FinetuneDataGenerator(tf.keras.utils.Sequence):
-    def __init__(self, filepaths, labels, batch_size, num_classes):
+    def __init__(self, filepaths, labels, batch_size, num_classes, seed=42, shuffle=True):
         self.filepaths = filepaths
         self.labels = labels
         self.batch_size = batch_size
         self.num_classes = num_classes
+        self.shuffle = shuffle
+        self.rng = np.random.default_rng(seed)
         self.indexes = np.arange(len(self.filepaths))
-        np.random.shuffle(self.indexes)
+        if self.shuffle:
+            self.rng.shuffle(self.indexes)
 
     def __len__(self):
         return int(np.ceil(len(self.filepaths) / self.batch_size))
@@ -167,7 +181,8 @@ class FinetuneDataGenerator(tf.keras.utils.Sequence):
         return x, tf.keras.utils.to_categorical(y, num_classes=self.num_classes)
 
     def on_epoch_end(self):
-        np.random.shuffle(self.indexes)
+        if self.shuffle:
+            self.rng.shuffle(self.indexes)
 
 
 def save_eval(output_dir, y_true, y_pred, y_proba, class_names, title, meta=None):
@@ -217,6 +232,7 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
+    setup_reproducibility(args.seed)
     setup_gpu()
 
     le = joblib.load(args.encoder)
@@ -285,8 +301,8 @@ def main():
         metrics=["accuracy"],
     )
 
-    train_gen = FinetuneDataGenerator(x_finetune, y_finetune, args.batch_size, num_classes)
-    val_gen = FinetuneDataGenerator(x_val, y_val, args.batch_size, num_classes)
+    train_gen = FinetuneDataGenerator(x_finetune, y_finetune, args.batch_size, num_classes, seed=args.seed, shuffle=True)
+    val_gen = FinetuneDataGenerator(x_val, y_val, args.batch_size, num_classes, seed=args.seed, shuffle=False)
 
     cls_w = class_weight.compute_class_weight("balanced", classes=np.unique(y_finetune), y=y_finetune)
     cls_w = dict(enumerate(cls_w))
