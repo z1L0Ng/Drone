@@ -1,4 +1,4 @@
-# Dataset Options 2026W14 (Phase1 English, Revision 1.1)
+# Dataset Options 2026W14 (Phase1 English, Revision 1.2)
 
 ## 0) Default Analysis Policy
 
@@ -17,9 +17,9 @@
 
 | plan | reason | default(no-surprise, estimated em/normal/total) | sensitivity(with-surprise, estimated em/normal/total) | scanned(no-surprise em/normal/total) | effort | meeting_deliverability |
 |---|---|---|---|---|---|---|
-| Plan A: ESD + CREMA-D | Best English coverage and best resilience if one source is delayed. | 5980/4740/10720 | 9480/4740/14220 | 0/0/0 | medium | high |
+| Plan A: ESD + CREMA-D | Best English coverage and best resilience if one source is delayed. | 5980/4740/10720 | 9480/4740/14220 | 667/284/951 | medium | high |
 | Plan B: ESD only | Largest single-source sample pool; simplest preprocessing path. | 3500/3500/7000 | 7000/3500/10500 | 0/0/0 | low | high |
-| Plan C: CREMA-D only | Commercial-friendly baseline but smaller speaker/style diversity. | 2480/1240/3720 | 2480/1240/3720 | 0/0/0 | low | medium |
+| Plan C: CREMA-D only | Commercial-friendly baseline but smaller speaker/style diversity. | 2480/1240/3720 | 2480/1240/3720 | 667/284/951 | low | medium |
 
 ## 3) Single Recommendation
 
@@ -30,6 +30,7 @@
 
 - Exact ESD and CREMA-D counts after copying downloaded audio into isolated root.
 - Whether deployment target requires strictly commercial-compatible datasets.
+- Current `ESD scanned(no-surprise)=0` is due to research-license-gated access not yet staged into `/tmp/drone_acoustic_2026w14_phase1_downloads/raw/esd`.
 
 ## 5) Risks And Limitations
 
