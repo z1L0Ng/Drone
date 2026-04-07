@@ -15,10 +15,24 @@
 - [ ] Update this file with progress, blockers, and next action.
 - [ ] Append one row in `docs/weekly_todo/handoff_log.md` with command + outputs + next owner.
 
+## Multi-Agent Coordination Board
+- [x] Assign acoustic analysis scope to acoustic agent.
+- [x] Assign model/config scope to model agent.
+- [x] Assign server execution protocol to server operator.
+- [ ] Collect acoustic agent phase-1 outputs (`dataset_options_2026w14.md`, `dataset_manifest_2026w14.csv`).
+- [ ] Collect model agent command pack for `preprocess_ext` and `branch_trial`.
+- [ ] Receive server startup and completion receipts for both runs.
+- [ ] Keep Notion checklist and repo docs synchronized after each receipt.
+- [x] Coordination reference doc:
+  - `docs/weekly_todo/2026/2026w14/agent_management_playbook.md`
+- [x] Dispatch prompt pack prepared:
+  - `docs/weekly_todo/2026/2026w14/dispatch_prompts.md`
+
 ## Branch / Model / Training Changes (This Week)
 | Date | Branch | Type | Change | Paths | Status |
 |---|---|---|---|---|---|
 | 2026-04-07 | `main` | planning | Lock meeting-week execution plan and checkpoints/report paths | `docs/weekly_todo/2026/2026w14/`, `docs/weekly_todo/handoff_log.md` | done |
+| 2026-04-07 | `main` | coordination | Multi-agent management playbook and handoff protocol activated | `docs/weekly_todo/2026/2026w14/agent_management_playbook.md` | done |
 | 2026-04-07 | `exp/preprocess-ext` | training | Preprocessing extension trial planned for server run | `saved_models/weekly_drone_2026w14/preprocess_ext/`, `result/weekly_drone_2026w14/preprocess_ext/` | planned |
 | 2026-04-08 | `exp/branch-trial` | training | New branch trial planned for server run | `saved_models/weekly_drone_2026w14/branch_trial/`, `result/weekly_drone_2026w14/branch_trial/` | planned |
 
@@ -37,7 +51,7 @@
   - `analysis/cross_language_emergency/findings.md`
 
 ### Server
-- [ ] Freeze baseline and launch baseline training (`drone_2026w14`).
+- [x] Freeze baseline and launch baseline training (`drone_2026w14`).
 - [ ] Output artifacts:
   - `saved_models/weekly_drone_2026w14/baseline/`
   - `result/weekly_drone_2026w14/baseline/`
@@ -76,4 +90,7 @@
 - 2026-04-07:
   - Done: Notion checklist updated for `2026/4/9`.
   - Done: repo weekly TODO/runbook/handoff docs aligned to meeting-week delivery plan.
-  - Next: run Tue local feature validation + baseline server launch.
+  - Done: baseline checkpoint confirmed in local workspace (`saved_models/weekly_drone_2026w14/baseline/best_embed_kd/student_kd_best.weights.h5`).
+  - Done: multi-agent dispatch prompts prepared and handed to user.
+  - Done: meeting wrap-up templates initialized under `result/weekly_wrapup_2026w14/`.
+  - Next: sync baseline `result/` and `logs/` evidence from server to local, then update handoff and Notion status.

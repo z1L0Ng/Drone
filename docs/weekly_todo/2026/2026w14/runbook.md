@@ -1,5 +1,13 @@
 # Weekly Runbook (Drone 2026w14)
 
+## 0) Coordination Rule
+
+- Manager agent: planning, documentation, and acceptance only.
+- Acoustic agent: dataset and acoustic feature analysis only.
+- Model agent: model/config branch work only.
+- Server operator: training execution only.
+- Reference: `docs/weekly_todo/2026/2026w14/agent_management_playbook.md`
+
 ## 1) Server Training
 
 ```bash
@@ -51,7 +59,17 @@ KD_STUDENT_CKPT=saved_models/weekly_drone_2026w14/branch_trial/student_kd_best.w
 python src/train_logmel_kd.py | tee logs/weekly_drone_2026w14_branch_trial_$(date +"%Y%m%d_%H%M%S").log
 ```
 
-## 3) Local Evaluation + Summaries
+## 3) Server Execution Policy
+
+1. Default orchestration is serial:
+   - `preprocess_ext` first
+   - `branch_trial` second
+2. Parallel run is allowed only if server resource headroom is confirmed.
+3. For each run, server operator must return:
+   - startup receipt within 10 minutes: PID + LOG + first 30 lines
+   - completion receipt: checkpoint path + result tree + last 50 lines
+
+## 4) Local Evaluation + Summaries
 
 ```bash
 WEEKLY_TAG=drone_2026w14 bash scripts/run_weekly_local_eval.sh
@@ -65,13 +83,13 @@ BASELINE_CKPT=saved_models/weekly_drone_2026w14/baseline/best_embed_kd/student_k
 bash scripts/run_weekly_local_eval.sh
 ```
 
-## 4) Weekly Wrap-up (Local)
+## 5) Weekly Wrap-up (Local)
 
 ```bash
 conda run -n drone python scripts/run_weekly_wrapup_local.py
 ```
 
-## 5) Handoff Steps
+## 6) Handoff Steps
 1. Update `docs/weekly_todo/2026/2026w14/todo.md`.
 2. Append a row to `docs/weekly_todo/handoff_log.md`.
 3. Record exact command + output path + next owner/action.
