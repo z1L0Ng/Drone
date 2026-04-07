@@ -1,0 +1,5 @@
+phase,dataset_name,mapping_variant,language_scope,emergency_labels,normal_labels,excluded_labels,mapping_notes,source_url
+phase1_en,ESD,surprise_included,english,anger|fear|surprise,neutral|calm,happy|sad|disgust|frustration|other,Primary phase-1 mapping for emergency sensitivity.,https://www.sciencedirect.com/science/article/pii/S0167639321001308
+phase1_en,ESD,surprise_excluded,english,anger|fear,neutral|calm,happy|sad|disgust|frustration|surprise|other,Conservative mapping to reduce ambiguity from surprise.,https://www.sciencedirect.com/science/article/pii/S0167639321001308
+phase1_en,CREMA-D,surprise_included,english,anger|fear|surprise,neutral|calm,happy|sad|disgust|frustration|other,Primary phase-1 mapping for emergency sensitivity.,https://audeering.github.io/datasets/datasets/crema-d.html
+phase1_en,CREMA-D,surprise_excluded,english,anger|fear,neutral|calm,happy|sad|disgust|frustration|surprise|other,Conservative mapping to reduce ambiguity from surprise.,https://audeering.github.io/datasets/datasets/crema-d.html

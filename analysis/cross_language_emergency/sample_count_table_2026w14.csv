@@ -1,0 +1,7 @@
+phase,dataset_name,mapping_variant,include_surprise,language,emergency_labels,normal_labels,emergency_count,normal_count,usable_total,count_type,count_notes,source_url
+phase1_en,ESD,surprise_included,yes,english,anger|fear|surprise,neutral|calm,7000,3500,10500,estimated,Derived from 350 sentences x 10 English speakers x 5 emotions,https://www.sciencedirect.com/science/article/pii/S0167639321001308
+phase1_en,ESD,surprise_excluded,no,english,anger|fear,neutral|calm,3500,3500,7000,estimated,Derived from 350 sentences x 10 English speakers x 5 emotions,https://www.sciencedirect.com/science/article/pii/S0167639321001308
+phase1_en,CREMA-D,surprise_included,yes,english,anger|fear|surprise,neutral|calm,2480,1240,3720,estimated,Approx uniform split from 7441 files over 6 emotions,https://audeering.github.io/datasets/datasets/crema-d.html
+phase1_en,CREMA-D,surprise_excluded,no,english,anger|fear,neutral|calm,2480,1240,3720,estimated,Approx uniform split from 7441 files over 6 emotions,https://audeering.github.io/datasets/datasets/crema-d.html
+phase1_en,COMBINED_ESD_CREMA-D,surprise_included,yes,english,anger|fear|surprise,neutral|calm,9480,4740,14220,estimated,Dataset-level estimates aggregated,https://github.com/HLTSingapore/Emotional-Speech-Data|https://audeering.github.io/datasets/datasets/crema-d.html
+phase1_en,COMBINED_ESD_CREMA-D,surprise_excluded,no,english,anger|fear,neutral|calm,5980,4740,10720,estimated,Dataset-level estimates aggregated,https://github.com/HLTSingapore/Emotional-Speech-Data|https://audeering.github.io/datasets/datasets/crema-d.html
