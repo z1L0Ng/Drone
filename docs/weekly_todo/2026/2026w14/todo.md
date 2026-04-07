@@ -21,6 +21,7 @@
 - [x] Assign server execution protocol to server operator.
 - [x] Collect acoustic agent phase-1 outputs (`dataset_options_2026w14.md`, `dataset_manifest_2026w14.csv`).
 - [x] Collect acoustic agent phase-1.2 scanned-count refresh (`sample_count_table_2026w14.csv`; CREMA-D scanned non-zero, ESD pending license-gated import).
+- [x] Collect acoustic agent phase-1.3 feature evidence package on `origin/codex/acoustic-2026w14-phase1` (`2bd80e50`).
 - [x] Collect model agent command pack for `preprocess_ext` and `branch_trial`.
 - [ ] Receive server startup and completion receipts for both runs.
 - [x] Receive server `preprocess_ext` startup receipt (PID/LOG/first 30 lines; GPU visible).
@@ -40,17 +41,19 @@
 
 ## Tue 2026-04-07
 ### Local
-- [ ] Validate emergency acoustic features:
+- [x] Validate emergency acoustic features (delivered on acoustic branch `2bd80e50`, pending merge to `main`):
   - alpha ratio
   - spectral centroid / bandwidth
   - energy distribution
   - pitch / energy envelope
-- [ ] Output artifacts:
+- [x] Output artifacts (on `origin/codex/acoustic-2026w14-phase1`):
   - `analysis/cross_language_emergency/alpha_ratio.png`
   - `analysis/cross_language_emergency/spectral_centroid_bandwidth.png`
   - `analysis/cross_language_emergency/energy_distribution.png`
   - `analysis/cross_language_emergency/pitch_energy_envelope.png`
-  - `analysis/cross_language_emergency/findings.md`
+  - `analysis/cross_language_emergency/findings_phase1_cremad.md`
+  - `analysis/cross_language_emergency/findings_phase1_sensitivity.md`
+  - `analysis/cross_language_emergency/summary_2026w14_phase1.md`
 
 ### Server
 - [x] Freeze baseline and launch baseline training (`drone_2026w14`).
@@ -97,6 +100,7 @@
   - Done: acoustic agent phase 1.1 receipt received on branch `codex/acoustic-2026w14-phase1` (`a1d79f2e`), with default `surprise_excluded`.
   - Done: model agent command/config pack received for `preprocess_ext` and `branch_trial`.
   - Done: acoustic agent phase 1.2 receipt received on `codex/acoustic-2026w14-phase1` (`b43c429c`); CREMA-D scanned counts now non-zero, ESD still pending license-gated import.
+  - Done: acoustic agent phase 1.3 receipt received on `codex/acoustic-2026w14-phase1` (`2bd80e50`) with CREMA-D feature figures, findings, and ESD ingestion/rescan SOP.
   - Done: server `preprocess_ext` startup receipt received (PID + LOG + first 30 lines; GPU visible).
   - Done: meeting wrap-up templates initialized under `result/weekly_wrapup_2026w14/`.
-  - Next: wait for `preprocess_ext` completion receipt, then trigger/track `branch_trial` startup and completion receipts.
+  - Next: wait for `preprocess_ext` completion receipt, then track `branch_trial` startup/completion receipts; keep acoustic branch unmerged until server-side comparison is available.
