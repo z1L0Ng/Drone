@@ -19,9 +19,11 @@
 - [x] Assign acoustic analysis scope to acoustic agent.
 - [x] Assign model/config scope to model agent.
 - [x] Assign server execution protocol to server operator.
-- [ ] Collect acoustic agent phase-1 outputs (`dataset_options_2026w14.md`, `dataset_manifest_2026w14.csv`).
-- [ ] Collect model agent command pack for `preprocess_ext` and `branch_trial`.
+- [x] Collect acoustic agent phase-1 outputs (`dataset_options_2026w14.md`, `dataset_manifest_2026w14.csv`).
+- [x] Collect acoustic agent phase-1.2 scanned-count refresh (`sample_count_table_2026w14.csv`; CREMA-D scanned non-zero, ESD pending license-gated import).
+- [x] Collect model agent command pack for `preprocess_ext` and `branch_trial`.
 - [ ] Receive server startup and completion receipts for both runs.
+- [x] Receive server `preprocess_ext` startup receipt (PID/LOG/first 30 lines; GPU visible).
 - [ ] Keep Notion checklist and repo docs synchronized after each receipt.
 - [x] Coordination reference doc:
   - `docs/weekly_todo/2026/2026w14/agent_management_playbook.md`
@@ -66,7 +68,7 @@
   - `analysis/cross_language_emergency/summary_2026w14.md`
 
 ### Server
-- [ ] Launch preprocessing extension run.
+- [x] Launch preprocessing extension run.
 - [ ] Launch new branch trial run.
 - [ ] Output artifacts:
   - `saved_models/weekly_drone_2026w14/preprocess_ext/`
@@ -92,5 +94,9 @@
   - Done: repo weekly TODO/runbook/handoff docs aligned to meeting-week delivery plan.
   - Done: baseline checkpoint confirmed in local workspace (`saved_models/weekly_drone_2026w14/baseline/best_embed_kd/student_kd_best.weights.h5`).
   - Done: multi-agent dispatch prompts prepared and handed to user.
+  - Done: acoustic agent phase 1.1 receipt received on branch `codex/acoustic-2026w14-phase1` (`a1d79f2e`), with default `surprise_excluded`.
+  - Done: model agent command/config pack received for `preprocess_ext` and `branch_trial`.
+  - Done: acoustic agent phase 1.2 receipt received on `codex/acoustic-2026w14-phase1` (`b43c429c`); CREMA-D scanned counts now non-zero, ESD still pending license-gated import.
+  - Done: server `preprocess_ext` startup receipt received (PID + LOG + first 30 lines; GPU visible).
   - Done: meeting wrap-up templates initialized under `result/weekly_wrapup_2026w14/`.
-  - Next: sync baseline `result/` and `logs/` evidence from server to local, then update handoff and Notion status.
+  - Next: wait for `preprocess_ext` completion receipt, then trigger/track `branch_trial` startup and completion receipts.
