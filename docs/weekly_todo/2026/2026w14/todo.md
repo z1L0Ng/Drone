@@ -22,10 +22,11 @@
 - [x] Collect acoustic agent phase-1 outputs (`dataset_options_2026w14.md`, `dataset_manifest_2026w14.csv`).
 - [x] Collect acoustic agent phase-1.2 scanned-count refresh (`sample_count_table_2026w14.csv`; CREMA-D scanned non-zero, ESD pending license-gated import).
 - [x] Collect acoustic agent phase-1.3 feature evidence package on `origin/codex/acoustic-2026w14-phase1` (`2bd80e50`).
+- [x] Collect acoustic agent phase-1.4 meeting evidence package (`6310b365`) with evidence table + surprise-zero diagnosis + onepager.
 - [x] Collect model agent command pack for `preprocess_ext` and `branch_trial`.
 - [ ] Receive server startup and completion receipts for both runs.
 - [x] Receive server `preprocess_ext` startup receipt (PID/LOG/first 30 lines; GPU visible).
-- [ ] Keep Notion checklist and repo docs synchronized after each receipt.
+- [x] Keep Notion checklist and repo docs synchronized after each receipt.
 - [x] Coordination reference doc:
   - `docs/weekly_todo/2026/2026w14/agent_management_playbook.md`
 - [x] Dispatch prompt pack prepared:
@@ -65,6 +66,7 @@
 ## Wed 2026-04-08
 ### Local
 - [ ] Complete cross-language analysis summary.
+- [x] Complete phase1 English meeting-ready summary package on acoustic branch (`6310b365`): evidence table + onepager + surprise-zero diagnosis.
 - [ ] Output artifacts:
   - `analysis/cross_language_emergency/cross_language_band_compare.png`
   - `analysis/cross_language_emergency/avg_energy_curves.png`
@@ -101,6 +103,7 @@
   - Done: model agent command/config pack received for `preprocess_ext` and `branch_trial`.
   - Done: acoustic agent phase 1.2 receipt received on `codex/acoustic-2026w14-phase1` (`b43c429c`); CREMA-D scanned counts now non-zero, ESD still pending license-gated import.
   - Done: acoustic agent phase 1.3 receipt received on `codex/acoustic-2026w14-phase1` (`2bd80e50`) with CREMA-D feature figures, findings, and ESD ingestion/rescan SOP.
+  - Done: acoustic agent phase 1.4 receipt received on `codex/acoustic-2026w14-phase1` (`6310b365`) with meeting evidence table and surprise-zero diagnosis.
   - Done: server `preprocess_ext` startup receipt received (PID + LOG + first 30 lines; GPU visible).
   - Done: meeting wrap-up templates initialized under `result/weekly_wrapup_2026w14/`.
-  - Next: wait for `preprocess_ext` completion receipt, then track `branch_trial` startup/completion receipts; keep acoustic branch unmerged until server-side comparison is available.
+  - Next: wait for `preprocess_ext` completion receipt, then track `branch_trial` startup/completion receipts; after server results, finalize adopt/defer with acoustic onepager integrated.
