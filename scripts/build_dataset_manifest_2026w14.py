@@ -3,10 +3,12 @@
 import argparse
 import csv
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
+AUDIO_EXTS = {".wav", ".flac", ".mp3", ".m4a", ".ogg"}
 
 DEFAULT_SOURCES = {
     "esd": {
@@ -21,7 +23,7 @@ DEFAULT_SOURCES = {
         "duration_range_sec": "unknown_public_page",
         "noise_condition": "controlled studio",
         "risks": "license_restriction; label_mapping_gap(no_fear); acted_speech_domain_shift",
-        "counts": {
+        "estimated_counts": {
             "english": {
                 "neutral": 3500,
                 "anger": 3500,
@@ -30,8 +32,7 @@ DEFAULT_SOURCES = {
                 "calm": 0,
             }
         },
-        "count_type": "estimated",
-        "count_notes": "Derived from 350 sentences x 10 English speakers x 5 emotions",
+        "estimated_notes": "Derived from 350 sentences x 10 English speakers x 5 emotions",
     },
     "crema_d": {
         "dataset_name": "CREMA-D",
@@ -45,7 +46,7 @@ DEFAULT_SOURCES = {
         "duration_range_sec": "1.3-5.0",
         "noise_condition": "recorded acted speech; low environmental noise",
         "risks": "acted_speech_domain_shift; per_emotion_count_unknown_without_local_scan",
-        "counts": {
+        "estimated_counts": {
             "english": {
                 "neutral": 1240,
                 "anger": 1240,
@@ -54,9 +55,29 @@ DEFAULT_SOURCES = {
                 "calm": 0,
             }
         },
-        "count_type": "estimated",
-        "count_notes": "Approx uniform split from 7441 files over 6 emotions",
+        "estimated_notes": "Approx uniform split from 7441 files over 6 emotions",
     },
+}
+
+GENERIC_TOKEN_MAP = {
+    "anger": "anger",
+    "angry": "anger",
+    "fear": "fear",
+    "fearful": "fear",
+    "surprise": "surprise",
+    "surprised": "surprise",
+    "neutral": "neutral",
+    "calm": "calm",
+    "neu": "neutral",
+}
+
+CREMA_CODE_MAP = {
+    "ANG": "anger",
+    "FEA": "fear",
+    "NEU": "neutral",
+    "DIS": "disgust",
+    "HAP": "happy",
+    "SAD": "sad",
 }
 
 
@@ -64,8 +85,8 @@ DEFAULT_SOURCES = {
 class MappingVariant:
     name: str
     include_surprise: bool
-    emergency_labels: List[str]
-    normal_labels: List[str]
+    emergency_candidates: List[str]
+    normal_candidates: List[str]
     excluded_labels: List[str]
     notes: str
 
@@ -74,18 +95,18 @@ VARIANTS = [
     MappingVariant(
         name="surprise_included",
         include_surprise=True,
-        emergency_labels=["anger", "fear", "surprise"],
-        normal_labels=["neutral", "calm"],
+        emergency_candidates=["anger", "fear", "surprise"],
+        normal_candidates=["neutral", "calm"],
         excluded_labels=["happy", "sad", "disgust", "frustration", "other"],
-        notes="Primary phase-1 mapping for emergency sensitivity.",
+        notes="Sensitivity mapping with surprise included.",
     ),
     MappingVariant(
         name="surprise_excluded",
         include_surprise=False,
-        emergency_labels=["anger", "fear"],
-        normal_labels=["neutral", "calm"],
+        emergency_candidates=["anger", "fear"],
+        normal_candidates=["neutral", "calm"],
         excluded_labels=["happy", "sad", "disgust", "frustration", "surprise", "other"],
-        notes="Conservative mapping to reduce ambiguity from surprise.",
+        notes="Default mapping for main analysis.",
     ),
 ]
 
@@ -103,10 +124,88 @@ def _join(labels: List[str]) -> str:
     return "|".join(labels)
 
 
-def _compute_counts(label_counts: Dict[str, int], variant: MappingVariant) -> Dict[str, int]:
-    em = sum(label_counts.get(lbl, 0) for lbl in variant.emergency_labels)
-    no = sum(label_counts.get(lbl, 0) for lbl in variant.normal_labels)
-    return {"emergency": int(em), "normal": int(no), "usable_total": int(em + no)}
+def _effective_labels(label_counts: Dict[str, int], candidates: List[str]) -> List[str]:
+    return [lbl for lbl in candidates if int(label_counts.get(lbl, 0)) > 0]
+
+
+def _compute_counts(label_counts: Dict[str, int], variant: MappingVariant) -> Tuple[List[str], List[str], Dict[str, int]]:
+    em_labels = _effective_labels(label_counts, variant.emergency_candidates)
+    no_labels = _effective_labels(label_counts, variant.normal_candidates)
+    em = sum(int(label_counts.get(lbl, 0)) for lbl in em_labels)
+    no = sum(int(label_counts.get(lbl, 0)) for lbl in no_labels)
+    return em_labels, no_labels, {"emergency": em, "normal": no, "usable_total": em + no}
+
+
+def _detect_label_esd(path: Path) -> List[str]:
+    tokens = [t for t in re.split(r"[^a-z0-9]+", path.as_posix().lower()) if t]
+    found = set()
+    for t in tokens:
+        mapped = GENERIC_TOKEN_MAP.get(t)
+        if mapped:
+            found.add(mapped)
+    return sorted(found)
+
+
+def _detect_label_cremad(path: Path) -> List[str]:
+    m = re.search(r"_(ANG|FEA|NEU|DIS|HAP|SAD)_", path.name.upper())
+    if not m:
+        return []
+    lbl = CREMA_CODE_MAP.get(m.group(1))
+    return [lbl] if lbl else []
+
+
+def _detect_labels(path: Path, dataset_key: str) -> List[str]:
+    if dataset_key == "crema_d":
+        labels = _detect_label_cremad(path)
+        if labels:
+            return labels
+    if dataset_key == "esd":
+        labels = _detect_label_esd(path)
+        if labels:
+            return labels
+
+    tokens = [t for t in re.split(r"[^a-z0-9]+", path.as_posix().lower()) if t]
+    found = set()
+    for t in tokens:
+        mapped = GENERIC_TOKEN_MAP.get(t)
+        if mapped:
+            found.add(mapped)
+    return sorted(found)
+
+
+def _scan_audio_counts(dataset_root: Path, dataset_key: str) -> Dict[str, int]:
+    counts: Dict[str, int] = {
+        "neutral": 0,
+        "calm": 0,
+        "anger": 0,
+        "fear": 0,
+        "surprise": 0,
+        "happy": 0,
+        "sad": 0,
+        "disgust": 0,
+    }
+    scanned = 0
+    detected = 0
+    unmapped = 0
+
+    if not dataset_root.exists():
+        return {**counts, "_scanned_files": 0, "_detected_files": 0, "_unmapped_files": 0}
+
+    for p in dataset_root.rglob("*"):
+        if not p.is_file() or p.suffix.lower() not in AUDIO_EXTS:
+            continue
+        scanned += 1
+        labels = _detect_labels(p, dataset_key)
+        if len(labels) == 1:
+            counts[labels[0]] = counts.get(labels[0], 0) + 1
+            detected += 1
+        else:
+            unmapped += 1
+
+    counts["_scanned_files"] = scanned
+    counts["_detected_files"] = detected
+    counts["_unmapped_files"] = unmapped
+    return counts
 
 
 def _write_csv(path: Path, rows: List[Dict[str, object]], fieldnames: List[str]) -> None:
@@ -133,52 +232,21 @@ def main() -> None:
     mapping_rows: List[Dict[str, object]] = []
     sample_rows: List[Dict[str, object]] = []
 
-    combined_by_variant = {v.name: {"emergency": 0, "normal": 0, "usable_total": 0} for v in VARIANTS}
+    combined = {
+        "estimated": {v.name: {"emergency": 0, "normal": 0, "usable_total": 0} for v in VARIANTS},
+        "scanned": {v.name: {"emergency": 0, "normal": 0, "usable_total": 0} for v in VARIANTS},
+    }
 
     for ds_key in selected:
         meta = DEFAULT_SOURCES[ds_key]
-        en_counts = meta["counts"].get("english", {})
+        estimated_counts = meta["estimated_counts"].get("english", {})
+        scanned_full = _scan_audio_counts(download_root / "raw" / ds_key, ds_key)
+        scanned_counts = {k: v for k, v in scanned_full.items() if not k.startswith("_")}
 
-        for variant in VARIANTS:
-            c = _compute_counts(en_counts, variant)
-            combined_by_variant[variant.name]["emergency"] += c["emergency"]
-            combined_by_variant[variant.name]["normal"] += c["normal"]
-            combined_by_variant[variant.name]["usable_total"] += c["usable_total"]
+        # default manifest mapping: main analysis without surprise
+        default_variant = next(v for v in VARIANTS if v.name == "surprise_excluded")
+        em_labels_def, no_labels_def, c_def = _compute_counts(estimated_counts, default_variant)
 
-            mapping_rows.append(
-                {
-                    "phase": args.phase,
-                    "dataset_name": meta["dataset_name"],
-                    "mapping_variant": variant.name,
-                    "language_scope": "english",
-                    "emergency_labels": _join(variant.emergency_labels),
-                    "normal_labels": _join(variant.normal_labels),
-                    "excluded_labels": _join(variant.excluded_labels),
-                    "mapping_notes": variant.notes,
-                    "source_url": meta["source_url"],
-                }
-            )
-
-            sample_rows.append(
-                {
-                    "phase": args.phase,
-                    "dataset_name": meta["dataset_name"],
-                    "mapping_variant": variant.name,
-                    "include_surprise": "yes" if variant.include_surprise else "no",
-                    "language": "english",
-                    "emergency_labels": _join(variant.emergency_labels),
-                    "normal_labels": _join(variant.normal_labels),
-                    "emergency_count": c["emergency"],
-                    "normal_count": c["normal"],
-                    "usable_total": c["usable_total"],
-                    "count_type": meta["count_type"],
-                    "count_notes": meta["count_notes"],
-                    "source_url": meta["source_url"],
-                }
-            )
-
-        primary = next(v for v in VARIANTS if v.name == "surprise_included")
-        primary_counts = _compute_counts(en_counts, primary)
         manifest_rows.append(
             {
                 "phase": args.phase,
@@ -188,12 +256,12 @@ def main() -> None:
                 "academic_usable": meta["academic_usable"],
                 "commercial_usable": meta["commercial_usable"],
                 "languages": meta["languages"],
-                "label_mapping_emergency": _join(primary.emergency_labels),
-                "label_mapping_normal": _join(primary.normal_labels),
-                "estimated_samples_by_language": json.dumps({"english": en_counts}, ensure_ascii=True),
-                "estimated_samples_emergency": primary_counts["emergency"],
-                "estimated_samples_normal": primary_counts["normal"],
-                "count_type": meta["count_type"],
+                "label_mapping_emergency": _join(em_labels_def),
+                "label_mapping_normal": _join(no_labels_def),
+                "estimated_samples_by_language": json.dumps({"english": estimated_counts}, ensure_ascii=True),
+                "estimated_samples_emergency": c_def["emergency"],
+                "estimated_samples_normal": c_def["normal"],
+                "count_type": "estimated",
                 "sampling_rate": meta["sampling_rate"],
                 "duration_range_sec": meta["duration_range_sec"],
                 "noise_condition": meta["noise_condition"],
@@ -205,25 +273,83 @@ def main() -> None:
             }
         )
 
-    for variant in VARIANTS:
-        cc = combined_by_variant[variant.name]
-        sample_rows.append(
-            {
-                "phase": args.phase,
-                "dataset_name": "COMBINED_ESD_CREMA-D",
-                "mapping_variant": variant.name,
-                "include_surprise": "yes" if variant.include_surprise else "no",
-                "language": "english",
-                "emergency_labels": _join(variant.emergency_labels),
-                "normal_labels": _join(variant.normal_labels),
-                "emergency_count": cc["emergency"],
-                "normal_count": cc["normal"],
-                "usable_total": cc["usable_total"],
-                "count_type": "estimated",
-                "count_notes": "Dataset-level estimates aggregated",
-                "source_url": "https://github.com/HLTSingapore/Emotional-Speech-Data|https://audeering.github.io/datasets/datasets/crema-d.html",
-            }
-        )
+        for count_source, label_counts, count_type, count_notes in [
+            ("estimated", estimated_counts, "estimated", meta["estimated_notes"]),
+            (
+                "scanned",
+                scanned_counts,
+                "exact_scan" if scanned_full["_scanned_files"] > 0 else "exact_scan_empty",
+                f"Scanned files={scanned_full['_scanned_files']}, detected={scanned_full['_detected_files']}, unmapped={scanned_full['_unmapped_files']}",
+            ),
+        ]:
+            for variant in VARIANTS:
+                em_labels, no_labels, c = _compute_counts(label_counts, variant)
+
+                mapping_rows.append(
+                    {
+                        "phase": args.phase,
+                        "dataset_name": meta["dataset_name"],
+                        "count_source": count_source,
+                        "mapping_variant": variant.name,
+                        "language_scope": "english",
+                        "emergency_labels": _join(em_labels),
+                        "normal_labels": _join(no_labels),
+                        "excluded_labels": _join(variant.excluded_labels),
+                        "mapping_notes": variant.notes,
+                        "source_url": meta["source_url"],
+                    }
+                )
+
+                sample_rows.append(
+                    {
+                        "phase": args.phase,
+                        "dataset_name": meta["dataset_name"],
+                        "count_source": count_source,
+                        "mapping_variant": variant.name,
+                        "include_surprise": "yes" if variant.include_surprise else "no",
+                        "language": "english",
+                        "emergency_labels": _join(em_labels),
+                        "normal_labels": _join(no_labels),
+                        "emergency_count": c["emergency"],
+                        "normal_count": c["normal"],
+                        "usable_total": c["usable_total"],
+                        "audio_files_scanned": scanned_full["_scanned_files"] if count_source == "scanned" else "",
+                        "label_detected_files": scanned_full["_detected_files"] if count_source == "scanned" else "",
+                        "unmapped_files": scanned_full["_unmapped_files"] if count_source == "scanned" else "",
+                        "count_type": count_type,
+                        "count_notes": count_notes,
+                        "source_url": meta["source_url"],
+                    }
+                )
+
+                combined[count_source][variant.name]["emergency"] += c["emergency"]
+                combined[count_source][variant.name]["normal"] += c["normal"]
+                combined[count_source][variant.name]["usable_total"] += c["usable_total"]
+
+    for count_source in ["estimated", "scanned"]:
+        for variant in VARIANTS:
+            cc = combined[count_source][variant.name]
+            sample_rows.append(
+                {
+                    "phase": args.phase,
+                    "dataset_name": "COMBINED_ESD_CREMA-D",
+                    "count_source": count_source,
+                    "mapping_variant": variant.name,
+                    "include_surprise": "yes" if variant.include_surprise else "no",
+                    "language": "english",
+                    "emergency_labels": _join(variant.emergency_candidates),
+                    "normal_labels": _join(variant.normal_candidates),
+                    "emergency_count": cc["emergency"],
+                    "normal_count": cc["normal"],
+                    "usable_total": cc["usable_total"],
+                    "audio_files_scanned": "",
+                    "label_detected_files": "",
+                    "unmapped_files": "",
+                    "count_type": "estimated" if count_source == "estimated" else "exact_scan",
+                    "count_notes": "Aggregated from dataset rows",
+                    "source_url": "https://github.com/HLTSingapore/Emotional-Speech-Data|https://audeering.github.io/datasets/datasets/crema-d.html",
+                }
+            )
 
     manifest_path = out_dir / "dataset_manifest_2026w14.csv"
     mapping_path = out_dir / "label_mapping_table_2026w14.csv"
@@ -264,6 +390,7 @@ def main() -> None:
         [
             "phase",
             "dataset_name",
+            "count_source",
             "mapping_variant",
             "language_scope",
             "emergency_labels",
@@ -280,6 +407,7 @@ def main() -> None:
         [
             "phase",
             "dataset_name",
+            "count_source",
             "mapping_variant",
             "include_surprise",
             "language",
@@ -288,6 +416,9 @@ def main() -> None:
             "emergency_count",
             "normal_count",
             "usable_total",
+            "audio_files_scanned",
+            "label_detected_files",
+            "unmapped_files",
             "count_type",
             "count_notes",
             "source_url",
@@ -299,19 +430,19 @@ def main() -> None:
 
 ## Speaker Risks
 - ESD and CREMA-D are acted corpora; urgency expression may be exaggerated compared to real emergency calls.
-- Speaker overlap and style homogeneity can bias pitch and energy envelopes.
+- Speaker style concentration can bias prosodic thresholds.
 
 ## License Risks
 - ESD requires research-use license agreement; not suitable for commercial redistribution.
-- CREMA-D (ODbL) supports commercial use but requires attribution/share obligations for database derivatives.
+- CREMA-D (ODbL) supports commercial use with attribution/database-share obligations.
 
 ## Domain Shift Risks
-- Scripted utterances differ from spontaneous command/control speech in real deployments.
-- Environment mismatch: both corpora are mostly clean recordings, unlike noisy operational audio.
+- Scripted utterances differ from spontaneous operational speech.
+- Current scan in isolated download root may be empty until licensed assets are copied there.
 
 ## Mapping Risks
-- ESD has no explicit fear class; emergency mapping relies on anger (+ surprise in included variant).
-- Surprise can be non-urgent in some contexts; include/exclude dual counting is provided for sensitivity analysis.
+- Default main analysis excludes surprise; surprise is sensitivity-only appendix.
+- Fear labels are removed per-dataset when absent (e.g., ESD).
 """,
         encoding="utf-8",
     )

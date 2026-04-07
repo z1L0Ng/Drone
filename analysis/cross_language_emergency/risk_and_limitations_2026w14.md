@@ -2,16 +2,16 @@
 
 ## Speaker Risks
 - ESD and CREMA-D are acted corpora; urgency expression may be exaggerated compared to real emergency calls.
-- Speaker overlap and style homogeneity can bias pitch and energy envelopes.
+- Speaker style concentration can bias prosodic thresholds.
 
 ## License Risks
 - ESD requires research-use license agreement; not suitable for commercial redistribution.
-- CREMA-D (ODbL) supports commercial use but requires attribution/share obligations for database derivatives.
+- CREMA-D (ODbL) supports commercial use with attribution/database-share obligations.
 
 ## Domain Shift Risks
-- Scripted utterances differ from spontaneous command/control speech in real deployments.
-- Environment mismatch: both corpora are mostly clean recordings, unlike noisy operational audio.
+- Scripted utterances differ from spontaneous operational speech.
+- Current scan in isolated download root may be empty until licensed assets are copied there.
 
 ## Mapping Risks
-- ESD has no explicit fear class; emergency mapping relies on anger (+ surprise in included variant).
-- Surprise can be non-urgent in some contexts; include/exclude dual counting is provided for sensitivity analysis.
+- Default main analysis excludes surprise; surprise is sensitivity-only appendix.
+- Fear labels are removed per-dataset when absent (e.g., ESD).
