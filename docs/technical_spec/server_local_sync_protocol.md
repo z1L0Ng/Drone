@@ -4,6 +4,7 @@
 - Drone project only.
 - Server: training with full dataset.
 - Local: coding, evaluation, plotting, reporting.
+- Do not run full training locally for weekly mainline updates.
 
 ## Fixed Contract
 - `WEEKLY_TAG=drone_<year>w<week>` (example: `drone_2026w14`)
@@ -24,6 +25,10 @@
 2. Record finished artifacts (model/result dirs)
 3. Append handoff row in `docs/weekly_todo/handoff_log.md`
 4. Push result summaries only (no large checkpoints)
+
+## Week-Specific Contract (Current)
+- Weekly tag in use: `drone_2026w14`
+- Meeting checkpoint: `2026-04-09` (pre-meeting summary must exist)
 
 ## Recommended Log Naming
 - `logs/weekly_${WEEKLY_TAG}_${task}_${timestamp}.log`

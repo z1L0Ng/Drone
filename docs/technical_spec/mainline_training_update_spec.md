@@ -30,7 +30,7 @@ This spec defines the required process for any mainline (`main`) model/training 
 - Weekly TODO and handoff log updates
 
 ## Naming and Traceability Rules
-- Use weekly tag format: `drone_<year>w<week>` (example: `drone_2026w13`)
+- Use weekly tag format: `drone_<year>w<week>` (example: `drone_2026w14`)
 - Result/model directories should include weekly tag
 - Each summary must reference command and output directories
 

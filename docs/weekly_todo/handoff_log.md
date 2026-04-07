@@ -18,3 +18,4 @@
 ## Entries
 | Time | Side | Commit | Command | Outputs | Next | Risk |
 |---|---|---|---|---|---|---|
+| 2026-04-07 00:00 CDT | local | pending | kickoff template: `<fill exact command>` | `<fill outputs paths>` | `<fill next owner/action>` | `<fill risk or none>` |
