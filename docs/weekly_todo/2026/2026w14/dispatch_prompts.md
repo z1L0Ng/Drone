@@ -32,6 +32,46 @@ Do not edit:
 - docs/technical_spec/*
 ```
 
+## Prompt A2: Acoustic Agent (Phase2 Gate + Multilingual Expansion)
+```text
+You are the acoustic-analysis execution agent for 2026w14.
+Keep working on branch: codex/acoustic-2026w14-phase1.
+
+Policy lock:
+1) English gate first:
+   - validate emergency vs normal separability in English phase1 package.
+2) If gate holds, expand to multilingual next:
+   - not limited to Chinese/Japanese; French and others are allowed.
+   - only use open datasets with sufficient sample size.
+   - label semantics must be mappable to the same English reference:
+     emergency vs normal.
+
+Immediate tasks:
+1) Re-run ingest/rescan only when ESD scanned audio > 0.
+2) Update phase1 artifacts and keep evidence table/onepager current.
+3) Submit a multilingual candidate matrix with:
+   - language
+   - dataset/license
+   - emergency/normal mapping compatibility
+   - usable sample estimate
+   - known risks
+
+Suggested command skeleton (run only when data is ready):
+- switch branch: `git switch codex/acoustic-2026w14-phase1`
+- set roots: `ESD_ROOT`, `CREMA_ROOT`, `OUT_DIR=analysis/cross_language_emergency`
+- gate check: `ESD_AUDIO_COUNT > 0`
+- run:
+  - `python3 scripts/build_dataset_manifest_2026w14.py ...`
+  - `python3 scripts/render_dataset_options_2026w14.py ...`
+  - `python3 scripts/analyze_phase1_cremad_acoustics.py ...`
+  - refresh `meeting_evidence_table_2026w14.(md/csv)` and `onepager_2026w14_phase1.md`
+
+Do not edit:
+- docs/weekly_todo/*
+- TODO_THIS_WEEK.md
+- docs/technical_spec/*
+```
+
 ## Prompt B: Model Agent
 ```text
 You are the model/config execution agent for 2026w14.
