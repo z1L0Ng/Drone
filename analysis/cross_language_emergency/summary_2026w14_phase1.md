@@ -1,9 +1,9 @@
 # Summary 2026W14 Phase1 (CREMA-D Acoustic Evidence)
 
 ## Main Conclusion
-- Mainline (`surprise_excluded`) sample counts: emergency=2071, normal=884.
-- Alpha ratio delta (em-normal): 0.1571.
-- Spectral centroid delta (em-normal, Hz): 123.15.
+- Mainline (`surprise_excluded`) sample counts: emergency=2539, normal=1086.
+- Alpha ratio delta (em-normal): 0.1545.
+- Spectral centroid delta (em-normal, Hz): 127.54.
 
 ## Sensitivity Change
 - Surprise detected in CREMA-D: 0.

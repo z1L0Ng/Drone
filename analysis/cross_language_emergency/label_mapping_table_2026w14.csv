@@ -5,5 +5,5 @@ phase1_en,ESD,scanned,surprise_included,english,,,happy|sad|disgust|frustration|
 phase1_en,ESD,scanned,surprise_excluded,english,,,happy|sad|disgust|frustration|surprise|other,Default mapping for main analysis.,https://www.sciencedirect.com/science/article/pii/S0167639321001308
 phase1_en,CREMA-D,estimated,surprise_included,english,anger|fear,neutral,happy|sad|disgust|frustration|other,Sensitivity mapping with surprise included.,https://audeering.github.io/datasets/datasets/crema-d.html
 phase1_en,CREMA-D,estimated,surprise_excluded,english,anger|fear,neutral,happy|sad|disgust|frustration|surprise|other,Default mapping for main analysis.,https://audeering.github.io/datasets/datasets/crema-d.html
-phase1_en,CREMA-D,scanned,surprise_included,english,,,happy|sad|disgust|frustration|other,Sensitivity mapping with surprise included.,https://audeering.github.io/datasets/datasets/crema-d.html
-phase1_en,CREMA-D,scanned,surprise_excluded,english,,,happy|sad|disgust|frustration|surprise|other,Default mapping for main analysis.,https://audeering.github.io/datasets/datasets/crema-d.html
+phase1_en,CREMA-D,scanned,surprise_included,english,anger|fear,neutral,happy|sad|disgust|frustration|other,Sensitivity mapping with surprise included.,https://audeering.github.io/datasets/datasets/crema-d.html
+phase1_en,CREMA-D,scanned,surprise_excluded,english,anger|fear,neutral,happy|sad|disgust|frustration|surprise|other,Default mapping for main analysis.,https://audeering.github.io/datasets/datasets/crema-d.html

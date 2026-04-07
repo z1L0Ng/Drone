@@ -1,13 +1,13 @@
 # Meeting Evidence Table 2026W14 (Phase1 CREMA-D)
 
 - Main mapping: `surprise_excluded` (emergency=anger+fear; normal=neutral[+calm if present]).
-- Statistics source: `findings_phase1_cremad.md` (no new experiment run).
+- Statistics source: `findings_phase1_cremad.md` (refreshed run, no training).
 
 | feature | emergency_mean | normal_mean | direction | delta(em-normal) | cohen_d | effect_magnitude | stat_summary | risk_note |
 |---|---:|---:|---|---:|---:|---|---|---|
-| alpha_ratio | 0.2405 | 0.0834 | emergency_higher | 0.1571 | 0.4506 | small | delta=0.1571; cohen_d=0.4506 (small) | Acted speech + clean recording; potential domain shift to real emergency audio. |
-| spectral_centroid_hz | 589.9442 | 466.7954 | emergency_higher | 123.1487 | 0.5198 | medium | delta=123.1487; cohen_d=0.5198 (medium) | Acted speech + clean recording; potential domain shift to real emergency audio. |
-| spectral_bandwidth_hz | 594.3455 | 524.0801 | emergency_higher | 70.2654 | 0.4497 | small | delta=70.2654; cohen_d=0.4497 (small) | Acted speech + clean recording; potential domain shift to real emergency audio. |
-| energy_low_prop | 0.4417 | 0.5567 | emergency_lower | -0.1150 | -0.5165 | medium | delta=-0.1150; cohen_d=-0.5165 (medium) | Acted speech + clean recording; potential domain shift to real emergency audio. |
-| energy_mid_prop | 0.5110 | 0.4177 | emergency_higher | 0.0933 | 0.4421 | small | delta=0.0933; cohen_d=0.4421 (small) | Acted speech + clean recording; potential domain shift to real emergency audio. |
-| energy_high_prop | 0.0473 | 0.0256 | emergency_higher | 0.0216 | 0.4318 | small | delta=0.0216; cohen_d=0.4318 (small) | Acted speech + clean recording; potential domain shift to real emergency audio. |
+| alpha_ratio | 0.2452 | 0.0907 | emergency_higher | 0.1545 | 0.4444 | small | delta=0.1545; cohen_d=0.4444 (small) | Acted speech + clean recording; potential domain shift to real emergency audio. |
+| spectral_centroid_hz | 612.0382 | 484.4983 | emergency_higher | 127.5399 | 0.4874 | small | delta=127.5399; cohen_d=0.4874 (small) | Acted speech + clean recording; potential domain shift to real emergency audio. |
+| spectral_bandwidth_hz | 607.1720 | 535.9418 | emergency_higher | 71.2302 | 0.4365 | small | delta=71.2302; cohen_d=0.4365 (small) | Acted speech + clean recording; potential domain shift to real emergency audio. |
+| energy_low_prop | 0.4491 | 0.5613 | emergency_lower | -0.1122 | -0.5023 | medium | delta=-0.1122; cohen_d=-0.5023 (medium) | Acted speech + clean recording; potential domain shift to real emergency audio. |
+| energy_mid_prop | 0.4977 | 0.4085 | emergency_higher | 0.0892 | 0.4178 | small | delta=0.0892; cohen_d=0.4178 (small) | Acted speech + clean recording; potential domain shift to real emergency audio. |
+| energy_high_prop | 0.0531 | 0.0301 | emergency_higher | 0.0230 | 0.3928 | small | delta=0.0230; cohen_d=0.3928 (small) | Acted speech + clean recording; potential domain shift to real emergency audio. |
