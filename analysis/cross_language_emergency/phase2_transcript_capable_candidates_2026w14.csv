@@ -1,0 +1,8 @@
+language,dataset_name,license,source_url,transcript_available,transcript_field_type,transcript_access_mode,emergency_labels,normal_labels,semantic_match_level,estimated_usable_samples,lexical_readiness,recommendation,blocker
+Quechua,quechua,CC-BY-4.0,https://audeering.github.io/datasets/datasets/quechua.html,yes,verbatim,direct_download,anger|fear,neutral|calmness,strict,"unknown_by_class (total files=12416)",ready,go,
+Polish,nemo,CC-BY-NC-SA-4.0,https://audeering.github.io/datasets/datasets/nemo.html,yes,verbatim,direct_download,anger|fear,neutral,strict,"unknown_by_class (total files=4481)",ready,go,
+Italian,emozionalmente,CC-BY-4.0,https://audeering.github.io/datasets/datasets/emozionalmente.html,yes,template_id,direct_download,anger|fear,neutral|calm,strict,"emergency≈1900-2100; normal≈900-1100; total≈2800-3200",partial,go,
+German,emodb,CC0-1.0,https://audeering.github.io/datasets/datasets/emodb.html,yes,template_id,direct_download,anger|fear,neutral,strict,"emergency≈150-220; normal≈60-90; total≈210-310",partial,go,
+French,CaFE,CC-BY-NC-SA-4.0,https://doi.org/10.5281/zenodo.1219621,yes,template_id,external_download,anger|fear,neutral,strict,"emergency=288; normal=72; total=360",partial,go,
+Chinese (Mandarin),ESD,research-use license agreement,https://www.sciencedirect.com/science/article/pii/S0167639321001308,yes,template_id,manual_request,anger,neutral,partial,"emergency=3500; normal=3500; total=7000",partial,hold,semantic_match_not_strict;license_gated_access
+Portuguese (Brazil),emouerj,CC-BY-4.0,https://audeering.github.io/datasets/datasets/emouerj.html,no,none,unavailable,anger,neutral,partial,unknown_by_class,blocked,hold,transcript_unavailable_in_open_metadata;semantic_match_not_strict
