@@ -225,3 +225,65 @@ Do not edit:
 - TODO_THIS_WEEK.md
 - docs/technical_spec/*
 ```
+
+## Prompt A5: Acoustic Agent (Lexical-First Dataset Expansion)
+```text
+You are the acoustic-analysis execution agent for lexical-first expansion.
+Keep working on branch: codex/acoustic-2026w14-phase1.
+
+Primary objective:
+- Build the next multilingual pool starting from lexical comparability first, not only emotion labels.
+
+Current known blocker:
+- Existing phase2 batch has mapping-level comparability, but multilingual transcript/text coverage is missing.
+
+Inputs (must read first):
+- analysis/cross_language_emergency/phase2_lexical_inventory_2026w14.csv
+- analysis/cross_language_emergency/phase2_lexical_alignment_2026w14.md
+- analysis/cross_language_emergency/phase2_lexical_coverage_summary_2026w14.md
+- analysis/cross_language_emergency/multilingual_mapping_contract_2026w14.md
+
+Required outputs:
+1) analysis/cross_language_emergency/phase2_lexical_first_dataset_pool_2026w14.csv
+2) analysis/cross_language_emergency/phase2_lexical_go_no_go_2026w14.md
+3) analysis/cross_language_emergency/phase2_lexical_target_top2_2026w14.md
+
+CSV required columns:
+- language
+- dataset_name
+- license
+- source_url
+- has_transcript_text (yes/no)
+- text_access_mode (embedded/provided_index/external_download/unavailable)
+- emergency_labels
+- normal_labels
+- semantic_match_level (strict/partial)
+- lexical_coverage_level (high/medium/low/none)
+- estimated_usable_samples
+- scanned_usable_samples
+- lexical_comparability (strict/partial/none)
+- recommendation (go/hold)
+- blocker
+
+Hard rules:
+1) `go` requires:
+   - semantic_match_level=strict
+   - has_transcript_text=yes
+   - lexical_comparability in {strict, partial}
+   - estimated_usable_samples above minimum gate
+2) If transcript is unavailable, force `hold` even when emotion mapping is strict.
+3) Keep canonical emotion mapping unchanged:
+   - emergency=anger+fear
+   - normal=neutral(+calm)
+   - surprise sensitivity-only
+4) Do not fabricate transcript content or counts.
+
+Ranking rule for final top-2:
+- Priority score = lexical_coverage_level > semantic_match_level > sample size > license risk
+- Return exactly 2 recommended languages with rationale and fallback.
+
+Do not edit:
+- docs/weekly_todo/*
+- TODO_THIS_WEEK.md
+- docs/technical_spec/*
+```

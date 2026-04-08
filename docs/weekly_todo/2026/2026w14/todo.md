@@ -26,6 +26,7 @@
 - [x] Collect acoustic agent phase-1.5 refresh (`46f9b06e`): English gate pass confirmed, multilingual candidate matrix delivered.
 - [x] Collect acoustic agent phase-1.6 decision-support docs (`25deca41`): multilingual priority scorecard + mapping contract.
 - [x] Collect acoustic agent phase2 first-batch outputs (`b1eed215`): `phase2_multilingual_plan_2026w14.md`, `phase2_multilingual_dataset_manifest_2026w14.csv`, `phase2_mapping_audit_2026w14.md`.
+- [x] Collect acoustic agent lexical A4 outputs (`7b6b25c3`): `phase2_lexical_inventory_2026w14.csv`, `phase2_lexical_alignment_2026w14.md`, `phase2_lexical_coverage_summary_2026w14.md`.
 - [x] Lock expansion policy: English gate first, then multilingual expansion with open datasets (not limited to Chinese/Japanese; French etc. allowed if sample size and semantic mapping are sufficient).
 - [x] Collect model agent command pack for `preprocess_ext` and `branch_trial`.
 - [x] Receive server startup and completion receipts for both runs (evidenced by synced `weeklyresult` package).
@@ -40,6 +41,8 @@
 - [x] Post-meeting phase2 acoustic prompt prepared (`Prompt A3`):
   - `docs/weekly_todo/2026/2026w14/dispatch_prompts.md`
 - [x] Lexical inventory/alignment acoustic prompt prepared (`Prompt A4`):
+  - `docs/weekly_todo/2026/2026w14/dispatch_prompts.md`
+- [x] Lexical-first expansion acoustic prompt prepared (`Prompt A5`):
   - `docs/weekly_todo/2026/2026w14/dispatch_prompts.md`
 - [x] Meeting evidence tracked snapshot created under docs (git-tracked mirror):
   - `docs/weekly_todo/2026/2026w14/meeting_artifacts_snapshot_20260408.md`
@@ -139,5 +142,7 @@
   - Done: post-meeting phase2 dispatch prompt (`Prompt A3`) added for acoustic agent with language priority and mapping constraints.
   - Done: acoustic agent returned phase2 first-batch outputs on `codex/acoustic-2026w14-phase1` (`b1eed215`), with strict pool `Italian/German/French` and bridge pool `Chinese/Portuguese`.
   - Done: lexical inventory dispatch prompt (`Prompt A4`) added to require explicit word/utterance-level corpus visibility and cross-lingual gloss alignment.
+  - Done: acoustic agent returned lexical A4 outputs on `codex/acoustic-2026w14-phase1` (`7b6b25c3`), confirming lexical-level claim is currently blocked by multilingual transcript coverage.
+  - Done: lexical-first expansion prompt (`Prompt A5`) added to prioritize transcript-capable datasets before further multilingual comparison.
   - Done: created git-tracked meeting artifact snapshot under `docs/weekly_todo/2026/2026w14/meeting_artifacts_snapshot_20260408.md`.
-  - Next: dispatch `Prompt A4` and collect lexical inventory/alignment/coverage outputs.
+  - Next: dispatch `Prompt A5` and collect lexical-first pool + top2 recommendation (with fallback).
