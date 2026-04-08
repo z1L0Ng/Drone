@@ -30,6 +30,7 @@
 - [ ] Receive server startup and completion receipts for both runs.
 - [x] Receive server `preprocess_ext` startup receipt (PID/LOG/first 30 lines; GPU visible).
 - [x] Receive server model checkpoints for both runs (partial server sync, no `result/log` evidence yet).
+- [x] Receive server-side result reports for all three candidates under `weeklyresult/weekly_drone_2026w14/*`.
 - [x] Keep Notion checklist and repo docs synchronized after each receipt.
 - [x] Coordination reference doc:
   - `docs/weekly_todo/2026/2026w14/agent_management_playbook.md`
@@ -84,13 +85,15 @@
 ### Server
 - [x] Launch preprocessing extension run.
 - [x] Launch new branch trial run.
-- [ ] Output artifacts:
+- [x] Output artifacts (synced under `weeklyresult/weekly_drone_2026w14/*`):
   - `saved_models/weekly_drone_2026w14/preprocess_ext/`
   - `saved_models/weekly_drone_2026w14/branch_trial/`
-  - `result/weekly_drone_2026w14/preprocess_ext/`
-  - `result/weekly_drone_2026w14/branch_trial/`
+  - `weeklyresult/weekly_drone_2026w14/preprocess_ext/`
+  - `weeklyresult/weekly_drone_2026w14/branch_trial/`
+- [ ] Missing artifact sync (still needed for audit traceability):
   - `logs/weekly_drone_2026w14_preprocess_ext_*.log`
   - `logs/weekly_drone_2026w14_branch_trial_*.log`
+  - `logs/weekly_drone_2026w14_baseline_*.log`
 
 ## Thu 2026-04-09 (Before Meeting)
 ### Local
@@ -121,5 +124,7 @@
   - Next: wait for `preprocess_ext` completion receipt, then track `branch_trial` startup/completion receipts; no additional acoustic dispatch before server-side evidence lands.
 - 2026-04-08:
   - Done: local sync includes server checkpoints for `preprocess_ext` and `branch_trial` under `saved_models/weekly_drone_2026w14/*`.
-  - Blocker: `result/weekly_drone_2026w14/*` and `logs/weekly_drone_2026w14_*.log` are still absent in current local repo path.
-  - Next: request server-side completion evidence pack (result tree + key files + log tails) before finalizing `decision_table.md` adopt/defer.
+  - Done: weekly results synced under `weeklyresult/weekly_drone_2026w14/*` with `run_config.json`, `classification_report_noisy.txt`, and `student_history.csv` for baseline/preprocess_ext/branch_trial.
+  - Done: model comparison updated (`preprocess_ext` best, `branch_trial` regression).
+  - Blocker: `logs/weekly_drone_2026w14_*.log` still missing in local workspace.
+  - Next: request only log-tail evidence from server; meanwhile proceed with meeting recommendation (`preprocess_ext` adopt candidate, `branch_trial` defer).
