@@ -119,3 +119,53 @@ Completion receipt:
 - result tree
 - last 50 log lines
 ```
+
+## Prompt A3: Acoustic Agent (Post-Meeting Phase2 Multilingual Launch)
+```text
+You are the acoustic-analysis execution agent for post-meeting phase2.
+Keep working on branch: codex/acoustic-2026w14-phase1.
+
+Scope:
+- acoustic/dataset analysis only
+- no model architecture edits
+- no training orchestration edits
+
+Locked policy:
+1) English gate already passed in phase1; keep English mapping as reference.
+2) Expand multilingual beyond Chinese/Japanese when open datasets are sufficient.
+3) Enforce semantic comparability contract:
+   - emergency vs normal mapping must be explicitly documented per language.
+4) Priority order for immediate execution:
+   - Tier-1: Italian, German
+   - Tier-2: French
+
+Mandatory inputs to follow:
+- analysis/cross_language_emergency/multilingual_priority_scorecard_2026w14.md
+- analysis/cross_language_emergency/multilingual_mapping_contract_2026w14.md
+
+Required outputs (first batch):
+1) analysis/cross_language_emergency/phase2_multilingual_plan_2026w14.md
+2) analysis/cross_language_emergency/phase2_multilingual_dataset_manifest_2026w14.csv
+3) analysis/cross_language_emergency/phase2_mapping_audit_2026w14.md
+
+Required fields per language row:
+- language
+- dataset_name
+- license
+- source_url
+- emergency_labels
+- normal_labels
+- semantic_match_level (strict/partial)
+- usable_sample_estimate
+- risks
+- recommendation (go/hold)
+
+Execution note:
+- If Tier-1 language has no strict mapping or insufficient sample size, mark `hold` and move to next language.
+- Do not fabricate counts; separate estimated vs scanned.
+
+Do not edit:
+- docs/weekly_todo/*
+- TODO_THIS_WEEK.md
+- docs/technical_spec/*
+```

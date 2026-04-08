@@ -36,6 +36,10 @@
   - `docs/weekly_todo/2026/2026w14/agent_management_playbook.md`
 - [x] Dispatch prompt pack prepared:
   - `docs/weekly_todo/2026/2026w14/dispatch_prompts.md`
+- [x] Post-meeting phase2 acoustic prompt prepared (`Prompt A3`):
+  - `docs/weekly_todo/2026/2026w14/dispatch_prompts.md`
+- [x] Meeting evidence tracked snapshot created under docs (git-tracked mirror):
+  - `docs/weekly_todo/2026/2026w14/meeting_artifacts_snapshot_20260408.md`
 
 ## Branch / Model / Training Changes (This Week)
 | Date | Branch | Type | Change | Paths | Status |
@@ -129,4 +133,6 @@
   - Done: meeting recommendation finalized as `preprocess_ext=adopt`, `branch_trial=defer`.
   - Done: local real-world gate executed on `testset/` (inference + finetune with shared split cache) and written to `result/weekly_wrapup_2026w14/local_realworld_*`.
   - Done: meeting wrap-up artifacts finalized with local gate metrics (`comparison_main.csv`, `decision_table.md`, `meeting_brief_2026w14.md`, `related_work_delta.md`).
-  - Next: post-meeting phase2 multilingual expansion by mapping contract and scorecard priority.
+  - Done: post-meeting phase2 dispatch prompt (`Prompt A3`) added for acoustic agent with language priority and mapping constraints.
+  - Done: created git-tracked meeting artifact snapshot under `docs/weekly_todo/2026/2026w14/meeting_artifacts_snapshot_20260408.md`.
+  - Next: dispatch `Prompt A3` and collect phase2 multilingual plan/manifest/audit first batch.
