@@ -93,3 +93,118 @@ conda run -n drone python scripts/run_weekly_wrapup_local.py
 1. Update `docs/weekly_todo/2026/2026w14/todo.md`.
 2. Append a row to `docs/weekly_todo/handoff_log.md`.
 3. Record exact command + output path + next owner/action.
+
+## 7) Local Real-World Validation (Standardized)
+
+Purpose:
+- Validate weekly selected models on local manually collected `testset/`.
+- Run both "inference-only" and "finetune+inference" to estimate real-world transfer.
+
+### 7.1 Inference-only on local testset
+
+```bash
+# Baseline
+python scripts/eval_logmel_kd_checkpoint.py \
+  --weights saved_models/weekly_drone_2026w14/baseline/best_embed_kd/student_kd_best.weights.h5 \
+  --encoder saved_models/label_encoder.joblib \
+  --testset testset \
+  --output-dir result/weekly_wrapup_2026w14/local_realworld_eval/baseline \
+  --model-profile base \
+  --run-id drone_2026w14_local_realworld_eval \
+  --exp-id baseline_realworld \
+  --kd-variant embed_only \
+  --aug-flag true \
+  --prewarm-flag false \
+  --link-best-model
+
+# preprocess_ext
+python scripts/eval_logmel_kd_checkpoint.py \
+  --weights saved_models/weekly_drone_2026w14/preprocess_ext/student_kd_best.weights.h5 \
+  --encoder saved_models/label_encoder.joblib \
+  --testset testset \
+  --output-dir result/weekly_wrapup_2026w14/local_realworld_eval/preprocess_ext \
+  --model-profile base \
+  --run-id drone_2026w14_local_realworld_eval \
+  --exp-id preprocess_ext_realworld \
+  --kd-variant embed_only \
+  --aug-flag true \
+  --prewarm-flag false \
+  --link-best-model
+
+# branch_trial
+python scripts/eval_logmel_kd_checkpoint.py \
+  --weights saved_models/weekly_drone_2026w14/branch_trial/student_kd_best.weights.h5 \
+  --encoder saved_models/label_encoder.joblib \
+  --testset testset \
+  --output-dir result/weekly_wrapup_2026w14/local_realworld_eval/branch_trial \
+  --model-profile base \
+  --run-id drone_2026w14_local_realworld_eval \
+  --exp-id branch_trial_realworld \
+  --kd-variant ce_logits \
+  --aug-flag true \
+  --prewarm-flag false \
+  --link-best-model
+```
+
+### 7.2 Finetune+inference on local testset
+
+Use the same split cache across models for fair comparison:
+
+```bash
+SPLIT_CACHE=result/weekly_wrapup_2026w14/local_realworld_finetune/split_indices_testset.npz
+
+# Baseline
+python scripts/run_finetune_logmel_kd.py \
+  --testset testset \
+  --encoder saved_models/label_encoder.joblib \
+  --weights saved_models/weekly_drone_2026w14/baseline/best_embed_kd/student_kd_best.weights.h5 \
+  --finetuned-weights saved_models/weekly_drone_2026w14/baseline/best_embed_kd/finetuned_local_testset_best.weights.h5 \
+  --output result/weekly_wrapup_2026w14/local_realworld_finetune/baseline \
+  --split-cache "${SPLIT_CACHE}" \
+  --finetune-ratio 0.3 \
+  --val-ratio 0.1 \
+  --epochs 10 \
+  --batch-size 32 \
+  --lr 1e-5 \
+  --seed 42
+
+# preprocess_ext
+python scripts/run_finetune_logmel_kd.py \
+  --testset testset \
+  --encoder saved_models/label_encoder.joblib \
+  --weights saved_models/weekly_drone_2026w14/preprocess_ext/student_kd_best.weights.h5 \
+  --finetuned-weights saved_models/weekly_drone_2026w14/preprocess_ext/finetuned_local_testset_best.weights.h5 \
+  --output result/weekly_wrapup_2026w14/local_realworld_finetune/preprocess_ext \
+  --split-cache "${SPLIT_CACHE}" \
+  --finetune-ratio 0.3 \
+  --val-ratio 0.1 \
+  --epochs 10 \
+  --batch-size 32 \
+  --lr 1e-5 \
+  --seed 42
+
+# branch_trial
+python scripts/run_finetune_logmel_kd.py \
+  --testset testset \
+  --encoder saved_models/label_encoder.joblib \
+  --weights saved_models/weekly_drone_2026w14/branch_trial/student_kd_best.weights.h5 \
+  --finetuned-weights saved_models/weekly_drone_2026w14/branch_trial/finetuned_local_testset_best.weights.h5 \
+  --output result/weekly_wrapup_2026w14/local_realworld_finetune/branch_trial \
+  --split-cache "${SPLIT_CACHE}" \
+  --finetune-ratio 0.3 \
+  --val-ratio 0.1 \
+  --epochs 10 \
+  --batch-size 32 \
+  --lr 1e-5 \
+  --seed 42
+```
+
+### 7.3 Required outputs
+- `result/weekly_wrapup_2026w14/local_realworld_eval/*/metrics.json`
+- `result/weekly_wrapup_2026w14/local_realworld_eval/*/classification_report.txt`
+- `result/weekly_wrapup_2026w14/local_realworld_finetune/*/summary.csv`
+- `result/weekly_wrapup_2026w14/local_realworld_finetune/*/finetuned/classification_report.txt`
+
+### 7.4 Decision usage
+- Compare "inference-only" vs "finetuned" deltas on real-world testset.
+- Keep this stage as default weekly post-server validation before next-language expansion.

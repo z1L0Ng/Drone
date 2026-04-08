@@ -74,6 +74,8 @@
 - [x] Complete phase1 English meeting-ready summary package on acoustic branch (`6310b365`): evidence table + onepager + surprise-zero diagnosis.
 - [x] Dispatch phase2 multilingual candidate-matrix task to acoustic agent (license/sample-size/semantic-alignment gated).
 - [x] Freeze acoustic dispatch scope after phase1.6; no further acoustic tasks until server training receipts arrive.
+- [ ] Run local real-world inference on `testset/` for baseline/preprocess_ext/branch_trial.
+- [ ] Run local real-world finetune validation on `testset/` with unified split cache.
 - [ ] Output artifacts:
   - `analysis/cross_language_emergency/cross_language_band_compare.png`
   - `analysis/cross_language_emergency/avg_energy_curves.png`
@@ -81,6 +83,8 @@
   - `analysis/cross_language_emergency/multilingual_candidate_matrix_2026w14.md` (delivered on acoustic branch `46f9b06e`)
   - `analysis/cross_language_emergency/multilingual_priority_scorecard_2026w14.md` (delivered on acoustic branch `25deca41`)
   - `analysis/cross_language_emergency/multilingual_mapping_contract_2026w14.md` (delivered on acoustic branch `25deca41`)
+  - `result/weekly_wrapup_2026w14/local_realworld_eval/*`
+  - `result/weekly_wrapup_2026w14/local_realworld_finetune/*`
 
 ### Server
 - [x] Launch preprocessing extension run.
@@ -124,4 +128,5 @@
   - Done: weekly results synced under `weeklyresult/weekly_drone_2026w14/*` with `run_config.json`, `classification_report_noisy.txt`, and `student_history.csv` for baseline/preprocess_ext/branch_trial.
   - Done: model comparison updated (`preprocess_ext` best, `branch_trial` regression).
   - Done: PI confirmed no extra log backfill needed when `weeklyresult` evidence is complete.
-  - Next: finalize meeting recommendation as `preprocess_ext=adopt`, `branch_trial=defer`, and move to Thursday briefing.
+  - Done: meeting recommendation finalized as `preprocess_ext=adopt`, `branch_trial=defer`.
+  - Next: execute local testset inference + finetune validation and record deltas as future standard weekly gate.

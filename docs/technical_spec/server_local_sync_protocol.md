@@ -32,3 +32,13 @@
 
 ## Recommended Log Naming
 - `logs/weekly_${WEEKLY_TAG}_${task}_${timestamp}.log`
+
+## Post-Sync Local Standard Stage (Mandatory)
+After weekly server outputs are synced locally:
+1. Run local real-world inference on `testset/` for baseline + weekly candidates.
+2. Run local finetune validation on the same `testset/` split cache.
+3. Store outputs under weekly wrap-up folders and include delta metrics in meeting brief.
+4. Use this stage as a gate before scaling multilingual experiments.
+
+Reference:
+- `docs/technical_spec/local_realworld_validation_standard.md`
