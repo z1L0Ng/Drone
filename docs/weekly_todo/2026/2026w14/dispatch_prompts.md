@@ -389,3 +389,50 @@ Do not edit:
 - TODO_THIS_WEEK.md
 - docs/technical_spec/*
 ```
+
+## Prompt A8: Acoustic Agent (Gloss-Unblock for Strict Cross-Language Clusters)
+```text
+You are the acoustic-analysis execution agent for gloss unblock.
+Keep working on branch: codex/acoustic-2026w14-phase1.
+
+Current blocker:
+- `phase2_top2_gloss_clusters_2026w14.md` reports strict cross-language clusters = 0
+  because `english_gloss` is NA.
+
+Goal:
+- Add auditable English gloss mapping for top2 languages (Quechua, Polish),
+  then regenerate strict cross-language gloss clusters.
+
+Inputs:
+- analysis/cross_language_emergency/phase2_top2_lexical_manifest_2026w14.csv
+- analysis/cross_language_emergency/phase2_top2_gloss_clusters_2026w14.md
+- analysis/cross_language_emergency/phase2_top2_eval_runbook_2026w14.md
+
+Required outputs:
+1) analysis/cross_language_emergency/phase2_top2_gloss_mapping_2026w14.csv
+2) analysis/cross_language_emergency/phase2_top2_gloss_clusters_2026w14.md (updated)
+3) analysis/cross_language_emergency/phase2_top2_lexical_manifest_2026w14.csv (updated english_gloss fields)
+4) analysis/cross_language_emergency/phase2_top2_gloss_quality_audit_2026w14.md
+
+Gloss mapping CSV required columns:
+- language
+- sample_id
+- normalized_utterance_text
+- english_gloss
+- gloss_source (official/human_curated/dataset_translation)
+- confidence (high/medium/low)
+- reviewer_note
+
+Hard rules:
+1) no fabricated gloss; every gloss must include `gloss_source`.
+2) low-confidence gloss cannot be used for strict cluster claims.
+3) strict cluster summary must report:
+   - number of strict clusters
+   - rows covered by strict clusters
+   - rows left as NA/partial
+
+Do not edit:
+- docs/weekly_todo/*
+- TODO_THIS_WEEK.md
+- docs/technical_spec/*
+```
