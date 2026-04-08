@@ -25,6 +25,7 @@
 - [x] Collect acoustic agent phase-1.4 meeting evidence package (`6310b365`) with evidence table + surprise-zero diagnosis + onepager.
 - [x] Collect acoustic agent phase-1.5 refresh (`46f9b06e`): English gate pass confirmed, multilingual candidate matrix delivered.
 - [x] Collect acoustic agent phase-1.6 decision-support docs (`25deca41`): multilingual priority scorecard + mapping contract.
+- [x] Collect acoustic agent phase2 first-batch outputs (`b1eed215`): `phase2_multilingual_plan_2026w14.md`, `phase2_multilingual_dataset_manifest_2026w14.csv`, `phase2_mapping_audit_2026w14.md`.
 - [x] Lock expansion policy: English gate first, then multilingual expansion with open datasets (not limited to Chinese/Japanese; French etc. allowed if sample size and semantic mapping are sufficient).
 - [x] Collect model agent command pack for `preprocess_ext` and `branch_trial`.
 - [x] Receive server startup and completion receipts for both runs (evidenced by synced `weeklyresult` package).
@@ -37,6 +38,8 @@
 - [x] Dispatch prompt pack prepared:
   - `docs/weekly_todo/2026/2026w14/dispatch_prompts.md`
 - [x] Post-meeting phase2 acoustic prompt prepared (`Prompt A3`):
+  - `docs/weekly_todo/2026/2026w14/dispatch_prompts.md`
+- [x] Lexical inventory/alignment acoustic prompt prepared (`Prompt A4`):
   - `docs/weekly_todo/2026/2026w14/dispatch_prompts.md`
 - [x] Meeting evidence tracked snapshot created under docs (git-tracked mirror):
   - `docs/weekly_todo/2026/2026w14/meeting_artifacts_snapshot_20260408.md`
@@ -134,5 +137,7 @@
   - Done: local real-world gate executed on `testset/` (inference + finetune with shared split cache) and written to `result/weekly_wrapup_2026w14/local_realworld_*`.
   - Done: meeting wrap-up artifacts finalized with local gate metrics (`comparison_main.csv`, `decision_table.md`, `meeting_brief_2026w14.md`, `related_work_delta.md`).
   - Done: post-meeting phase2 dispatch prompt (`Prompt A3`) added for acoustic agent with language priority and mapping constraints.
+  - Done: acoustic agent returned phase2 first-batch outputs on `codex/acoustic-2026w14-phase1` (`b1eed215`), with strict pool `Italian/German/French` and bridge pool `Chinese/Portuguese`.
+  - Done: lexical inventory dispatch prompt (`Prompt A4`) added to require explicit word/utterance-level corpus visibility and cross-lingual gloss alignment.
   - Done: created git-tracked meeting artifact snapshot under `docs/weekly_todo/2026/2026w14/meeting_artifacts_snapshot_20260408.md`.
-  - Next: dispatch `Prompt A3` and collect phase2 multilingual plan/manifest/audit first batch.
+  - Next: dispatch `Prompt A4` and collect lexical inventory/alignment/coverage outputs.

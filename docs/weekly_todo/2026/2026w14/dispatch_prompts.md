@@ -169,3 +169,59 @@ Do not edit:
 - TODO_THIS_WEEK.md
 - docs/technical_spec/*
 ```
+
+## Prompt A4: Acoustic Agent (Lexical Inventory + Cross-Lingual Word-Level Alignment)
+```text
+You are the acoustic-analysis execution agent for phase2 lexical alignment.
+Keep working on branch: codex/acoustic-2026w14-phase1.
+
+Goal:
+- Make explicit which words/utterances are actually used as analysis corpus, not only language-level labels.
+- Separate emotion-label mapping from lexical-content comparability.
+
+Inputs:
+- analysis/cross_language_emergency/phase2_multilingual_dataset_manifest_2026w14.csv
+- analysis/cross_language_emergency/phase2_mapping_audit_2026w14.md
+- analysis/cross_language_emergency/multilingual_mapping_contract_2026w14.md
+
+Required outputs:
+1) analysis/cross_language_emergency/phase2_lexical_inventory_2026w14.csv
+2) analysis/cross_language_emergency/phase2_lexical_alignment_2026w14.md
+3) analysis/cross_language_emergency/phase2_lexical_coverage_summary_2026w14.md
+
+CSV required columns:
+- language
+- dataset_name
+- sample_id
+- split_source (estimated/scanned)
+- emotion_label_raw
+- canonical_label (emergency/normal/excluded)
+- raw_utterance_text
+- normalized_utterance_text
+- english_gloss
+- lexical_domain_tag (command/help-call/status/other)
+- lexical_comparability (strict/partial/none)
+- notes
+
+Execution rules:
+1) If dataset has no utterance text/transcript, set `raw_utterance_text=NA` and `lexical_comparability=none`.
+2) Do not fabricate text. If only template sentence IDs are provided, keep IDs and mark text availability explicitly.
+3) For strict lexical comparability, require semantically matched gloss clusters between English and target language.
+4) Keep emotion mapping contract unchanged:
+   - mainline: emergency=anger+fear; normal=neutral(+calm)
+   - `surprise` remains sensitivity-only
+
+Markdown deliverable expectations:
+- `phase2_lexical_alignment_2026w14.md`:
+  - per-language lexical availability status
+  - top comparable gloss clusters (if any)
+  - mismatch reasons
+- `phase2_lexical_coverage_summary_2026w14.md`:
+  - counts of rows with/without usable text per language
+  - recommendation: can lexical-level comparison be claimed in meeting? (yes/no + reason)
+
+Do not edit:
+- docs/weekly_todo/*
+- TODO_THIS_WEEK.md
+- docs/technical_spec/*
+```
