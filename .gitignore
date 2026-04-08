@@ -221,3 +221,4 @@ testset/
 #aved_models/logmel_kd_ablation_*/
 #saved_models/**/finetuned_best.weights.h5
 #experiments/**/best_model.ckpt
+saved_models/**/finetuned_local_testset_best.weights.h5

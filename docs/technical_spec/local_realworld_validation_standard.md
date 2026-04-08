@@ -16,10 +16,13 @@
 
 ## Standard workflow
 1. Inference-only validation:
-   - script: `scripts/eval_logmel_kd_checkpoint.py`
+   - script: `src/infer_logmel_kd.py` (default)
+   - runtime: `conda run -n drone ...`
    - run on all weekly candidates with same testset.
+   - note: this path avoids local `librosa/numba` compatibility failures seen in some environments.
 2. Finetune validation:
    - script: `scripts/run_finetune_logmel_kd.py`
+   - runtime: `conda run -n drone ...`
    - use same split cache across models (`split_indices_testset.npz`).
 3. Comparison and decision:
    - compare original vs finetuned metrics.
@@ -34,7 +37,6 @@
 
 Minimum files per model:
 - inference-only:
-  - `metrics.json`
   - `classification_report.txt`
   - `confusion_matrix.png`
 - finetune:

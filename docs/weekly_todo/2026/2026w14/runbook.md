@@ -104,46 +104,25 @@ Purpose:
 
 ```bash
 # Baseline
-python scripts/eval_logmel_kd_checkpoint.py \
+conda run -n drone python src/infer_logmel_kd.py \
   --weights saved_models/weekly_drone_2026w14/baseline/best_embed_kd/student_kd_best.weights.h5 \
-  --encoder saved_models/label_encoder.joblib \
-  --testset testset \
-  --output-dir result/weekly_wrapup_2026w14/local_realworld_eval/baseline \
-  --model-profile base \
-  --run-id drone_2026w14_local_realworld_eval \
-  --exp-id baseline_realworld \
-  --kd-variant embed_only \
-  --aug-flag true \
-  --prewarm-flag false \
-  --link-best-model
+  --label-encoder saved_models/label_encoder.joblib \
+  --testset-root testset \
+  --output-dir result/weekly_wrapup_2026w14/local_realworld_eval/baseline
 
 # preprocess_ext
-python scripts/eval_logmel_kd_checkpoint.py \
+conda run -n drone python src/infer_logmel_kd.py \
   --weights saved_models/weekly_drone_2026w14/preprocess_ext/student_kd_best.weights.h5 \
-  --encoder saved_models/label_encoder.joblib \
-  --testset testset \
-  --output-dir result/weekly_wrapup_2026w14/local_realworld_eval/preprocess_ext \
-  --model-profile base \
-  --run-id drone_2026w14_local_realworld_eval \
-  --exp-id preprocess_ext_realworld \
-  --kd-variant embed_only \
-  --aug-flag true \
-  --prewarm-flag false \
-  --link-best-model
+  --label-encoder saved_models/label_encoder.joblib \
+  --testset-root testset \
+  --output-dir result/weekly_wrapup_2026w14/local_realworld_eval/preprocess_ext
 
 # branch_trial
-python scripts/eval_logmel_kd_checkpoint.py \
+conda run -n drone python src/infer_logmel_kd.py \
   --weights saved_models/weekly_drone_2026w14/branch_trial/student_kd_best.weights.h5 \
-  --encoder saved_models/label_encoder.joblib \
-  --testset testset \
-  --output-dir result/weekly_wrapup_2026w14/local_realworld_eval/branch_trial \
-  --model-profile base \
-  --run-id drone_2026w14_local_realworld_eval \
-  --exp-id branch_trial_realworld \
-  --kd-variant ce_logits \
-  --aug-flag true \
-  --prewarm-flag false \
-  --link-best-model
+  --label-encoder saved_models/label_encoder.joblib \
+  --testset-root testset \
+  --output-dir result/weekly_wrapup_2026w14/local_realworld_eval/branch_trial
 ```
 
 ### 7.2 Finetune+inference on local testset
@@ -154,7 +133,7 @@ Use the same split cache across models for fair comparison:
 SPLIT_CACHE=result/weekly_wrapup_2026w14/local_realworld_finetune/split_indices_testset.npz
 
 # Baseline
-python scripts/run_finetune_logmel_kd.py \
+conda run -n drone python scripts/run_finetune_logmel_kd.py \
   --testset testset \
   --encoder saved_models/label_encoder.joblib \
   --weights saved_models/weekly_drone_2026w14/baseline/best_embed_kd/student_kd_best.weights.h5 \
@@ -169,7 +148,7 @@ python scripts/run_finetune_logmel_kd.py \
   --seed 42
 
 # preprocess_ext
-python scripts/run_finetune_logmel_kd.py \
+conda run -n drone python scripts/run_finetune_logmel_kd.py \
   --testset testset \
   --encoder saved_models/label_encoder.joblib \
   --weights saved_models/weekly_drone_2026w14/preprocess_ext/student_kd_best.weights.h5 \
@@ -184,7 +163,7 @@ python scripts/run_finetune_logmel_kd.py \
   --seed 42
 
 # branch_trial
-python scripts/run_finetune_logmel_kd.py \
+conda run -n drone python scripts/run_finetune_logmel_kd.py \
   --testset testset \
   --encoder saved_models/label_encoder.joblib \
   --weights saved_models/weekly_drone_2026w14/branch_trial/student_kd_best.weights.h5 \
@@ -200,7 +179,6 @@ python scripts/run_finetune_logmel_kd.py \
 ```
 
 ### 7.3 Required outputs
-- `result/weekly_wrapup_2026w14/local_realworld_eval/*/metrics.json`
 - `result/weekly_wrapup_2026w14/local_realworld_eval/*/classification_report.txt`
 - `result/weekly_wrapup_2026w14/local_realworld_finetune/*/summary.csv`
 - `result/weekly_wrapup_2026w14/local_realworld_finetune/*/finetuned/classification_report.txt`

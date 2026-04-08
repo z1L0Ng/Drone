@@ -42,8 +42,8 @@
 |---|---|---|---|---|---|
 | 2026-04-07 | `main` | planning | Lock meeting-week execution plan and checkpoints/report paths | `docs/weekly_todo/2026/2026w14/`, `docs/weekly_todo/handoff_log.md` | done |
 | 2026-04-07 | `main` | coordination | Multi-agent management playbook and handoff protocol activated | `docs/weekly_todo/2026/2026w14/agent_management_playbook.md` | done |
-| 2026-04-07 | `exp/preprocess-ext` | training | Preprocessing extension trial planned for server run | `saved_models/weekly_drone_2026w14/preprocess_ext/`, `result/weekly_drone_2026w14/preprocess_ext/` | planned |
-| 2026-04-08 | `exp/branch-trial` | training | New branch trial planned for server run | `saved_models/weekly_drone_2026w14/branch_trial/`, `result/weekly_drone_2026w14/branch_trial/` | planned |
+| 2026-04-07 | `exp/preprocess-ext` | training | Preprocessing extension trial completed on server and synced locally | `saved_models/weekly_drone_2026w14/preprocess_ext/`, `weeklyresult/weekly_drone_2026w14/preprocess_ext/` | done |
+| 2026-04-08 | `exp/branch-trial` | training | New branch trial completed on server and synced locally | `saved_models/weekly_drone_2026w14/branch_trial/`, `weeklyresult/weekly_drone_2026w14/branch_trial/` | done |
 
 ## Tue 2026-04-07
 ### Local
@@ -63,26 +63,24 @@
 
 ### Server
 - [x] Freeze baseline and launch baseline training (`drone_2026w14`).
-- [ ] Output artifacts:
+- [x] Output artifacts:
   - `saved_models/weekly_drone_2026w14/baseline/`
-  - `result/weekly_drone_2026w14/baseline/`
-  - `logs/weekly_drone_2026w14_baseline_*.log`
+  - `weeklyresult/weekly_drone_2026w14/baseline/`
+  - `logs/weekly_drone_2026w14_baseline_*.log` (log backfill waived this week; `weeklyresult` accepted as evidence)
 
 ## Wed 2026-04-08
 ### Local
-- [ ] Complete cross-language analysis summary.
+- [x] Complete cross-language analysis summary (delivered on `origin/codex/acoustic-2026w14-phase1` up to `25deca41`).
 - [x] Complete phase1 English meeting-ready summary package on acoustic branch (`6310b365`): evidence table + onepager + surprise-zero diagnosis.
 - [x] Dispatch phase2 multilingual candidate-matrix task to acoustic agent (license/sample-size/semantic-alignment gated).
 - [x] Freeze acoustic dispatch scope after phase1.6; no further acoustic tasks until server training receipts arrive.
-- [ ] Run local real-world inference on `testset/` for baseline/preprocess_ext/branch_trial.
-- [ ] Run local real-world finetune validation on `testset/` with unified split cache.
-- [ ] Output artifacts:
-  - `analysis/cross_language_emergency/cross_language_band_compare.png`
-  - `analysis/cross_language_emergency/avg_energy_curves.png`
-  - `analysis/cross_language_emergency/summary_2026w14.md`
-  - `analysis/cross_language_emergency/multilingual_candidate_matrix_2026w14.md` (delivered on acoustic branch `46f9b06e`)
-  - `analysis/cross_language_emergency/multilingual_priority_scorecard_2026w14.md` (delivered on acoustic branch `25deca41`)
-  - `analysis/cross_language_emergency/multilingual_mapping_contract_2026w14.md` (delivered on acoustic branch `25deca41`)
+- [x] Run local real-world inference on `testset/` for baseline/preprocess_ext/branch_trial.
+- [x] Run local real-world finetune validation on `testset/` with unified split cache.
+- [x] Output artifacts:
+  - `analysis/cross_language_emergency/summary_2026w14_phase1.md` (acoustic branch)
+  - `analysis/cross_language_emergency/multilingual_candidate_matrix_2026w14.md` (acoustic branch `46f9b06e`)
+  - `analysis/cross_language_emergency/multilingual_priority_scorecard_2026w14.md` (acoustic branch `25deca41`)
+  - `analysis/cross_language_emergency/multilingual_mapping_contract_2026w14.md` (acoustic branch `25deca41`)
   - `result/weekly_wrapup_2026w14/local_realworld_eval/*`
   - `result/weekly_wrapup_2026w14/local_realworld_finetune/*`
 
@@ -98,9 +96,9 @@
 
 ## Thu 2026-04-09 (Before Meeting)
 ### Local
-- [ ] Produce decision table for mainline inclusion (baseline vs preprocess_ext vs branch_trial).
-- [ ] Prepare short meeting brief and minimal related work update.
-- [ ] Output artifacts:
+- [x] Produce decision table for mainline inclusion (baseline vs preprocess_ext vs branch_trial).
+- [x] Prepare short meeting brief and minimal related work update.
+- [x] Output artifacts:
   - `result/weekly_wrapup_2026w14/comparison_main.csv`
   - `result/weekly_wrapup_2026w14/decision_table.md`
   - `result/weekly_wrapup_2026w14/meeting_brief_2026w14.md`
@@ -129,4 +127,6 @@
   - Done: model comparison updated (`preprocess_ext` best, `branch_trial` regression).
   - Done: PI confirmed no extra log backfill needed when `weeklyresult` evidence is complete.
   - Done: meeting recommendation finalized as `preprocess_ext=adopt`, `branch_trial=defer`.
-  - Next: execute local testset inference + finetune validation and record deltas as future standard weekly gate.
+  - Done: local real-world gate executed on `testset/` (inference + finetune with shared split cache) and written to `result/weekly_wrapup_2026w14/local_realworld_*`.
+  - Done: meeting wrap-up artifacts finalized with local gate metrics (`comparison_main.csv`, `decision_table.md`, `meeting_brief_2026w14.md`, `related_work_delta.md`).
+  - Next: post-meeting phase2 multilingual expansion by mapping contract and scorecard priority.
