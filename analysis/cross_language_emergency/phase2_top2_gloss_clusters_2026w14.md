@@ -4,45 +4,27 @@
 - Top2 lexical-first languages: Quechua + Polish.
 - Canonical mapping fixed: emergency=anger+fear; normal=neutral(+calm); surprise sensitivity-only.
 
-## Cluster Construction
-1. Candidate lexical unit = `normalized_utterance_text`.
-2. Keep only rows with `include_flag=1` and canonical labels in {emergency, normal}.
-3. Cross-language strict gloss cluster requires non-NA `english_gloss` match; current batch has no open English gloss, so strict cross-language clusters = 0.
+## Strict Cross-Language Cluster Summary
+- strict_clusters: **8**
+- rows_covered_by_strict_clusters: **4424**
+- included_rows_total: **7805**
+- rows_left_as_NA_or_partial: **3381**
+  - NA gloss rows: 3381
+  - low-confidence rows (partial): 0
 
-## Per-Language Top Lexical Units (frequency)
+## Strict Cluster Table
+| cluster_id | canonical_label | lexical_domain_tag | Quechua_rows | Polish_rows | total_rows |
+|---|---|---|---:|---:|---:|
+| C1 | emergency | command | 156 | 135 | 291 |
+| C2 | emergency | help-call | 18 | 18 | 36 |
+| C3 | emergency | other | 822 | 626 | 1448 |
+| C4 | emergency | status | 372 | 706 | 1078 |
+| C5 | normal | command | 72 | 72 | 144 |
+| C6 | normal | help-call | 12 | 9 | 21 |
+| C7 | normal | other | 414 | 341 | 755 |
+| C8 | normal | status | 264 | 387 | 651 |
 
-### Quechua
-| normalized_utterance_text | freq |
-|---|---:|
-| llasa | 18 |
-| kuchuna | 18 |
-| chay ruwayta mana chaskisqachu millaypunin chayqa consejo viceministro nisqakunamanta hamuq. | 12 |
-| tintinqa wasimasinchispa sach'akunapin wiñan | 12 |
-| phiña | 12 |
-| sasachaykuna | 12 |
-| sapallanmi chay runaqa waqtuta ukyarapusqa | 12 |
-| waqayuspan ripun | 12 |
-| manan waylluytaqa huchapi t ́ikachinachu. | 12 |
-| raphi | 12 |
-| saqesqay hinallan kashan | 12 |
-| ¿pitaq chay t’ikakunatari t ́iraran? | 12 |
-
-### Polish
-| normalized_utterance_text | freq |
-|---|---:|
-| nie waśńmy się ze sobą | 27 |
-| moja ciocia jest bardzo pomocna | 27 |
-| w parku rośnie ogromne drzewo | 27 |
-| ten miesiąc minął bardzo szybko | 27 |
-| dzieci muszą dużo jeść | 27 |
-| przestań go judzić | 27 |
-| aby upiec ciasto muszę kupić mączkę | 26 |
-| egipcjanie uważali ibisy za święte | 26 |
-| człowiek zaczyna umierać już w momencie narodzin | 26 |
-| ten pomysł trąci brakiem realizmu | 26 |
-| żołwica to dawne określenie na siostrę męża | 26 |
-| lubię czytać przed snem | 26 |
-
-## Cross-Language Gloss Status
-- Strict comparable gloss clusters: **0** (english_gloss unavailable for both top2 datasets).
-- Action to unlock strict clustering: add human-curated or officially provided English gloss table keyed by `sample_id` or sentence id.
+## Method Note
+- Quechua glosses translated for top-250 frequent source texts among included rows (auditable priority batch).
+- Polish glosses translated for full selected sentence set from metadata.
+- low-confidence rows are excluded from strict claims by rule.
