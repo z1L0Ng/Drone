@@ -1,0 +1,75 @@
+language,dataset_name,sample_id,split_source,emotion_label_raw,canonical_label,raw_utterance_text,normalized_utterance_text,english_gloss,lexical_domain_tag,lexical_comparability,notes
+English,CREMA-D(phase1_reference),DFA,scanned,ANG,emergency,DFA,dfa,DFA,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),DFA,scanned,FEA,emergency,DFA,dfa,DFA,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),DFA,scanned,NEU,normal,DFA,dfa,DFA,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),IEO,scanned,ANG,emergency,IEO,ieo,IEO,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),IEO,scanned,FEA,emergency,IEO,ieo,IEO,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),IEO,scanned,NEU,normal,IEO,ieo,IEO,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),IOM,scanned,ANG,emergency,IOM,iom,IOM,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),IOM,scanned,FEA,emergency,IOM,iom,IOM,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),IOM,scanned,NEU,normal,IOM,iom,IOM,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),ITH,scanned,ANG,emergency,ITH,ith,ITH,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),ITH,scanned,FEA,emergency,ITH,ith,ITH,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),ITH,scanned,NEU,normal,ITH,ith,ITH,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),ITS,scanned,ANG,emergency,ITS,its,ITS,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),ITS,scanned,FEA,emergency,ITS,its,ITS,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),ITS,scanned,NEU,normal,ITS,its,ITS,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),IWL,scanned,ANG,emergency,IWL,iwl,IWL,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),IWL,scanned,FEA,emergency,IWL,iwl,IWL,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),IWL,scanned,NEU,normal,IWL,iwl,IWL,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),IWW,scanned,ANG,emergency,IWW,iww,IWW,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),IWW,scanned,FEA,emergency,IWW,iww,IWW,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),IWW,scanned,NEU,normal,IWW,iww,IWW,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),MTI,scanned,ANG,emergency,MTI,mti,MTI,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),MTI,scanned,FEA,emergency,MTI,mti,MTI,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),MTI,scanned,NEU,normal,MTI,mti,MTI,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),TAI,scanned,ANG,emergency,TAI,tai,TAI,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),TAI,scanned,FEA,emergency,TAI,tai,TAI,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),TAI,scanned,NEU,normal,TAI,tai,TAI,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),TIE,scanned,ANG,emergency,TIE,tie,TIE,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),TIE,scanned,FEA,emergency,TIE,tie,TIE,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),TIE,scanned,NEU,normal,TIE,tie,TIE,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),TSI,scanned,ANG,emergency,TSI,tsi,TSI,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),TSI,scanned,FEA,emergency,TSI,tsi,TSI,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),TSI,scanned,NEU,normal,TSI,tsi,TSI,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),WSI,scanned,ANG,emergency,WSI,wsi,WSI,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),WSI,scanned,FEA,emergency,WSI,wsi,WSI,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+English,CREMA-D(phase1_reference),WSI,scanned,NEU,normal,WSI,wsi,WSI,other,partial,Template sentence ID extracted from phase1 filename; full transcript text not staged in current artifacts.
+Italian,EMOZIONALMENTE,EMOZIONALMENTE_estimated_anger,estimated,anger,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Italian,EMOZIONALMENTE,EMOZIONALMENTE_estimated_fear,estimated,fear,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Italian,EMOZIONALMENTE,EMOZIONALMENTE_estimated_neutral,estimated,neutral,normal,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Italian,EMOZIONALMENTE,EMOZIONALMENTE_estimated_calm,estimated,calm,normal,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Italian,EMOZIONALMENTE,EMOZIONALMENTE_estimated_surprise_policy,estimated,surprise,excluded,NA,NA,NA,other,none,Sensitivity-only label per contract; excluded from mainline emergency-vs-normal analysis.
+Italian,EMOZIONALMENTE,EMOZIONALMENTE_scanned_anger,scanned,anger,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Italian,EMOZIONALMENTE,EMOZIONALMENTE_scanned_fear,scanned,fear,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Italian,EMOZIONALMENTE,EMOZIONALMENTE_scanned_neutral,scanned,neutral,normal,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Italian,EMOZIONALMENTE,EMOZIONALMENTE_scanned_calm,scanned,calm,normal,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Italian,EMOZIONALMENTE,EMOZIONALMENTE_scanned_surprise_policy,scanned,surprise,excluded,NA,NA,NA,other,none,Sensitivity-only label per contract; excluded from mainline emergency-vs-normal analysis.
+German,EMO-DB,EMO-DB_estimated_anger,estimated,anger,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+German,EMO-DB,EMO-DB_estimated_fear,estimated,fear,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+German,EMO-DB,EMO-DB_estimated_neutral,estimated,neutral,normal,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+German,EMO-DB,EMO-DB_estimated_surprise_policy,estimated,surprise,excluded,NA,NA,NA,other,none,Sensitivity-only label per contract; excluded from mainline emergency-vs-normal analysis.
+German,EMO-DB,EMO-DB_scanned_anger,scanned,anger,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+German,EMO-DB,EMO-DB_scanned_fear,scanned,fear,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+German,EMO-DB,EMO-DB_scanned_neutral,scanned,neutral,normal,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+German,EMO-DB,EMO-DB_scanned_surprise_policy,scanned,surprise,excluded,NA,NA,NA,other,none,Sensitivity-only label per contract; excluded from mainline emergency-vs-normal analysis.
+French,CaFE,CaFE_estimated_anger,estimated,anger,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+French,CaFE,CaFE_estimated_fear,estimated,fear,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+French,CaFE,CaFE_estimated_neutral,estimated,neutral,normal,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+French,CaFE,CaFE_estimated_surprise_policy,estimated,surprise,excluded,NA,NA,NA,other,none,Sensitivity-only label per contract; excluded from mainline emergency-vs-normal analysis.
+French,CaFE,CaFE_scanned_anger,scanned,anger,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+French,CaFE,CaFE_scanned_fear,scanned,fear,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+French,CaFE,CaFE_scanned_neutral,scanned,neutral,normal,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+French,CaFE,CaFE_scanned_surprise_policy,scanned,surprise,excluded,NA,NA,NA,other,none,Sensitivity-only label per contract; excluded from mainline emergency-vs-normal analysis.
+Chinese (Mandarin),ESD(ZH),ESD(ZH)_estimated_anger,estimated,anger,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Chinese (Mandarin),ESD(ZH),ESD(ZH)_estimated_neutral,estimated,neutral,normal,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Chinese (Mandarin),ESD(ZH),ESD(ZH)_estimated_surprise_policy,estimated,surprise,excluded,NA,NA,NA,other,none,Sensitivity-only label per contract; excluded from mainline emergency-vs-normal analysis.
+Chinese (Mandarin),ESD(ZH),ESD(ZH)_scanned_anger,scanned,anger,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Chinese (Mandarin),ESD(ZH),ESD(ZH)_scanned_neutral,scanned,neutral,normal,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Chinese (Mandarin),ESD(ZH),ESD(ZH)_scanned_surprise_policy,scanned,surprise,excluded,NA,NA,NA,other,none,Sensitivity-only label per contract; excluded from mainline emergency-vs-normal analysis.
+Portuguese (Brazil),EmoUERJ,EmoUERJ_estimated_anger,estimated,anger,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Portuguese (Brazil),EmoUERJ,EmoUERJ_estimated_neutral,estimated,neutral,normal,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Portuguese (Brazil),EmoUERJ,EmoUERJ_estimated_surprise_policy,estimated,surprise,excluded,NA,NA,NA,other,none,Sensitivity-only label per contract; excluded from mainline emergency-vs-normal analysis.
+Portuguese (Brazil),EmoUERJ,EmoUERJ_scanned_anger,scanned,anger,emergency,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Portuguese (Brazil),EmoUERJ,EmoUERJ_scanned_neutral,scanned,neutral,normal,NA,NA,NA,other,none,No utterance transcript/text staged in current phase2 assets; emotion mapping available but lexical alignment unavailable.
+Portuguese (Brazil),EmoUERJ,EmoUERJ_scanned_surprise_policy,scanned,surprise,excluded,NA,NA,NA,other,none,Sensitivity-only label per contract; excluded from mainline emergency-vs-normal analysis.
