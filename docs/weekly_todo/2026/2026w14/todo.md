@@ -29,6 +29,7 @@
 - [x] Collect model agent command pack for `preprocess_ext` and `branch_trial`.
 - [ ] Receive server startup and completion receipts for both runs.
 - [x] Receive server `preprocess_ext` startup receipt (PID/LOG/first 30 lines; GPU visible).
+- [x] Receive server model checkpoints for both runs (partial server sync, no `result/log` evidence yet).
 - [x] Keep Notion checklist and repo docs synchronized after each receipt.
 - [x] Coordination reference doc:
   - `docs/weekly_todo/2026/2026w14/agent_management_playbook.md`
@@ -82,7 +83,7 @@
 
 ### Server
 - [x] Launch preprocessing extension run.
-- [ ] Launch new branch trial run.
+- [x] Launch new branch trial run.
 - [ ] Output artifacts:
   - `saved_models/weekly_drone_2026w14/preprocess_ext/`
   - `saved_models/weekly_drone_2026w14/branch_trial/`
@@ -118,3 +119,7 @@
   - Done: server `preprocess_ext` startup receipt received (PID + LOG + first 30 lines; GPU visible).
   - Done: meeting wrap-up templates initialized under `result/weekly_wrapup_2026w14/`.
   - Next: wait for `preprocess_ext` completion receipt, then track `branch_trial` startup/completion receipts; no additional acoustic dispatch before server-side evidence lands.
+- 2026-04-08:
+  - Done: local sync includes server checkpoints for `preprocess_ext` and `branch_trial` under `saved_models/weekly_drone_2026w14/*`.
+  - Blocker: `result/weekly_drone_2026w14/*` and `logs/weekly_drone_2026w14_*.log` are still absent in current local repo path.
+  - Next: request server-side completion evidence pack (result tree + key files + log tails) before finalizing `decision_table.md` adopt/defer.
