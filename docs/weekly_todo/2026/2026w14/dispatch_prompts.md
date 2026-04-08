@@ -336,3 +336,56 @@ Do not edit:
 - TODO_THIS_WEEK.md
 - docs/technical_spec/*
 ```
+
+## Prompt A7: Acoustic Agent (Top2 Lexical-Ready Execution Pack)
+```text
+You are the acoustic-analysis execution agent for top2 lexical-ready execution.
+Keep working on branch: codex/acoustic-2026w14-phase1.
+
+Locked inputs:
+- Top2 (lexical-first): Quechua + Polish
+- Fallback: Italian
+- Canonical mapping unchanged:
+  - emergency=anger+fear
+  - normal=neutral(+calm)
+  - surprise sensitivity-only
+
+Goal:
+- Produce execution-ready package for real lexical-level cross-language comparison on top2.
+
+Required outputs:
+1) analysis/cross_language_emergency/phase2_top2_lexical_manifest_2026w14.csv
+2) analysis/cross_language_emergency/phase2_top2_gloss_clusters_2026w14.md
+3) analysis/cross_language_emergency/phase2_top2_eval_runbook_2026w14.md
+
+Manifest required columns:
+- language
+- dataset_name
+- sample_id
+- canonical_label
+- raw_utterance_text
+- normalized_utterance_text
+- english_gloss
+- lexical_domain_tag
+- split (train/dev/test)
+- include_flag
+- exclusion_reason
+
+Hard rules:
+1) include only canonical labels (anger/fear/neutral(+calm)).
+2) no fabricated transcript/gloss.
+3) every excluded row must have explicit exclusion_reason.
+4) output class counts by language and split.
+
+Runbook expectations:
+- data acquisition path
+- preprocessing normalization steps
+- lexical cluster construction method
+- reproducible command skeletons for local analysis
+- risk notes (license/domain shift/imbalance)
+
+Do not edit:
+- docs/weekly_todo/*
+- TODO_THIS_WEEK.md
+- docs/technical_spec/*
+```
