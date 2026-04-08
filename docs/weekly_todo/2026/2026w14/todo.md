@@ -30,6 +30,7 @@
 - [x] Collect acoustic agent lexical-first A5 outputs (`af904615`): `phase2_lexical_first_dataset_pool_2026w14.csv`, `phase2_lexical_go_no_go_2026w14.md`, `phase2_lexical_target_top2_2026w14.md`.
 - [x] Collect acoustic agent transcript-unblock A6 outputs (`a1d686de`): `phase2_transcript_capable_candidates_2026w14.csv`, `phase2_transcript_access_plan_2026w14.md`, `phase2_lexical_unblock_top2_2026w14.md`.
 - [x] Collect acoustic agent top2 lexical-ready A7 outputs (`739abfa4`): `phase2_top2_lexical_manifest_2026w14.csv`, `phase2_top2_gloss_clusters_2026w14.md`, `phase2_top2_eval_runbook_2026w14.md`.
+- [x] Collect acoustic agent gloss-unblock A8 outputs (`849712c1`): `phase2_top2_gloss_mapping_2026w14.csv`, updated `phase2_top2_gloss_clusters_2026w14.md`, updated `phase2_top2_lexical_manifest_2026w14.csv`, `phase2_top2_gloss_quality_audit_2026w14.md`.
 - [x] Lock expansion policy: English gate first, then multilingual expansion with open datasets (not limited to Chinese/Japanese; French etc. allowed if sample size and semantic mapping are sufficient).
 - [x] Collect model agent command pack for `preprocess_ext` and `branch_trial`.
 - [x] Receive server startup and completion receipts for both runs (evidenced by synced `weeklyresult` package).
@@ -52,6 +53,8 @@
 - [x] Top2 lexical-ready execution prompt prepared (`Prompt A7`):
   - `docs/weekly_todo/2026/2026w14/dispatch_prompts.md`
 - [x] Gloss-unblock execution prompt prepared (`Prompt A8`):
+  - `docs/weekly_todo/2026/2026w14/dispatch_prompts.md`
+- [x] Strict-cluster benchmark packaging prompt prepared (`Prompt A9`):
   - `docs/weekly_todo/2026/2026w14/dispatch_prompts.md`
 - [x] Meeting evidence tracked snapshot created under docs (git-tracked mirror):
   - `docs/weekly_todo/2026/2026w14/meeting_artifacts_snapshot_20260408.md`
@@ -161,5 +164,8 @@
   - Done: acoustic agent returned A7 top2 execution pack on `codex/acoustic-2026w14-phase1` (`739abfa4`) with canonical include/exclude enforcement and reproducible runbook.
   - Done: branch tip `739abfa4` confirmed on remote via `git ls-remote`.
   - Done: gloss-unblock prompt (`Prompt A8`) added to resolve `english_gloss=NA` and unlock strict cross-language gloss clusters.
+  - Done: acoustic agent returned A8 gloss-unblock outputs on `codex/acoustic-2026w14-phase1` (`849712c1`): strict clusters `0 -> 8`, strict covered rows `4424/7805`, NA/partial `3381`; `gloss_source` missing `0`; `low_marked_strict=0`.
+  - Done: acoustic branch tip `849712c1` pushed and verified on remote (`origin/codex/acoustic-2026w14-phase1`).
+  - Done: strict-cluster benchmark packaging prompt (`Prompt A9`) added for local real-world gate integration.
   - Done: created git-tracked meeting artifact snapshot under `docs/weekly_todo/2026/2026w14/meeting_artifacts_snapshot_20260408.md`.
-  - Next: dispatch `Prompt A8` and collect updated manifest/gloss mapping/strict-cluster audit.
+  - Next: dispatch `Prompt A9` and collect strict benchmark CSV + eval-readiness + language go/no-go note.

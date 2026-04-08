@@ -436,3 +436,55 @@ Do not edit:
 - TODO_THIS_WEEK.md
 - docs/technical_spec/*
 ```
+
+## Prompt A9: Acoustic Agent (Strict-Cluster Eval Pack for Local Real-World Gate)
+```text
+You are the acoustic-analysis execution agent for strict-cluster evaluation packaging.
+Keep working on branch: codex/acoustic-2026w14-phase1.
+
+Current state:
+- A8 completed with strict cross-language clusters > 0.
+- We now need a fixed lexical benchmark pack that can be consumed by local inference/finetune gate.
+
+Goal:
+- Freeze a reproducible lexical benchmark slice from strict clusters only.
+- Output a language go/no-go note for immediate next-round execution.
+
+Inputs:
+- analysis/cross_language_emergency/phase2_top2_lexical_manifest_2026w14.csv
+- analysis/cross_language_emergency/phase2_top2_gloss_mapping_2026w14.csv
+- analysis/cross_language_emergency/phase2_top2_gloss_clusters_2026w14.md
+- analysis/cross_language_emergency/phase2_top2_gloss_quality_audit_2026w14.md
+
+Required outputs:
+1) analysis/cross_language_emergency/phase2_top2_strict_eval_benchmark_2026w14.csv
+2) analysis/cross_language_emergency/phase2_top2_eval_readiness_2026w14.md
+3) analysis/cross_language_emergency/phase2_top2_language_go_no_go_2026w14.md
+
+Benchmark CSV required columns:
+- concept_id
+- english_gloss
+- language
+- sample_id
+- normalized_utterance_text
+- canonical_label
+- gloss_source
+- confidence
+- split (train/dev/test)
+- use_for_eval (1/0)
+- exclusion_reason
+
+Hard rules:
+1) `use_for_eval=1` requires confidence in {high, medium} and non-NA english_gloss.
+2) low-confidence rows must be `use_for_eval=0` with explicit exclusion_reason.
+3) no fabricated text/gloss/counts.
+4) `phase2_top2_eval_readiness_2026w14.md` must report:
+   - strict cluster count
+   - benchmark usable rows by language and canonical label
+   - remaining blockers for local real-world gate integration.
+
+Do not edit:
+- docs/weekly_todo/*
+- TODO_THIS_WEEK.md
+- docs/technical_spec/*
+```
