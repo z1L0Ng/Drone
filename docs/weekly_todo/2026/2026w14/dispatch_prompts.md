@@ -287,3 +287,52 @@ Do not edit:
 - TODO_THIS_WEEK.md
 - docs/technical_spec/*
 ```
+
+## Prompt A6: Acoustic Agent (Transcript-Unblock Sourcing)
+```text
+You are the acoustic-analysis execution agent for transcript unblock.
+Keep working on branch: codex/acoustic-2026w14-phase1.
+
+Goal:
+- Resolve lexical-first blocker by finding open multilingual datasets with usable utterance text/transcript.
+- Prioritize datasets that can preserve canonical mapping:
+  emergency=anger+fear, normal=neutral(+calm), surprise sensitivity-only.
+
+Current blocker to fix:
+- Existing lexical-first pool is all `hold` due `has_transcript_text=no`.
+
+Required outputs:
+1) analysis/cross_language_emergency/phase2_transcript_capable_candidates_2026w14.csv
+2) analysis/cross_language_emergency/phase2_transcript_access_plan_2026w14.md
+3) analysis/cross_language_emergency/phase2_lexical_unblock_top2_2026w14.md
+
+CSV required columns:
+- language
+- dataset_name
+- license
+- source_url
+- transcript_available (yes/no)
+- transcript_field_type (verbatim/template_id/forced_alignment/none)
+- transcript_access_mode (direct_download/api/manual_request/unavailable)
+- emergency_labels
+- normal_labels
+- semantic_match_level (strict/partial)
+- estimated_usable_samples
+- lexical_readiness (ready/partial/blocked)
+- recommendation (go/hold)
+- blocker
+
+Hard rules:
+1) mark `go` only when transcript_available=yes and lexical_readiness is at least partial.
+2) do not fabricate transcript availability or license scope.
+3) if transcript exists but is not open-access, mark hold with concrete unblock action.
+
+Ranking rule:
+- lexical readiness > semantic strictness > sample size > license risk.
+- Return exactly 2 best actionable languages plus 1 fallback.
+
+Do not edit:
+- docs/weekly_todo/*
+- TODO_THIS_WEEK.md
+- docs/technical_spec/*
+```
