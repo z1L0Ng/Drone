@@ -27,7 +27,7 @@
 - [x] Collect acoustic agent phase-1.6 decision-support docs (`25deca41`): multilingual priority scorecard + mapping contract.
 - [x] Lock expansion policy: English gate first, then multilingual expansion with open datasets (not limited to Chinese/Japanese; French etc. allowed if sample size and semantic mapping are sufficient).
 - [x] Collect model agent command pack for `preprocess_ext` and `branch_trial`.
-- [ ] Receive server startup and completion receipts for both runs.
+- [x] Receive server startup and completion receipts for both runs (evidenced by synced `weeklyresult` package).
 - [x] Receive server `preprocess_ext` startup receipt (PID/LOG/first 30 lines; GPU visible).
 - [x] Receive server model checkpoints for both runs (partial server sync, no `result/log` evidence yet).
 - [x] Receive server-side result reports for all three candidates under `weeklyresult/weekly_drone_2026w14/*`.
@@ -90,10 +90,7 @@
   - `saved_models/weekly_drone_2026w14/branch_trial/`
   - `weeklyresult/weekly_drone_2026w14/preprocess_ext/`
   - `weeklyresult/weekly_drone_2026w14/branch_trial/`
-- [ ] Missing artifact sync (still needed for audit traceability):
-  - `logs/weekly_drone_2026w14_preprocess_ext_*.log`
-  - `logs/weekly_drone_2026w14_branch_trial_*.log`
-  - `logs/weekly_drone_2026w14_baseline_*.log`
+- [x] Log copy waiver accepted by PI: reports/history in `weeklyresult` are used as completion evidence; no extra log backfill required.
 
 ## Thu 2026-04-09 (Before Meeting)
 ### Local
@@ -126,5 +123,5 @@
   - Done: local sync includes server checkpoints for `preprocess_ext` and `branch_trial` under `saved_models/weekly_drone_2026w14/*`.
   - Done: weekly results synced under `weeklyresult/weekly_drone_2026w14/*` with `run_config.json`, `classification_report_noisy.txt`, and `student_history.csv` for baseline/preprocess_ext/branch_trial.
   - Done: model comparison updated (`preprocess_ext` best, `branch_trial` regression).
-  - Blocker: `logs/weekly_drone_2026w14_*.log` still missing in local workspace.
-  - Next: request only log-tail evidence from server; meanwhile proceed with meeting recommendation (`preprocess_ext` adopt candidate, `branch_trial` defer).
+  - Done: PI confirmed no extra log backfill needed when `weeklyresult` evidence is complete.
+  - Next: finalize meeting recommendation as `preprocess_ext=adopt`, `branch_trial=defer`, and move to Thursday briefing.
