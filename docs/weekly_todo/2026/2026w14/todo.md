@@ -175,5 +175,6 @@
   - Done: acoustic branch tip `52bbe199` pushed and verified on remote (`origin/codex/acoustic-2026w14-phase1`).
   - Done: local top2 strict benchmark gate prompt (`Prompt B2`) added for execution handoff.
   - Done: local-eval agent returned B2 gate outputs (strict subset `use_for_eval=1`) with final recommendation: default `baseline`, emergency-first backup `branch_trial`.
+  - Done: archived one-off local gate script under `archive/phase2_local_gate_2026w14/` to avoid interference with mainline `scripts/` entrypoints.
   - Done: created git-tracked meeting artifact snapshot under `docs/weekly_todo/2026/2026w14/meeting_artifacts_snapshot_20260408.md`.
   - Next: lock phase2 model selection in weekly wrap-up docs using B2 outputs, and prepare follow-up plan for threshold calibration under emergency-first scenario.
