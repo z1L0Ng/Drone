@@ -17,5 +17,11 @@ Each weekly `todo.md` must include:
 ## Cross-week Log
 - Shared handoff log: `docs/weekly_todo/handoff_log.md`
 
+## Workflow Policy
+- Weekly Notion page is the source of truth for:
+  - weekly TODO planning and assignment
+  - pre-meeting weekly report write-up
+- `docs/overleaf/` is reserved for paper drafting only (not weekly report drafts).
+
 ## Template
 - Start from: `docs/weekly_todo/_templates/weekly_todo_template.md`

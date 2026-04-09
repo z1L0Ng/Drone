@@ -1,21 +1,21 @@
-# Weekly Writing Board
+# Paper Writing Board
 
 ## This Week Focus
-- [x] Update method section with latest mainline training settings
-- [x] Update experiment section with newest weekly results
-- [x] Update limitation/future work based on pending experiments
+- [ ] Align paper method narrative with current mainline training protocol
+- [ ] Consolidate paper experiment claims with stable weekly evidence paths
+- [ ] Keep limitation/future-work bullets paper-oriented (not weekly ops notes)
 
 ## Section Status
 | Section | Owner | Source Docs | Status | Notes |
 |---|---|---|---|---|
-| Abstract | manager | `docs/overleaf/weekly_report_2026w14_draft.md` | in_progress | Weekly decision + phase2 reconciliation drafted |
-| Introduction | manager | `result/weekly_wrapup_2026w14/meeting_brief_2026w14.md` | in_progress | Problem framing and weekly objective ready to migrate |
-| Method | manager | `docs/technical_spec/mainline_training_update_spec.md` | in_progress | Server/local split and gate protocol aligned |
-| Experiments | manager | `docs/weekly_todo/` + `result/` | in_progress | Server + local + phase2 lexical benchmark results integrated |
-| Conclusion | manager | `docs/overleaf/weekly_report_2026w14_draft.md` | in_progress | Mainline vs local lexical decision rule clarified |
+| Abstract | manager | `result/weekly_wrapup_2026w14/meeting_brief_2026w14.md` | in_progress | Distill stable claims only |
+| Introduction | manager | `result/weekly_wrapup_2026w14/meeting_brief_2026w14.md` | in_progress | Keep problem framing independent of weekly logistics |
+| Method | manager | `docs/technical_spec/mainline_training_update_spec.md` | in_progress | Keep reproducible training settings in sync |
+| Experiments | manager | `result/weekly_wrapup_2026w14/decision_table.md` + `result/weekly_wrapup_2026w14/phase2_top2_local_eval/phase2_top2_recommendation.md` | in_progress | Separate weekly mainline vs phase2 local gate narrative |
+| Conclusion | manager | `result/weekly_wrapup_2026w14/related_work_delta.md` | in_progress | Focus on transferable paper-level takeaways |
 
 ## Sync Log
 | Date | Overleaf Section | Updated From | Notes |
 |---|---|---|---|
 | 2026-04-02 | setup | week reset to `2026w14` | initialize new-week writing tracking |
-| 2026-04-08 | draft | `docs/overleaf/weekly_report_2026w14_draft.md` | assembled weekly report draft with phase2 lexical gate outcomes |
+| 2026-04-08 | policy | workflow lock | weekly report moves to Notion; overleaf folder remains paper-only |
