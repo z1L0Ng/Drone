@@ -32,6 +32,7 @@
 - [x] Collect acoustic agent top2 lexical-ready A7 outputs (`739abfa4`): `phase2_top2_lexical_manifest_2026w14.csv`, `phase2_top2_gloss_clusters_2026w14.md`, `phase2_top2_eval_runbook_2026w14.md`.
 - [x] Collect acoustic agent gloss-unblock A8 outputs (`849712c1`): `phase2_top2_gloss_mapping_2026w14.csv`, updated `phase2_top2_gloss_clusters_2026w14.md`, updated `phase2_top2_lexical_manifest_2026w14.csv`, `phase2_top2_gloss_quality_audit_2026w14.md`.
 - [x] Collect acoustic agent strict-benchmark A9 outputs (`52bbe199`): `phase2_top2_strict_eval_benchmark_2026w14.csv`, `phase2_top2_eval_readiness_2026w14.md`, `phase2_top2_language_go_no_go_2026w14.md`.
+- [x] Collect local-eval B2 outputs (phase2 top2 strict benchmark gate): `result/weekly_wrapup_2026w14/phase2_top2_local_eval/{comparison_by_language.csv,comparison_by_label.csv,phase2_top2_recommendation.md}` + `result/weekly_wrapup_2026w14/phase2_top2_local_finetune/finetune_delta_summary.csv`.
 - [x] Lock expansion policy: English gate first, then multilingual expansion with open datasets (not limited to Chinese/Japanese; French etc. allowed if sample size and semantic mapping are sufficient).
 - [x] Collect model agent command pack for `preprocess_ext` and `branch_trial`.
 - [x] Receive server startup and completion receipts for both runs (evidenced by synced `weeklyresult` package).
@@ -173,5 +174,6 @@
   - Done: acoustic agent returned A9 strict-benchmark outputs on `codex/acoustic-2026w14-phase1` (`52bbe199`): strict cluster count `8`; benchmark `use_for_eval=1` rows `7805` (Quechua `5511`, Polish `2294`); language go/no-go `Quechua=go`, `Polish=go`.
   - Done: acoustic branch tip `52bbe199` pushed and verified on remote (`origin/codex/acoustic-2026w14-phase1`).
   - Done: local top2 strict benchmark gate prompt (`Prompt B2`) added for execution handoff.
+  - Done: local-eval agent returned B2 gate outputs (strict subset `use_for_eval=1`) with final recommendation: default `baseline`, emergency-first backup `branch_trial`.
   - Done: created git-tracked meeting artifact snapshot under `docs/weekly_todo/2026/2026w14/meeting_artifacts_snapshot_20260408.md`.
-  - Next: dispatch `Prompt B2` and collect local inference/finetune benchmark comparison outputs for final phase2 model-selection decision.
+  - Next: lock phase2 model selection in weekly wrap-up docs using B2 outputs, and prepare follow-up plan for threshold calibration under emergency-first scenario.
