@@ -32,6 +32,7 @@
 - [x] Collect acoustic agent top2 lexical-ready A7 outputs (`739abfa4`): `phase2_top2_lexical_manifest_2026w14.csv`, `phase2_top2_gloss_clusters_2026w14.md`, `phase2_top2_eval_runbook_2026w14.md`.
 - [x] Collect acoustic agent gloss-unblock A8 outputs (`849712c1`): `phase2_top2_gloss_mapping_2026w14.csv`, updated `phase2_top2_gloss_clusters_2026w14.md`, updated `phase2_top2_lexical_manifest_2026w14.csv`, `phase2_top2_gloss_quality_audit_2026w14.md`.
 - [x] Collect acoustic agent strict-benchmark A9 outputs (`52bbe199`): `phase2_top2_strict_eval_benchmark_2026w14.csv`, `phase2_top2_eval_readiness_2026w14.md`, `phase2_top2_language_go_no_go_2026w14.md`.
+- [x] Collect acoustic agent longrun multilingual commonality package (`b58815f8`): `analysis/cross_language_emergency/longrun_multilingual_commonality_2026w14/{dataset_registry_2026w14.csv,feature_effects_by_language_2026w14.csv,shared_features_meta_2026w14.csv,divergence_features_2026w14.csv,training_preprocessing_recommendations_2026w14.md,final_report_{zh,en}_2026w14.md,reproducibility_runbook_2026w14.md,figures/*}` + `scripts/run_longrun_multilingual_commonality_2026w14.py`.
 - [x] Collect local-eval B2 outputs (phase2 top2 strict benchmark gate): `result/weekly_wrapup_2026w14/phase2_top2_local_eval/{comparison_by_language.csv,comparison_by_label.csv,phase2_top2_recommendation.md}` + `result/weekly_wrapup_2026w14/phase2_top2_local_finetune/finetune_delta_summary.csv`.
 - [x] Lock expansion policy: English gate first, then multilingual expansion with open datasets (not limited to Chinese/Japanese; French etc. allowed if sample size and semantic mapping are sufficient).
 - [x] Collect model agent command pack for `preprocess_ext` and `branch_trial`.
@@ -70,6 +71,7 @@
 | 2026-04-07 | `main` | coordination | Multi-agent management playbook and handoff protocol activated | `docs/weekly_todo/2026/2026w14/agent_management_playbook.md` | done |
 | 2026-04-07 | `exp/preprocess-ext` | training | Preprocessing extension trial completed on server and synced locally | `saved_models/weekly_drone_2026w14/preprocess_ext/`, `weeklyresult/weekly_drone_2026w14/preprocess_ext/` | done |
 | 2026-04-08 | `exp/branch-trial` | training | New branch trial completed on server and synced locally | `saved_models/weekly_drone_2026w14/branch_trial/`, `weeklyresult/weekly_drone_2026w14/branch_trial/` | done |
+| 2026-04-09 | `codex/acoustic-2026w14-phase1` | analysis | Longrun multilingual emergency commonality package completed and pushed | `analysis/cross_language_emergency/longrun_multilingual_commonality_2026w14/`, `scripts/run_longrun_multilingual_commonality_2026w14.py` | done |
 
 ## Tue 2026-04-07
 ### Local
@@ -179,3 +181,8 @@
   - Done: workflow policy locked: weekly report is maintained in Notion weekly page; `docs/overleaf/` is paper-draft-only.
   - Done: created git-tracked meeting artifact snapshot under `docs/weekly_todo/2026/2026w14/meeting_artifacts_snapshot_20260408.md`.
   - Next: finalize this week's Notion weekly report wording for meeting and add threshold-calibration follow-up item into next-week plan.
+- 2026-04-09:
+  - Done: acoustic agent longrun package received on `codex/acoustic-2026w14-phase1` (`b58815f8`) with 5-language shared-feature analysis (zh/en/fr/it/pl), pooled effects, divergence set, and reproducibility runbook.
+  - Done: remote branch tip advanced to `origin/codex/acoustic-2026w14-phase1 -> b58815f865510366ca10acd8e39307422e1d077b`.
+  - Done: management docs updated to include longrun package receipt and downstream training/preprocessing recommendation handoff.
+  - Next: fold longrun key results (shared feature top-3, heterogeneity risk, training knobs) into Notion weekly report for meeting narrative closure.
