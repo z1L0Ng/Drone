@@ -102,6 +102,12 @@ STATS_MLP_UNITS = _env_int_tuple("KD_STATS_MLP_UNITS", (32, 16))
 FUSE_UNITS = _env_int("KD_FUSE_UNITS", 128)
 FUSION_MODE = os.getenv("KD_FUSION_MODE", "concat").strip().lower()
 GATE_UNITS = _env_int("KD_GATE_UNITS", 16)
+TEACHER_USE_STATS_BRANCH = _env_bool("KD_TEACHER_USE_STATS_BRANCH", USE_STATS_BRANCH)
+TEACHER_STATS_DIM = _env_int("KD_TEACHER_STATS_DIM", STATS_DIM)
+TEACHER_STATS_MLP_UNITS = _env_int_tuple("KD_TEACHER_STATS_MLP_UNITS", STATS_MLP_UNITS)
+TEACHER_FUSE_UNITS = _env_int("KD_TEACHER_FUSE_UNITS", FUSE_UNITS)
+TEACHER_FUSION_MODE = os.getenv("KD_TEACHER_FUSION_MODE", "concat").strip().lower()
+TEACHER_GATE_UNITS = _env_int("KD_TEACHER_GATE_UNITS", GATE_UNITS)
 PITCH_FMIN = _env_float("KD_STATS_PITCH_FMIN", 50.0)
 PITCH_FMAX = _env_float("KD_STATS_PITCH_FMAX", 500.0)
 AUX_LOSS_ALPHA = _env_float("KD_AUX_ALPHA", 0.2)
@@ -115,6 +121,7 @@ TEACHER_EPOCHS = _env_int("KD_TEACHER_EPOCHS", 50)
 STUDENT_EPOCHS = _env_int("KD_STUDENT_EPOCHS", 50)
 LEARNING_RATE = _env_float("KD_LR", 1e-4)
 REUSE_TEACHER = _env_bool("KD_REUSE_TEACHER", False)
+STRICT_REUSE_TEACHER_SHAPE = _env_bool("KD_STRICT_REUSE_TEACHER_SHAPE", True)
 RANDOM_SEED = _env_int("KD_SEED", 42)
 TEACHER_MODEL_PROFILE = os.getenv("KD_TEACHER_MODEL_PROFILE", "base").strip().lower()
 STUDENT_MODEL_PROFILE = os.getenv("KD_STUDENT_MODEL_PROFILE", "base").strip().lower()
@@ -190,6 +197,8 @@ if STUDENT_INIT_MODE not in {"auto", "teacher", "random"}:
     raise ValueError("KD_STUDENT_INIT_MODE must be one of: auto, teacher, random")
 if FUSION_MODE not in {"concat", "gated"}:
     raise ValueError("KD_FUSION_MODE must be one of: concat, gated")
+if TEACHER_FUSION_MODE not in {"concat", "gated"}:
+    raise ValueError("KD_TEACHER_FUSION_MODE must be one of: concat, gated")
 if AUX_MODE not in {"embed_align", "stats_reg"}:
     raise ValueError("KD_AUX_MODE must be one of: embed_align, stats_reg")
 if AUX_LOSS_TYPE not in {"huber", "mse"}:
@@ -224,14 +233,23 @@ def _fmt_model_kwargs(kwargs: dict) -> str:
     return ", ".join(parts)
 
 
-def _with_stats_kwargs(base_kwargs: dict) -> dict:
+def _with_stats_kwargs(base_kwargs: dict, role: str = "student") -> dict:
+    role_norm = str(role).strip().lower()
     kwargs = dict(base_kwargs)
-    kwargs["use_stats_branch"] = USE_STATS_BRANCH
-    kwargs["stats_dim"] = STATS_DIM
-    kwargs["stats_mlp_units"] = STATS_MLP_UNITS
-    kwargs["fuse_units"] = FUSE_UNITS
-    kwargs["fusion_mode"] = FUSION_MODE
-    kwargs["gate_units"] = GATE_UNITS
+    if role_norm == "teacher":
+        kwargs["use_stats_branch"] = TEACHER_USE_STATS_BRANCH
+        kwargs["stats_dim"] = TEACHER_STATS_DIM
+        kwargs["stats_mlp_units"] = TEACHER_STATS_MLP_UNITS
+        kwargs["fuse_units"] = TEACHER_FUSE_UNITS
+        kwargs["fusion_mode"] = TEACHER_FUSION_MODE
+        kwargs["gate_units"] = TEACHER_GATE_UNITS
+    else:
+        kwargs["use_stats_branch"] = USE_STATS_BRANCH
+        kwargs["stats_dim"] = STATS_DIM
+        kwargs["stats_mlp_units"] = STATS_MLP_UNITS
+        kwargs["fuse_units"] = FUSE_UNITS
+        kwargs["fusion_mode"] = FUSION_MODE
+        kwargs["gate_units"] = GATE_UNITS
     return kwargs
 
 
@@ -304,6 +322,7 @@ def _dump_run_config(out_path: str):
             "student_epochs": STUDENT_EPOCHS,
             "learning_rate": LEARNING_RATE,
             "reuse_teacher": REUSE_TEACHER,
+            "strict_reuse_teacher_shape": STRICT_REUSE_TEACHER_SHAPE,
             "random_seed": RANDOM_SEED,
             "teacher_model_profile": TEACHER_MODEL_PROFILE,
             "student_model_profile": STUDENT_MODEL_PROFILE,
@@ -314,12 +333,22 @@ def _dump_run_config(out_path: str):
             "student_monitor": STUDENT_MONITOR,
         },
         "stats_branch": {
-            "use_stats_branch": USE_STATS_BRANCH,
-            "stats_dim": STATS_DIM,
-            "stats_mlp_units": list(STATS_MLP_UNITS),
-            "fuse_units": FUSE_UNITS,
-            "fusion_mode": FUSION_MODE,
-            "gate_units": GATE_UNITS,
+            "teacher": {
+                "use_stats_branch": TEACHER_USE_STATS_BRANCH,
+                "stats_dim": TEACHER_STATS_DIM,
+                "stats_mlp_units": list(TEACHER_STATS_MLP_UNITS),
+                "fuse_units": TEACHER_FUSE_UNITS,
+                "fusion_mode": TEACHER_FUSION_MODE,
+                "gate_units": TEACHER_GATE_UNITS,
+            },
+            "student": {
+                "use_stats_branch": USE_STATS_BRANCH,
+                "stats_dim": STATS_DIM,
+                "stats_mlp_units": list(STATS_MLP_UNITS),
+                "fuse_units": FUSE_UNITS,
+                "fusion_mode": FUSION_MODE,
+                "gate_units": GATE_UNITS,
+            },
             "pitch_fmin": PITCH_FMIN,
             "pitch_fmax": PITCH_FMAX,
         },
@@ -1078,7 +1107,18 @@ print(
     f"student_init_ckpt={STUDENT_INIT_CKPT or 'None'}"
 )
 print(
-    "[StatsBranch] "
+    "[StatsBranch/Teacher] "
+    f"enabled={TEACHER_USE_STATS_BRANCH}, "
+    f"stats_dim={TEACHER_STATS_DIM}, "
+    f"stats_mlp_units={list(TEACHER_STATS_MLP_UNITS)}, "
+    f"fuse_units={TEACHER_FUSE_UNITS}, "
+    f"fusion_mode={TEACHER_FUSION_MODE}, "
+    f"gate_units={TEACHER_GATE_UNITS}, "
+    f"strict_reuse_shape={STRICT_REUSE_TEACHER_SHAPE}, "
+    f"pitch_range=[{PITCH_FMIN},{PITCH_FMAX}]"
+)
+print(
+    "[StatsBranch/Student] "
     f"enabled={USE_STATS_BRANCH}, "
     f"stats_dim={STATS_DIM}, "
     f"stats_mlp_units={list(STATS_MLP_UNITS)}, "
@@ -1141,7 +1181,7 @@ student_history = None
 
 # ---------- Stage 1: train clean teacher ----------
 print("\n[Stage 1] Train clean teacher...")
-teacher = build_model((N_MELS, MAX_FRAMES, 1), num_classes, **_with_stats_kwargs(TEACHER_MODEL_KWARGS))
+teacher = build_model((N_MELS, MAX_FRAMES, 1), num_classes, **_with_stats_kwargs(TEACHER_MODEL_KWARGS, role="teacher"))
 print(f"[Stage 1] teacher_params={teacher.count_params():,}")
 teacher_loaded = False
 if REUSE_TEACHER and os.path.exists(TEACHER_CKPT):
@@ -1150,7 +1190,18 @@ if REUSE_TEACHER and os.path.exists(TEACHER_CKPT):
         teacher.load_weights(TEACHER_CKPT)
         teacher_loaded = True
     except Exception as exc:
-        print(f"[Stage 1] Reuse teacher failed (shape/config mismatch), fallback to train: {exc}")
+        msg = (
+            "[Stage 1] Reuse teacher failed due to shape/config mismatch.\n"
+            f"  teacher_ckpt={TEACHER_CKPT}\n"
+            "  expected_action=align teacher branch knobs with checkpoint "
+            "(KD_TEACHER_USE_STATS_BRANCH, KD_TEACHER_STATS_MLP_UNITS, "
+            "KD_TEACHER_FUSE_UNITS, KD_TEACHER_FUSION_MODE, KD_TEACHER_GATE_UNITS)\n"
+            f"  error={exc}"
+        )
+        if STRICT_REUSE_TEACHER_SHAPE:
+            raise RuntimeError(msg) from exc
+        print(msg)
+        print("[Stage 1] strict_reuse_teacher_shape=0, fallback to train teacher")
 
 if not teacher_loaded:
     teacher.compile(optimizer=Adam(LEARNING_RATE), loss="categorical_crossentropy", metrics=["accuracy"])
