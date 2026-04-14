@@ -71,6 +71,8 @@ def build_model(
     stats_dim=4,
     stats_mlp_units=(32, 16),
     fuse_units=128,
+    fusion_mode="concat",
+    gate_units=16,
 ):
     """Builds the full ResNet-Branchformer model."""
     spec_input = Input(shape=input_shape)
@@ -139,8 +141,24 @@ def build_model(
             s = Dropout(dropout_rate, name=f"stats_mlp_dropout_{i + 1}")(s)
         stats_embed = Lambda(lambda z: z, name="stats_embed")(s)
 
-        fused = Concatenate(name="fusion_concat")([mel_embed, stats_embed])
-        fused = Dense(int(fuse_units), activation="relu", name="fusion_dense")(fused)
+        fusion_mode = str(fusion_mode).strip().lower()
+        if fusion_mode not in {"concat", "gated"}:
+            raise ValueError(f"Unsupported fusion_mode={fusion_mode}, expected one of: concat, gated")
+
+        if fusion_mode == "gated":
+            gate_in = stats_embed
+            if int(gate_units) > 0:
+                gate_in = Dense(int(gate_units), activation="relu", name="gate_mlp_dense")(gate_in)
+            stats_embed_dim = stats_embed.shape[-1]
+            if stats_embed_dim is None:
+                stats_embed_dim = int(stats_dim)
+            stats_gate = Dense(int(stats_embed_dim), activation="sigmoid", name="stats_gate")(gate_in)
+            gated_stats = Multiply(name="gated_stats")([stats_embed, stats_gate])
+            fused_input = Concatenate(name="fusion_concat")([mel_embed, gated_stats])
+        else:
+            fused_input = Concatenate(name="fusion_concat")([mel_embed, stats_embed])
+
+        fused = Dense(int(fuse_units), activation="relu", name="fusion_dense")(fused_input)
         fused = Dropout(dropout_rate, name="fusion_dropout")(fused)
         fused = Lambda(lambda z: z, name="fused_embed")(fused)
         outputs = Dense(num_classes, activation="softmax", name="class_output")(fused)

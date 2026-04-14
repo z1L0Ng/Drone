@@ -100,9 +100,13 @@ USE_STATS_BRANCH = _env_bool("KD_USE_STATS_BRANCH", True)
 STATS_DIM = _env_int("KD_STATS_DIM", 4)
 STATS_MLP_UNITS = _env_int_tuple("KD_STATS_MLP_UNITS", (32, 16))
 FUSE_UNITS = _env_int("KD_FUSE_UNITS", 128)
+FUSION_MODE = os.getenv("KD_FUSION_MODE", "concat").strip().lower()
+GATE_UNITS = _env_int("KD_GATE_UNITS", 16)
 PITCH_FMIN = _env_float("KD_STATS_PITCH_FMIN", 50.0)
 PITCH_FMAX = _env_float("KD_STATS_PITCH_FMAX", 500.0)
 AUX_LOSS_ALPHA = _env_float("KD_AUX_ALPHA", 0.2)
+AUX_MODE = os.getenv("KD_AUX_MODE", "embed_align").strip().lower()
+AUX_LOSS_TYPE = os.getenv("KD_AUX_LOSS_TYPE", "huber").strip().lower()
 
 
 # ==================== Train config ====================
@@ -184,6 +188,12 @@ TEACHER_MODEL_KWARGS = get_model_kwargs(TEACHER_MODEL_PROFILE)
 STUDENT_MODEL_KWARGS = get_model_kwargs(STUDENT_MODEL_PROFILE)
 if STUDENT_INIT_MODE not in {"auto", "teacher", "random"}:
     raise ValueError("KD_STUDENT_INIT_MODE must be one of: auto, teacher, random")
+if FUSION_MODE not in {"concat", "gated"}:
+    raise ValueError("KD_FUSION_MODE must be one of: concat, gated")
+if AUX_MODE not in {"embed_align", "stats_reg"}:
+    raise ValueError("KD_AUX_MODE must be one of: embed_align, stats_reg")
+if AUX_LOSS_TYPE not in {"huber", "mse"}:
+    raise ValueError("KD_AUX_LOSS_TYPE must be one of: huber, mse")
 
 np.random.seed(RANDOM_SEED)
 tf.random.set_seed(RANDOM_SEED)
@@ -220,6 +230,8 @@ def _with_stats_kwargs(base_kwargs: dict) -> dict:
     kwargs["stats_dim"] = STATS_DIM
     kwargs["stats_mlp_units"] = STATS_MLP_UNITS
     kwargs["fuse_units"] = FUSE_UNITS
+    kwargs["fusion_mode"] = FUSION_MODE
+    kwargs["gate_units"] = GATE_UNITS
     return kwargs
 
 
@@ -306,6 +318,8 @@ def _dump_run_config(out_path: str):
             "stats_dim": STATS_DIM,
             "stats_mlp_units": list(STATS_MLP_UNITS),
             "fuse_units": FUSE_UNITS,
+            "fusion_mode": FUSION_MODE,
+            "gate_units": GATE_UNITS,
             "pitch_fmin": PITCH_FMIN,
             "pitch_fmax": PITCH_FMAX,
         },
@@ -343,6 +357,8 @@ def _dump_run_config(out_path: str):
         },
         "aux_loss": {
             "aux_alpha": AUX_LOSS_ALPHA,
+            "aux_mode": AUX_MODE,
+            "aux_loss_type": AUX_LOSS_TYPE,
         },
         "prewarm": {
             "prewarm_epochs": PREWARM_EPOCHS,
@@ -766,6 +782,9 @@ class Distiller(tf.keras.Model):
         use_embed_kd=True,
         use_embed_projection=True,
         aux_alpha=0.0,
+        aux_mode="embed_align",
+        aux_loss_type="huber",
+        stats_dim=4,
     ):
         super().__init__()
         self.student_probe = student_probe
@@ -778,6 +797,13 @@ class Distiller(tf.keras.Model):
         self.use_logits_kd = bool(use_logits_kd)
         self.use_embed_kd = bool(use_embed_kd)
         self.aux_alpha = float(max(0.0, aux_alpha))
+        self.aux_mode = str(aux_mode).strip().lower()
+        self.aux_loss_type = str(aux_loss_type).strip().lower()
+        self.stats_dim = int(stats_dim)
+        if self.aux_mode not in {"embed_align", "stats_reg"}:
+            raise ValueError(f"Unsupported aux_mode={self.aux_mode}, expected one of: embed_align, stats_reg")
+        if self.aux_loss_type not in {"huber", "mse"}:
+            raise ValueError(f"Unsupported aux_loss_type={self.aux_loss_type}, expected one of: huber, mse")
 
         teacher_embed_dim = teacher_probe.output_shape[1][-1] if len(teacher_probe.output_shape) > 1 else None
         student_embed_dim = student_probe.output_shape[1][-1] if len(student_probe.output_shape) > 1 else None
@@ -797,7 +823,7 @@ class Distiller(tf.keras.Model):
 
         self.stats_to_mel_proj = None
         has_stats_student = len(student_probe.output_shape) > 3
-        if has_stats_student:
+        if self.aux_mode == "embed_align" and has_stats_student:
             mel_dim = student_probe.output_shape[2][-1]
             stats_dim = student_probe.output_shape[3][-1]
             if mel_dim is not None and stats_dim is not None and int(mel_dim) != int(stats_dim):
@@ -806,6 +832,9 @@ class Distiller(tf.keras.Model):
                     use_bias=False,
                     name="stats_to_mel_proj",
                 )
+        self.stats_reg_head = None
+        if self.aux_mode == "stats_reg":
+            self.stats_reg_head = tf.keras.layers.Dense(self.stats_dim, activation="linear", name="stats_reg_head")
 
         self.current_gamma = tf.Variable(0.0, trainable=False, dtype=tf.float32, name="gamma_embed_weight")
 
@@ -821,6 +850,7 @@ class Distiller(tf.keras.Model):
         self.ce_fn = tf.keras.losses.CategoricalCrossentropy()
         self.kld_fn = tf.keras.losses.KLDivergence()
         self.mse_fn = tf.keras.losses.MeanSquaredError()
+        self.huber_fn = tf.keras.losses.Huber()
 
     @property
     def metrics(self):
@@ -849,8 +879,27 @@ class Distiller(tf.keras.Model):
         stats_embed = outputs[3] if len(outputs) > 3 else None
         return probs, embed, mel_embed, stats_embed
 
-    def _calc_aux_loss(self, mel_embed, stats_embed):
-        if self.aux_alpha <= 0.0 or stats_embed is None:
+    def _extract_stats_target(self, x_input):
+        if isinstance(x_input, (list, tuple)) and len(x_input) >= 2:
+            return tf.cast(x_input[1], tf.float32)
+        if isinstance(x_input, dict):
+            for key in ("stats", "x_stats"):
+                if key in x_input:
+                    return tf.cast(x_input[key], tf.float32)
+        return None
+
+    def _calc_aux_loss(self, mel_embed, stats_embed, stats_target):
+        if self.aux_alpha <= 0.0:
+            return tf.constant(0.0, dtype=tf.float32)
+        if self.aux_mode == "stats_reg":
+            if stats_target is None or self.stats_reg_head is None:
+                return tf.constant(0.0, dtype=tf.float32)
+            stats_hat = self.stats_reg_head(mel_embed)
+            target = tf.stop_gradient(tf.cast(stats_target, tf.float32))
+            if self.aux_loss_type == "huber":
+                return self.huber_fn(target, stats_hat)
+            return self.mse_fn(target, stats_hat)
+        if stats_embed is None:
             return tf.constant(0.0, dtype=tf.float32)
         mel_norm = tf.math.l2_normalize(mel_embed, axis=-1)
         stats_aligned = stats_embed
@@ -867,6 +916,7 @@ class Distiller(tf.keras.Model):
         else:
             x_clean = x
             x_noisy = x
+        stats_target = self._extract_stats_target(x_noisy)
 
         t_out = self.teacher_probe(x_clean, training=False)
         t_probs, t_embed, _, _ = self._unpack_probe_outputs(t_out)
@@ -894,7 +944,7 @@ class Distiller(tf.keras.Model):
                 s_norm = tf.math.l2_normalize(s_aligned, axis=-1)
                 kd_embed = self.mse_fn(t_norm, s_norm)
 
-            aux_loss = self._calc_aux_loss(s_mel_embed, s_stats_embed)
+            aux_loss = self._calc_aux_loss(s_mel_embed, s_stats_embed, stats_target)
             cls_loss = self.alpha * ce_loss + self.beta * kd_logits + self.current_gamma * kd_embed
             total_loss = cls_loss + self.aux_alpha * aux_loss
 
@@ -903,6 +953,8 @@ class Distiller(tf.keras.Model):
             train_vars.extend(self.student_embed_proj.trainable_variables)
         if self.stats_to_mel_proj is not None:
             train_vars.extend(self.stats_to_mel_proj.trainable_variables)
+        if self.stats_reg_head is not None:
+            train_vars.extend(self.stats_reg_head.trainable_variables)
         grads = tape.gradient(total_loss, train_vars)
         grads_and_vars = [(g, v) for g, v in zip(grads, train_vars) if g is not None]
         if grads_and_vars:
@@ -927,6 +979,7 @@ class Distiller(tf.keras.Model):
         else:
             x_clean = x
             x_noisy = x
+        stats_target = self._extract_stats_target(x_noisy)
 
         t_out = self.teacher_probe(x_clean, training=False)
         s_out = self.student_probe(x_noisy, training=False)
@@ -952,7 +1005,7 @@ class Distiller(tf.keras.Model):
             s_norm = tf.math.l2_normalize(s_aligned, axis=-1)
             kd_embed = self.mse_fn(t_norm, s_norm)
 
-        aux_loss = self._calc_aux_loss(s_mel_embed, s_stats_embed)
+        aux_loss = self._calc_aux_loss(s_mel_embed, s_stats_embed, stats_target)
         cls_loss = self.alpha * ce_loss + self.beta * kd_logits + self.current_gamma * kd_embed
         total_loss = cls_loss + self.aux_alpha * aux_loss
 
@@ -1030,9 +1083,11 @@ print(
     f"stats_dim={STATS_DIM}, "
     f"stats_mlp_units={list(STATS_MLP_UNITS)}, "
     f"fuse_units={FUSE_UNITS}, "
+    f"fusion_mode={FUSION_MODE}, "
+    f"gate_units={GATE_UNITS}, "
     f"pitch_range=[{PITCH_FMIN},{PITCH_FMAX}]"
 )
-print(f"[AuxLoss] alpha={AUX_LOSS_ALPHA}")
+print(f"[AuxLoss] mode={AUX_MODE}, loss_type={AUX_LOSS_TYPE}, alpha={AUX_LOSS_ALPHA}")
 print(
     "[Prosody] "
     f"enabled={ENABLE_CLASS_PROSODY_AUG}, "
@@ -1088,10 +1143,16 @@ student_history = None
 print("\n[Stage 1] Train clean teacher...")
 teacher = build_model((N_MELS, MAX_FRAMES, 1), num_classes, **_with_stats_kwargs(TEACHER_MODEL_KWARGS))
 print(f"[Stage 1] teacher_params={teacher.count_params():,}")
+teacher_loaded = False
 if REUSE_TEACHER and os.path.exists(TEACHER_CKPT):
     print(f"[Stage 1] Reusing existing teacher checkpoint: {TEACHER_CKPT}")
-    teacher.load_weights(TEACHER_CKPT)
-else:
+    try:
+        teacher.load_weights(TEACHER_CKPT)
+        teacher_loaded = True
+    except Exception as exc:
+        print(f"[Stage 1] Reuse teacher failed (shape/config mismatch), fallback to train: {exc}")
+
+if not teacher_loaded:
     teacher.compile(optimizer=Adam(LEARNING_RATE), loss="categorical_crossentropy", metrics=["accuracy"])
 
     teacher_train_gen = CleanDataGenerator(
@@ -1170,6 +1231,9 @@ if PREWARM_EPOCHS > 0 and (PREWARM_USE_CE or PREWARM_USE_LOGITS):
         use_embed_kd=False,
         use_embed_projection=False,
         aux_alpha=AUX_LOSS_ALPHA,
+        aux_mode=AUX_MODE,
+        aux_loss_type=AUX_LOSS_TYPE,
+        stats_dim=STATS_DIM,
     )
     prewarm_distiller.compile(optimizer=Adam(PREWARM_LR))
 
@@ -1227,6 +1291,8 @@ print(
     f"alpha={alpha_ce}, "
     f"beta={beta_logits}, "
     f"gamma_max={gamma_embed_max}, "
+    f"aux_mode={AUX_MODE}, "
+    f"aux_loss_type={AUX_LOSS_TYPE}, "
     f"aux_alpha={AUX_LOSS_ALPHA}, "
     f"embed_proj={USE_EMBED_PROJECTION}, "
     f"warmup_epochs={embed_warmup_epochs}, "
@@ -1245,6 +1311,9 @@ distiller = Distiller(
     use_embed_kd=use_embed_kd,
     use_embed_projection=USE_EMBED_PROJECTION,
     aux_alpha=AUX_LOSS_ALPHA,
+    aux_mode=AUX_MODE,
+    aux_loss_type=AUX_LOSS_TYPE,
+    stats_dim=STATS_DIM,
 )
 distiller.compile(optimizer=Adam(LEARNING_RATE))
 
