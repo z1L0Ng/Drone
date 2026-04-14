@@ -39,6 +39,21 @@ def _env_optional_int(name: str):
     return value if value > 0 else None
 
 
+def _env_int_tuple(name: str, default):
+    raw = os.getenv(name)
+    if raw is None:
+        return tuple(int(x) for x in default)
+    vals = []
+    for part in raw.split(","):
+        p = part.strip()
+        if not p:
+            continue
+        vals.append(int(p))
+    if not vals:
+        return tuple(int(x) for x in default)
+    return tuple(vals)
+
+
 # ==================== GPU ====================
 gpus = tf.config.list_physical_devices("GPU")
 if gpus:
@@ -79,6 +94,15 @@ FMIN = 50
 FMAX = None
 TOP_DB = 80.0
 MAX_FRAMES = int(DURATION * SAMPLE_RATE / HOP_LENGTH) + 1
+
+# ==================== Aux stats branch ====================
+USE_STATS_BRANCH = _env_bool("KD_USE_STATS_BRANCH", True)
+STATS_DIM = _env_int("KD_STATS_DIM", 4)
+STATS_MLP_UNITS = _env_int_tuple("KD_STATS_MLP_UNITS", (32, 16))
+FUSE_UNITS = _env_int("KD_FUSE_UNITS", 128)
+PITCH_FMIN = _env_float("KD_STATS_PITCH_FMIN", 50.0)
+PITCH_FMAX = _env_float("KD_STATS_PITCH_FMAX", 500.0)
+AUX_LOSS_ALPHA = _env_float("KD_AUX_ALPHA", 0.2)
 
 
 # ==================== Train config ====================
@@ -190,6 +214,15 @@ def _fmt_model_kwargs(kwargs: dict) -> str:
     return ", ".join(parts)
 
 
+def _with_stats_kwargs(base_kwargs: dict) -> dict:
+    kwargs = dict(base_kwargs)
+    kwargs["use_stats_branch"] = USE_STATS_BRANCH
+    kwargs["stats_dim"] = STATS_DIM
+    kwargs["stats_mlp_units"] = STATS_MLP_UNITS
+    kwargs["fuse_units"] = FUSE_UNITS
+    return kwargs
+
+
 def initialize_student_weights(student_model: tf.keras.Model) -> str:
     if STUDENT_INIT_CKPT:
         if os.path.exists(STUDENT_INIT_CKPT):
@@ -268,6 +301,14 @@ def _dump_run_config(out_path: str):
             "teacher_monitor": TEACHER_MONITOR,
             "student_monitor": STUDENT_MONITOR,
         },
+        "stats_branch": {
+            "use_stats_branch": USE_STATS_BRANCH,
+            "stats_dim": STATS_DIM,
+            "stats_mlp_units": list(STATS_MLP_UNITS),
+            "fuse_units": FUSE_UNITS,
+            "pitch_fmin": PITCH_FMIN,
+            "pitch_fmax": PITCH_FMAX,
+        },
         "noise": {
             "noise_mix_prob": NOISE_MIX_PROB,
             "min_snr_db": MIN_SNR_DB,
@@ -299,6 +340,9 @@ def _dump_run_config(out_path: str):
             "use_embed_projection": USE_EMBED_PROJECTION,
             "embed_warmup_epochs": EMBED_WARMUP_EPOCHS,
             "embed_ramp_epochs": EMBED_RAMP_EPOCHS,
+        },
+        "aux_loss": {
+            "aux_alpha": AUX_LOSS_ALPHA,
         },
         "prewarm": {
             "prewarm_epochs": PREWARM_EPOCHS,
@@ -440,6 +484,65 @@ def extract_logmel(y):
     return feat.astype(np.float32)
 
 
+def extract_stats_features(y):
+    y = _ensure_target_len(y)
+    rms = librosa.feature.rms(
+        y=y,
+        frame_length=N_FFT,
+        hop_length=HOP_LENGTH,
+        center=CENTER,
+    )[0].astype(np.float32)
+    energy_env_std = float(np.std(rms)) if rms.size > 0 else 0.0
+
+    try:
+        pitch = librosa.yin(
+            y=y,
+            fmin=max(1.0, float(PITCH_FMIN)),
+            fmax=max(float(PITCH_FMIN) + 1.0, float(PITCH_FMAX)),
+            sr=SAMPLE_RATE,
+            frame_length=N_FFT,
+            hop_length=HOP_LENGTH,
+            center=CENTER,
+        ).astype(np.float32)
+    except Exception:
+        pitch = np.full_like(rms, np.nan, dtype=np.float32)
+
+    valid_pitch = np.isfinite(pitch) & (pitch > 0.0)
+    if np.any(valid_pitch):
+        pitch_vals = pitch[valid_pitch]
+        pitch_mean = float(np.mean(pitch_vals))
+        pitch_std = float(np.std(pitch_vals))
+    else:
+        pitch_mean = 0.0
+        pitch_std = 0.0
+
+    pitch_energy_corr = 0.0
+    if pitch.shape[0] == rms.shape[0]:
+        idx = valid_pitch
+        if np.sum(idx) >= 2:
+            p = pitch[idx]
+            e = rms[idx]
+            if np.std(p) > 1e-8 and np.std(e) > 1e-8:
+                pitch_energy_corr = float(np.corrcoef(p, e)[0, 1])
+
+    stats = np.array(
+        [
+            pitch_mean,
+            pitch_std,
+            energy_env_std,
+            np.clip(pitch_energy_corr, -1.0, 1.0),
+        ],
+        dtype=np.float32,
+    )
+    stats = np.nan_to_num(stats, nan=0.0, posinf=0.0, neginf=0.0)
+    if int(STATS_DIM) == stats.shape[0]:
+        return stats
+    out = np.zeros((int(STATS_DIM),), dtype=np.float32)
+    n = min(out.shape[0], stats.shape[0])
+    out[:n] = stats[:n]
+    return out
+
+
 # ==================== Generators ====================
 class CleanDataGenerator(tf.keras.utils.Sequence):
     def __init__(
@@ -472,7 +575,8 @@ class CleanDataGenerator(tf.keras.utils.Sequence):
 
     def __getitem__(self, index):
         idxs = self.indexes[index * self.batch_size:(index + 1) * self.batch_size]
-        x = np.empty((self.batch_size, N_MELS, MAX_FRAMES, 1), dtype=np.float32)
+        x_mel = np.empty((self.batch_size, N_MELS, MAX_FRAMES, 1), dtype=np.float32)
+        x_stats = np.empty((self.batch_size, STATS_DIM), dtype=np.float32) if USE_STATS_BRANCH else None
         y = np.empty(self.batch_size, dtype=np.int32)
 
         for i, idx in enumerate(idxs):
@@ -493,9 +597,12 @@ class CleanDataGenerator(tf.keras.utils.Sequence):
                 )
                 self._prosody_log_budget -= 1
             feat = extract_logmel(clean)
-            x[i] = np.expand_dims(feat, axis=-1)
+            x_mel[i] = np.expand_dims(feat, axis=-1)
+            if USE_STATS_BRANCH:
+                x_stats[i] = extract_stats_features(clean)
             y[i] = label_idx
 
+        x = (x_mel, x_stats) if USE_STATS_BRANCH else x_mel
         return x, tf.keras.utils.to_categorical(y, num_classes=self.num_classes)
 
 
@@ -542,8 +649,10 @@ class PairedKDGenerator(tf.keras.utils.Sequence):
     def __getitem__(self, index):
         idxs = self.indexes[index * self.batch_size:(index + 1) * self.batch_size]
 
-        x_clean = np.empty((self.batch_size, N_MELS, MAX_FRAMES, 1), dtype=np.float32)
-        x_noisy = np.empty((self.batch_size, N_MELS, MAX_FRAMES, 1), dtype=np.float32)
+        x_clean_mel = np.empty((self.batch_size, N_MELS, MAX_FRAMES, 1), dtype=np.float32)
+        x_noisy_mel = np.empty((self.batch_size, N_MELS, MAX_FRAMES, 1), dtype=np.float32)
+        x_clean_stats = np.empty((self.batch_size, STATS_DIM), dtype=np.float32) if USE_STATS_BRANCH else None
+        x_noisy_stats = np.empty((self.batch_size, STATS_DIM), dtype=np.float32) if USE_STATS_BRANCH else None
         y = np.empty(self.batch_size, dtype=np.int32)
 
         for i, idx in enumerate(idxs):
@@ -579,11 +688,20 @@ class PairedKDGenerator(tf.keras.utils.Sequence):
             clean_feat = extract_logmel(clean)
             noisy_feat = extract_logmel(noisy)
 
-            x_clean[i] = np.expand_dims(clean_feat, axis=-1)
-            x_noisy[i] = np.expand_dims(noisy_feat, axis=-1)
+            x_clean_mel[i] = np.expand_dims(clean_feat, axis=-1)
+            x_noisy_mel[i] = np.expand_dims(noisy_feat, axis=-1)
+            if USE_STATS_BRANCH:
+                x_clean_stats[i] = extract_stats_features(clean)
+                x_noisy_stats[i] = extract_stats_features(noisy)
             y[i] = label_idx
 
-        x = {"clean": x_clean, "noisy": x_noisy}
+        if USE_STATS_BRANCH:
+            x = {
+                "clean": (x_clean_mel, x_clean_stats),
+                "noisy": (x_noisy_mel, x_noisy_stats),
+            }
+        else:
+            x = {"clean": x_clean_mel, "noisy": x_noisy_mel}
         y_onehot = tf.keras.utils.to_categorical(y, num_classes=self.num_classes)
         return x, y_onehot
 
@@ -603,7 +721,8 @@ class NoisyEvalGenerator(tf.keras.utils.Sequence):
 
     def __getitem__(self, index):
         idxs = self.indexes[index * self.batch_size:(index + 1) * self.batch_size]
-        x = np.empty((self.batch_size, N_MELS, MAX_FRAMES, 1), dtype=np.float32)
+        x_mel = np.empty((self.batch_size, N_MELS, MAX_FRAMES, 1), dtype=np.float32)
+        x_stats = np.empty((self.batch_size, STATS_DIM), dtype=np.float32) if USE_STATS_BRANCH else None
         y = np.empty(self.batch_size, dtype=np.int32)
 
         for i, idx in enumerate(idxs):
@@ -612,17 +731,25 @@ class NoisyEvalGenerator(tf.keras.utils.Sequence):
             noisy = mix_with_noise(clean, noise, self.snr_db) if noise is not None else clean
 
             feat = extract_logmel(noisy)
-            x[i] = np.expand_dims(feat, axis=-1)
+            x_mel[i] = np.expand_dims(feat, axis=-1)
+            if USE_STATS_BRANCH:
+                x_stats[i] = extract_stats_features(noisy)
             y[i] = self.labels[idx]
 
+        x = (x_mel, x_stats) if USE_STATS_BRANCH else x_mel
         return x, tf.keras.utils.to_categorical(y, num_classes=self.num_classes)
 
 
 # ==================== Distiller ====================
 def build_probe_model(base_model: tf.keras.Model) -> tf.keras.Model:
-    # Use the tensor right before the final softmax classifier as embedding.
-    embedding_tensor = base_model.layers[-1].input
-    return tf.keras.Model(base_model.input, [base_model.output, embedding_tensor], name=f"{base_model.name}_probe")
+    # Main probability output + embeddings used by KD and auxiliary branch loss.
+    probs = base_model.output
+    fused_embed = base_model.get_layer("fused_embed").output if "fused_embed" in [l.name for l in base_model.layers] else base_model.layers[-1].input
+    mel_embed = base_model.get_layer("mel_embed").output if "mel_embed" in [l.name for l in base_model.layers] else fused_embed
+    outputs = [probs, fused_embed, mel_embed]
+    if "stats_embed" in [l.name for l in base_model.layers]:
+        outputs.append(base_model.get_layer("stats_embed").output)
+    return tf.keras.Model(base_model.input, outputs, name=f"{base_model.name}_probe")
 
 
 class Distiller(tf.keras.Model):
@@ -638,6 +765,7 @@ class Distiller(tf.keras.Model):
         use_logits_kd=True,
         use_embed_kd=True,
         use_embed_projection=True,
+        aux_alpha=0.0,
     ):
         super().__init__()
         self.student_probe = student_probe
@@ -649,22 +777,44 @@ class Distiller(tf.keras.Model):
         self.use_ce = bool(use_ce)
         self.use_logits_kd = bool(use_logits_kd)
         self.use_embed_kd = bool(use_embed_kd)
+        self.aux_alpha = float(max(0.0, aux_alpha))
 
-        teacher_embed_dim = teacher_probe.output_shape[1][-1]
+        teacher_embed_dim = teacher_probe.output_shape[1][-1] if len(teacher_probe.output_shape) > 1 else None
+        student_embed_dim = student_probe.output_shape[1][-1] if len(student_probe.output_shape) > 1 else None
         self.student_embed_proj = None
-        if self.use_embed_kd and use_embed_projection and teacher_embed_dim is not None:
+        if (
+            self.use_embed_kd
+            and use_embed_projection
+            and teacher_embed_dim is not None
+            and student_embed_dim is not None
+            and int(student_embed_dim) != int(teacher_embed_dim)
+        ):
             self.student_embed_proj = tf.keras.layers.Dense(
                 int(teacher_embed_dim),
                 use_bias=False,
                 name="student_embed_proj",
             )
 
+        self.stats_to_mel_proj = None
+        has_stats_student = len(student_probe.output_shape) > 3
+        if has_stats_student:
+            mel_dim = student_probe.output_shape[2][-1]
+            stats_dim = student_probe.output_shape[3][-1]
+            if mel_dim is not None and stats_dim is not None and int(mel_dim) != int(stats_dim):
+                self.stats_to_mel_proj = tf.keras.layers.Dense(
+                    int(mel_dim),
+                    use_bias=False,
+                    name="stats_to_mel_proj",
+                )
+
         self.current_gamma = tf.Variable(0.0, trainable=False, dtype=tf.float32, name="gamma_embed_weight")
 
         self.loss_tracker = tf.keras.metrics.Mean(name="loss")
+        self.cls_loss_tracker = tf.keras.metrics.Mean(name="cls_loss")
         self.ce_tracker = tf.keras.metrics.Mean(name="ce_loss")
         self.kd_logits_tracker = tf.keras.metrics.Mean(name="kd_logits")
         self.kd_embed_tracker = tf.keras.metrics.Mean(name="kd_embed")
+        self.aux_tracker = tf.keras.metrics.Mean(name="aux_loss")
         self.gamma_tracker = tf.keras.metrics.Mean(name="gamma_embed_weight")
         self.acc_metric = tf.keras.metrics.CategoricalAccuracy(name="accuracy")
 
@@ -676,9 +826,11 @@ class Distiller(tf.keras.Model):
     def metrics(self):
         return [
             self.loss_tracker,
+            self.cls_loss_tracker,
             self.ce_tracker,
             self.kd_logits_tracker,
             self.kd_embed_tracker,
+            self.aux_tracker,
             self.gamma_tracker,
             self.acc_metric,
         ]
@@ -687,6 +839,25 @@ class Distiller(tf.keras.Model):
         probs = tf.clip_by_value(probs, 1e-7, 1.0)
         logits = tf.math.log(probs)
         return tf.nn.softmax(logits / self.temperature, axis=-1)
+
+    def _unpack_probe_outputs(self, outputs):
+        if not isinstance(outputs, (list, tuple)):
+            return outputs, outputs, outputs, None
+        probs = outputs[0]
+        embed = outputs[1] if len(outputs) > 1 else probs
+        mel_embed = outputs[2] if len(outputs) > 2 else embed
+        stats_embed = outputs[3] if len(outputs) > 3 else None
+        return probs, embed, mel_embed, stats_embed
+
+    def _calc_aux_loss(self, mel_embed, stats_embed):
+        if self.aux_alpha <= 0.0 or stats_embed is None:
+            return tf.constant(0.0, dtype=tf.float32)
+        mel_norm = tf.math.l2_normalize(mel_embed, axis=-1)
+        stats_aligned = stats_embed
+        if self.stats_to_mel_proj is not None:
+            stats_aligned = self.stats_to_mel_proj(stats_aligned)
+        stats_norm = tf.math.l2_normalize(stats_aligned, axis=-1)
+        return self.mse_fn(mel_norm, stats_norm)
 
     def train_step(self, data):
         x, y = data
@@ -697,10 +868,12 @@ class Distiller(tf.keras.Model):
             x_clean = x
             x_noisy = x
 
-        t_probs, t_embed = self.teacher_probe(x_clean, training=False)
+        t_out = self.teacher_probe(x_clean, training=False)
+        t_probs, t_embed, _, _ = self._unpack_probe_outputs(t_out)
 
         with tf.GradientTape() as tape:
-            s_probs, s_embed = self.student_probe(x_noisy, training=True)
+            s_out = self.student_probe(x_noisy, training=True)
+            s_probs, s_embed, s_mel_embed, s_stats_embed = self._unpack_probe_outputs(s_out)
 
             ce_loss = tf.constant(0.0, dtype=tf.float32)
             if self.use_ce and self.alpha > 0.0:
@@ -721,20 +894,26 @@ class Distiller(tf.keras.Model):
                 s_norm = tf.math.l2_normalize(s_aligned, axis=-1)
                 kd_embed = self.mse_fn(t_norm, s_norm)
 
-            total_loss = self.alpha * ce_loss + self.beta * kd_logits + self.current_gamma * kd_embed
+            aux_loss = self._calc_aux_loss(s_mel_embed, s_stats_embed)
+            cls_loss = self.alpha * ce_loss + self.beta * kd_logits + self.current_gamma * kd_embed
+            total_loss = cls_loss + self.aux_alpha * aux_loss
 
         train_vars = list(self.student_probe.trainable_variables)
         if self.student_embed_proj is not None:
             train_vars.extend(self.student_embed_proj.trainable_variables)
+        if self.stats_to_mel_proj is not None:
+            train_vars.extend(self.stats_to_mel_proj.trainable_variables)
         grads = tape.gradient(total_loss, train_vars)
         grads_and_vars = [(g, v) for g, v in zip(grads, train_vars) if g is not None]
         if grads_and_vars:
             self.optimizer.apply_gradients(grads_and_vars)
 
         self.loss_tracker.update_state(total_loss)
+        self.cls_loss_tracker.update_state(cls_loss)
         self.ce_tracker.update_state(ce_loss)
         self.kd_logits_tracker.update_state(kd_logits)
         self.kd_embed_tracker.update_state(kd_embed)
+        self.aux_tracker.update_state(aux_loss)
         self.gamma_tracker.update_state(self.current_gamma)
         self.acc_metric.update_state(y, s_probs)
 
@@ -749,8 +928,10 @@ class Distiller(tf.keras.Model):
             x_clean = x
             x_noisy = x
 
-        t_probs, t_embed = self.teacher_probe(x_clean, training=False)
-        s_probs, s_embed = self.student_probe(x_noisy, training=False)
+        t_out = self.teacher_probe(x_clean, training=False)
+        s_out = self.student_probe(x_noisy, training=False)
+        t_probs, t_embed, _, _ = self._unpack_probe_outputs(t_out)
+        s_probs, s_embed, s_mel_embed, s_stats_embed = self._unpack_probe_outputs(s_out)
 
         ce_loss = tf.constant(0.0, dtype=tf.float32)
         if self.use_ce and self.alpha > 0.0:
@@ -771,12 +952,16 @@ class Distiller(tf.keras.Model):
             s_norm = tf.math.l2_normalize(s_aligned, axis=-1)
             kd_embed = self.mse_fn(t_norm, s_norm)
 
-        total_loss = self.alpha * ce_loss + self.beta * kd_logits + self.current_gamma * kd_embed
+        aux_loss = self._calc_aux_loss(s_mel_embed, s_stats_embed)
+        cls_loss = self.alpha * ce_loss + self.beta * kd_logits + self.current_gamma * kd_embed
+        total_loss = cls_loss + self.aux_alpha * aux_loss
 
         self.loss_tracker.update_state(total_loss)
+        self.cls_loss_tracker.update_state(cls_loss)
         self.ce_tracker.update_state(ce_loss)
         self.kd_logits_tracker.update_state(kd_logits)
         self.kd_embed_tracker.update_state(kd_embed)
+        self.aux_tracker.update_state(aux_loss)
         self.gamma_tracker.update_state(self.current_gamma)
         self.acc_metric.update_state(y, s_probs)
 
@@ -840,6 +1025,15 @@ print(
     f"student_init_ckpt={STUDENT_INIT_CKPT or 'None'}"
 )
 print(
+    "[StatsBranch] "
+    f"enabled={USE_STATS_BRANCH}, "
+    f"stats_dim={STATS_DIM}, "
+    f"stats_mlp_units={list(STATS_MLP_UNITS)}, "
+    f"fuse_units={FUSE_UNITS}, "
+    f"pitch_range=[{PITCH_FMIN},{PITCH_FMAX}]"
+)
+print(f"[AuxLoss] alpha={AUX_LOSS_ALPHA}")
+print(
     "[Prosody] "
     f"enabled={ENABLE_CLASS_PROSODY_AUG}, "
     f"teacher={TEACHER_ENABLE_PROSODY_AUG}, "
@@ -892,7 +1086,7 @@ student_history = None
 
 # ---------- Stage 1: train clean teacher ----------
 print("\n[Stage 1] Train clean teacher...")
-teacher = build_model((N_MELS, MAX_FRAMES, 1), num_classes, **TEACHER_MODEL_KWARGS)
+teacher = build_model((N_MELS, MAX_FRAMES, 1), num_classes, **_with_stats_kwargs(TEACHER_MODEL_KWARGS))
 print(f"[Stage 1] teacher_params={teacher.count_params():,}")
 if REUSE_TEACHER and os.path.exists(TEACHER_CKPT):
     print(f"[Stage 1] Reusing existing teacher checkpoint: {TEACHER_CKPT}")
@@ -951,7 +1145,7 @@ else:
 
 # ---------- Stage 2: student warm start + noisy KD ----------
 print("\n[Stage 2] Prepare student for distillation...")
-student = build_model((N_MELS, MAX_FRAMES, 1), num_classes, **STUDENT_MODEL_KWARGS)
+student = build_model((N_MELS, MAX_FRAMES, 1), num_classes, **_with_stats_kwargs(STUDENT_MODEL_KWARGS))
 print(f"[Stage 2] student_params={student.count_params():,}")
 student_init_source = initialize_student_weights(student)
 print(f"[Stage 2] student_init={student_init_source}")
@@ -975,6 +1169,7 @@ if PREWARM_EPOCHS > 0 and (PREWARM_USE_CE or PREWARM_USE_LOGITS):
         use_logits_kd=PREWARM_USE_LOGITS,
         use_embed_kd=False,
         use_embed_projection=False,
+        aux_alpha=AUX_LOSS_ALPHA,
     )
     prewarm_distiller.compile(optimizer=Adam(PREWARM_LR))
 
@@ -1032,6 +1227,7 @@ print(
     f"alpha={alpha_ce}, "
     f"beta={beta_logits}, "
     f"gamma_max={gamma_embed_max}, "
+    f"aux_alpha={AUX_LOSS_ALPHA}, "
     f"embed_proj={USE_EMBED_PROJECTION}, "
     f"warmup_epochs={embed_warmup_epochs}, "
     f"ramp_epochs={embed_ramp_epochs}"
@@ -1048,6 +1244,7 @@ distiller = Distiller(
     use_logits_kd=use_logits_kd,
     use_embed_kd=use_embed_kd,
     use_embed_projection=USE_EMBED_PROJECTION,
+    aux_alpha=AUX_LOSS_ALPHA,
 )
 distiller.compile(optimizer=Adam(LEARNING_RATE))
 

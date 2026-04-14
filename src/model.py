@@ -5,7 +5,7 @@ from keras.models import Model
 from keras.layers import (
     Input, Conv2D, BatchNormalization, Activation, MaxPooling2D, Dropout,
     Permute, Reshape, Dense, LayerNormalization, Add, MultiHeadAttention,
-    GlobalAveragePooling1D, DepthwiseConv1D, Multiply, Lambda, Conv1D
+    GlobalAveragePooling1D, DepthwiseConv1D, Multiply, Lambda, Conv1D, Concatenate
 )
 
 # 这个设计是正确的，保持不变
@@ -58,7 +58,20 @@ def branchformer_block(x, head_size, num_heads, ff_dim, input_feature_dim, dropo
     x = LayerNormalization(epsilon=1e-6, name=f"{prefix}_ln_out")(x)
     return x
 
-def build_model(input_shape, num_classes, num_layers=1, head_size=32, num_heads=4, ff_dim=256, dropout_rate=0.15, fnn_units=[128]):
+def build_model(
+    input_shape,
+    num_classes,
+    num_layers=1,
+    head_size=32,
+    num_heads=4,
+    ff_dim=256,
+    dropout_rate=0.15,
+    fnn_units=[128],
+    use_stats_branch=False,
+    stats_dim=4,
+    stats_mlp_units=(32, 16),
+    fuse_units=128,
+):
     """Builds the full ResNet-Branchformer model."""
     spec_input = Input(shape=input_shape)
 
@@ -106,12 +119,33 @@ def build_model(input_shape, num_classes, num_layers=1, head_size=32, num_heads=
             block_idx=i
         )
 
-    # Classification Head
+    # Classification Head (mel branch)
     x = GlobalAveragePooling1D()(x)
     for units in fnn_units:
         x = Dense(units, activation='relu')(x)
         x = Dropout(dropout_rate)(x)
-        
-    outputs = Dense(num_classes, activation="softmax")(x)
 
+    mel_embed = Lambda(lambda z: z, name="mel_embed")(x)
+
+    if use_stats_branch:
+        stats_input = Input(shape=(int(stats_dim),), name="stats_input")
+        s = stats_input
+        if isinstance(stats_mlp_units, int):
+            stats_mlp_units = (stats_mlp_units,)
+        for i, units in enumerate(stats_mlp_units):
+            if int(units) <= 0:
+                continue
+            s = Dense(int(units), activation="relu", name=f"stats_mlp_dense_{i + 1}")(s)
+            s = Dropout(dropout_rate, name=f"stats_mlp_dropout_{i + 1}")(s)
+        stats_embed = Lambda(lambda z: z, name="stats_embed")(s)
+
+        fused = Concatenate(name="fusion_concat")([mel_embed, stats_embed])
+        fused = Dense(int(fuse_units), activation="relu", name="fusion_dense")(fused)
+        fused = Dropout(dropout_rate, name="fusion_dropout")(fused)
+        fused = Lambda(lambda z: z, name="fused_embed")(fused)
+        outputs = Dense(num_classes, activation="softmax", name="class_output")(fused)
+        return Model(inputs=[spec_input, stats_input], outputs=outputs)
+
+    fused = Lambda(lambda z: z, name="fused_embed")(mel_embed)
+    outputs = Dense(num_classes, activation="softmax", name="class_output")(fused)
     return Model(inputs=spec_input, outputs=outputs)
