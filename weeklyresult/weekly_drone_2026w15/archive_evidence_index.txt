@@ -1,0 +1,27 @@
+generated_at=2026-04-14 10:06:58 CDT
+note=Run1-Run3 are stats-branch runs with KD_REUSE_TEACHER=0 due shape mismatch against baseline teacher ckpt
+
+[result/weekly_drone_2026w15/stats_fuse_only]
+result/weekly_drone_2026w15/stats_fuse_only/archive_manifest.txt
+result/weekly_drone_2026w15/stats_fuse_only/classification_report_noisy.txt
+result/weekly_drone_2026w15/stats_fuse_only/history/student_history.csv
+result/weekly_drone_2026w15/stats_fuse_only/history/teacher_history.csv
+result/weekly_drone_2026w15/stats_fuse_only/log_tail_50.txt
+result/weekly_drone_2026w15/stats_fuse_only/run_config.json
+
+[result/weekly_drone_2026w15/stats_laux_a010]
+result/weekly_drone_2026w15/stats_laux_a010/archive_manifest.txt
+result/weekly_drone_2026w15/stats_laux_a010/classification_report_noisy.txt
+result/weekly_drone_2026w15/stats_laux_a010/history/student_history.csv
+result/weekly_drone_2026w15/stats_laux_a010/history/teacher_history.csv
+result/weekly_drone_2026w15/stats_laux_a010/log_tail_50.txt
+result/weekly_drone_2026w15/stats_laux_a010/run_config.json
+
+[result/weekly_drone_2026w15/stats_laux_a020]
+result/weekly_drone_2026w15/stats_laux_a020/archive_manifest.txt
+result/weekly_drone_2026w15/stats_laux_a020/classification_report_noisy.txt
+result/weekly_drone_2026w15/stats_laux_a020/history/student_history.csv
+result/weekly_drone_2026w15/stats_laux_a020/history/teacher_history.csv
+result/weekly_drone_2026w15/stats_laux_a020/log_tail_50.txt
+result/weekly_drone_2026w15/stats_laux_a020/run_config.json
+

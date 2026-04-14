@@ -1,0 +1,9 @@
+generated_at=2026-04-14 10:06:58 CDT
+run_dir=result/weekly_drone_2026w15/stats_fuse_only
+source_log=logs/weekly_drone_2026w15_stats_fuse_only_20260413_233950.log
+files:
+-rw-rw-r-- 1 xdx9964 xdx9964 2.5K Apr 13 23:39 result/weekly_drone_2026w15/stats_fuse_only/run_config.json
+-rw-rw-r-- 1 xdx9964 xdx9964 380 Apr 14 03:58 result/weekly_drone_2026w15/stats_fuse_only/classification_report_noisy.txt
+-rw-rw-r-- 1 xdx9964 xdx9964 3.7K Apr 14 03:55 result/weekly_drone_2026w15/stats_fuse_only/history/student_history.csv
+-rw-rw-r-- 1 xdx9964 xdx9964 2.6K Apr 14 03:55 result/weekly_drone_2026w15/stats_fuse_only/history/teacher_history.csv
+-rw-rw-r-- 1 xdx9964 xdx9964 7.8K Apr 14 10:06 result/weekly_drone_2026w15/stats_fuse_only/log_tail_50.txt

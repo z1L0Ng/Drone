@@ -1,0 +1,9 @@
+generated_at=2026-04-14 10:06:58 CDT
+run_dir=result/weekly_drone_2026w15/stats_laux_a010
+source_log=logs/weekly_drone_2026w15_stats_laux_a010_20260413_233950.log
+files:
+-rw-rw-r-- 1 xdx9964 xdx9964 2.5K Apr 13 23:39 result/weekly_drone_2026w15/stats_laux_a010/run_config.json
+-rw-rw-r-- 1 xdx9964 xdx9964 380 Apr 14 05:22 result/weekly_drone_2026w15/stats_laux_a010/classification_report_noisy.txt
+-rw-rw-r-- 1 xdx9964 xdx9964 6.8K Apr 14 05:19 result/weekly_drone_2026w15/stats_laux_a010/history/student_history.csv
+-rw-rw-r-- 1 xdx9964 xdx9964 3.0K Apr 14 05:19 result/weekly_drone_2026w15/stats_laux_a010/history/teacher_history.csv
+-rw-rw-r-- 1 xdx9964 xdx9964 9.5K Apr 14 10:06 result/weekly_drone_2026w15/stats_laux_a010/log_tail_50.txt
