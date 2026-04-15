@@ -3,6 +3,7 @@
 import os
 import argparse
 import random
+from typing import Tuple
 import numpy as np
 import tensorflow as tf
 import joblib
@@ -40,6 +41,9 @@ FMAX = None
 TOP_DB = 80.0
 MAX_FRAMES = int(DURATION * SAMPLE_RATE / HOP_LENGTH) + 1
 INPUT_SHAPE = (N_MELS, MAX_FRAMES, 1)
+CENTER = False
+PITCH_FMIN = 50.0
+PITCH_FMAX = 500.0
 
 
 def setup_gpu():
@@ -116,6 +120,112 @@ def extract_logmel(y):
     return feat.astype(np.float32)
 
 
+def _framed_rms(y: np.ndarray) -> np.ndarray:
+    n = len(y)
+    if n <= 0:
+        return np.zeros((0,), dtype=np.float32)
+    starts = list(range(0, max(1, n - N_FFT + 1), HOP_LENGTH))
+    if not starts:
+        starts = [0]
+    rms = np.zeros((len(starts),), dtype=np.float32)
+    for i, s in enumerate(starts):
+        frame = y[s:s + N_FFT]
+        if frame.shape[0] < N_FFT:
+            frame = np.pad(frame, (0, N_FFT - frame.shape[0]))
+        rms[i] = float(np.sqrt(np.mean(np.square(frame), dtype=np.float64) + 1e-12))
+    return rms
+
+
+def _framed_pitch_autocorr(y: np.ndarray) -> np.ndarray:
+    n = len(y)
+    if n <= 0:
+        return np.zeros((0,), dtype=np.float32)
+    starts = list(range(0, max(1, n - N_FFT + 1), HOP_LENGTH))
+    if not starts:
+        starts = [0]
+    pitch = np.full((len(starts),), np.nan, dtype=np.float32)
+    lag_min = max(1, int(SAMPLE_RATE / max(PITCH_FMAX, 1.0)))
+    lag_max = max(lag_min + 1, int(SAMPLE_RATE / max(PITCH_FMIN, 1.0)))
+    window = np.hanning(N_FFT).astype(np.float32)
+    for i, s in enumerate(starts):
+        frame = y[s:s + N_FFT]
+        if frame.shape[0] < N_FFT:
+            frame = np.pad(frame, (0, N_FFT - frame.shape[0]))
+        frame = (frame - np.mean(frame)) * window
+        ac = np.correlate(frame, frame, mode="full")[N_FFT - 1:]
+        if ac.size <= lag_min:
+            continue
+        upper = min(lag_max, ac.size - 1)
+        ac0 = float(ac[0]) if ac.size > 0 else 0.0
+        if ac0 <= 1e-12:
+            continue
+        ac[:lag_min] = 0.0
+        if upper + 1 < ac.size:
+            ac[upper + 1:] = 0.0
+        lag = int(np.argmax(ac))
+        peak = float(ac[lag])
+        if lag <= 0 or peak / ac0 < 0.1:
+            continue
+        pitch[i] = float(SAMPLE_RATE / lag)
+    return pitch
+
+
+def extract_stats_features(y: np.ndarray, stats_dim: int) -> np.ndarray:
+    rms = _framed_rms(y).astype(np.float32)
+    energy_env_std = float(np.std(rms)) if rms.size > 0 else 0.0
+
+    pitch = _framed_pitch_autocorr(y).astype(np.float32)
+
+    valid_pitch = np.isfinite(pitch) & (pitch > 0.0)
+    if np.any(valid_pitch):
+        pitch_vals = pitch[valid_pitch]
+        pitch_mean = float(np.mean(pitch_vals))
+        pitch_std = float(np.std(pitch_vals))
+    else:
+        pitch_mean = 0.0
+        pitch_std = 0.0
+
+    pitch_energy_corr = 0.0
+    if pitch.shape[0] == rms.shape[0]:
+        idx = valid_pitch
+        if np.sum(idx) >= 2:
+            p = pitch[idx]
+            e = rms[idx]
+            if np.std(p) > 1e-8 and np.std(e) > 1e-8:
+                pitch_energy_corr = float(np.corrcoef(p, e)[0, 1])
+
+    stats = np.array(
+        [
+            pitch_mean,
+            pitch_std,
+            energy_env_std,
+            np.clip(pitch_energy_corr, -1.0, 1.0),
+        ],
+        dtype=np.float32,
+    )
+    stats = np.nan_to_num(stats, nan=0.0, posinf=0.0, neginf=0.0)
+    if int(stats_dim) == stats.shape[0]:
+        return stats
+    out = np.zeros((int(stats_dim),), dtype=np.float32)
+    n = min(out.shape[0], stats.shape[0])
+    out[:n] = stats[:n]
+    return out
+
+
+def bool_flag(raw: str) -> bool:
+    return str(raw).strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def parse_int_tuple(raw: str) -> Tuple[int, ...]:
+    text = str(raw).strip()
+    if not text:
+        return tuple()
+    parts = [p.strip() for p in text.split(",") if p.strip()]
+    if not parts:
+        return tuple()
+    return tuple(int(p) for p in parts)
+
+
 def scan_testset(test_data_dir, class_names):
     if not os.path.isdir(test_data_dir):
         raise ValueError(f"Test data directory not found: {test_data_dir}")
@@ -143,21 +253,37 @@ def scan_testset(test_data_dir, class_names):
     return np.array(x_all), np.array(y_all)
 
 
-def build_feature_tensor(filepaths):
-    x = np.empty((len(filepaths), *INPUT_SHAPE), dtype=np.float32)
+def build_feature_tensor(filepaths, use_stats_branch=False, stats_dim=4):
+    x_mel = np.empty((len(filepaths), *INPUT_SHAPE), dtype=np.float32)
+    x_stats = np.empty((len(filepaths), int(stats_dim)), dtype=np.float32) if use_stats_branch else None
     for i, p in enumerate(filepaths):
-        feat = extract_logmel(load_audio_1s(p))
-        x[i] = np.expand_dims(feat, axis=-1)
-    return x
+        y = load_audio_1s(p)
+        feat = extract_logmel(y)
+        x_mel[i] = np.expand_dims(feat, axis=-1)
+        if use_stats_branch:
+            x_stats[i] = extract_stats_features(y, stats_dim=stats_dim)
+    return (x_mel, x_stats) if use_stats_branch else x_mel
 
 
 class FinetuneDataGenerator(tf.keras.utils.Sequence):
-    def __init__(self, filepaths, labels, batch_size, num_classes, seed=42, shuffle=True):
+    def __init__(
+        self,
+        filepaths,
+        labels,
+        batch_size,
+        num_classes,
+        seed=42,
+        shuffle=True,
+        use_stats_branch=False,
+        stats_dim=4,
+    ):
         self.filepaths = filepaths
         self.labels = labels
         self.batch_size = batch_size
         self.num_classes = num_classes
         self.shuffle = shuffle
+        self.use_stats_branch = bool(use_stats_branch)
+        self.stats_dim = int(stats_dim)
         self.rng = np.random.default_rng(seed)
         self.indexes = np.arange(len(self.filepaths))
         if self.shuffle:
@@ -170,14 +296,19 @@ class FinetuneDataGenerator(tf.keras.utils.Sequence):
         batch_idx = self.indexes[index * self.batch_size:(index + 1) * self.batch_size]
         bsz = len(batch_idx)
 
-        x = np.empty((bsz, *INPUT_SHAPE), dtype=np.float32)
+        x_mel = np.empty((bsz, *INPUT_SHAPE), dtype=np.float32)
+        x_stats = np.empty((bsz, self.stats_dim), dtype=np.float32) if self.use_stats_branch else None
         y = np.empty(bsz, dtype=np.int32)
 
         for i, idx in enumerate(batch_idx):
-            feat = extract_logmel(load_audio_1s(self.filepaths[idx]))
-            x[i] = np.expand_dims(feat, axis=-1)
+            wav = load_audio_1s(self.filepaths[idx])
+            feat = extract_logmel(wav)
+            x_mel[i] = np.expand_dims(feat, axis=-1)
+            if self.use_stats_branch:
+                x_stats[i] = extract_stats_features(wav, stats_dim=self.stats_dim)
             y[i] = self.labels[idx]
 
+        x = (x_mel, x_stats) if self.use_stats_branch else x_mel
         return x, tf.keras.utils.to_categorical(y, num_classes=self.num_classes)
 
     def on_epoch_end(self):
@@ -230,6 +361,12 @@ def main():
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--lr", type=float, default=1e-5)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--use-stats-branch", default="0")
+    parser.add_argument("--stats-dim", type=int, default=4)
+    parser.add_argument("--stats-mlp-units", default="32,16")
+    parser.add_argument("--fuse-units", type=int, default=128)
+    parser.add_argument("--fusion-mode", default="concat")
+    parser.add_argument("--gate-units", type=int, default=16)
     args = parser.parse_args()
 
     setup_reproducibility(args.seed)
@@ -238,6 +375,7 @@ def main():
     le = joblib.load(args.encoder)
     class_names = le.classes_
     num_classes = len(class_names)
+    use_stats_branch = bool_flag(args.use_stats_branch)
 
     x_all, y_all = scan_testset(args.testset, class_names)
     print(f"Loaded testset: {len(x_all)} samples")
@@ -284,16 +422,31 @@ def main():
 
     print(f"Finetune/Val/Test: {len(x_finetune)}/{len(x_val)}/{len(x_test)}")
 
-    x_test_features = build_feature_tensor(x_test)
+    x_test_features = build_feature_tensor(
+        x_test,
+        use_stats_branch=use_stats_branch,
+        stats_dim=args.stats_dim,
+    )
 
-    model_original = build_model(INPUT_SHAPE, num_classes, **MODEL_KWARGS)
+    model_kwargs = dict(MODEL_KWARGS)
+    if use_stats_branch:
+        model_kwargs.update(
+            use_stats_branch=True,
+            stats_dim=int(args.stats_dim),
+            stats_mlp_units=parse_int_tuple(args.stats_mlp_units),
+            fuse_units=int(args.fuse_units),
+            fusion_mode=str(args.fusion_mode).strip().lower(),
+            gate_units=int(args.gate_units),
+        )
+
+    model_original = build_model(INPUT_SHAPE, num_classes, **model_kwargs)
     model_original.load_weights(args.weights)
     y_proba_original = model_original.predict(x_test_features, verbose=0)
     y_pred_original = np.argmax(y_proba_original, axis=1)
     acc_original = accuracy_score(y_test, y_pred_original)
     print(f"Original accuracy: {acc_original:.4f}")
 
-    model_finetuned = build_model(INPUT_SHAPE, num_classes, **MODEL_KWARGS)
+    model_finetuned = build_model(INPUT_SHAPE, num_classes, **model_kwargs)
     model_finetuned.load_weights(args.weights)
     model_finetuned.compile(
         optimizer=Adam(learning_rate=args.lr),
@@ -301,8 +454,26 @@ def main():
         metrics=["accuracy"],
     )
 
-    train_gen = FinetuneDataGenerator(x_finetune, y_finetune, args.batch_size, num_classes, seed=args.seed, shuffle=True)
-    val_gen = FinetuneDataGenerator(x_val, y_val, args.batch_size, num_classes, seed=args.seed, shuffle=False)
+    train_gen = FinetuneDataGenerator(
+        x_finetune,
+        y_finetune,
+        args.batch_size,
+        num_classes,
+        seed=args.seed,
+        shuffle=True,
+        use_stats_branch=use_stats_branch,
+        stats_dim=args.stats_dim,
+    )
+    val_gen = FinetuneDataGenerator(
+        x_val,
+        y_val,
+        args.batch_size,
+        num_classes,
+        seed=args.seed,
+        shuffle=False,
+        use_stats_branch=use_stats_branch,
+        stats_dim=args.stats_dim,
+    )
 
     cls_w = class_weight.compute_class_weight("balanced", classes=np.unique(y_finetune), y=y_finetune)
     cls_w = dict(enumerate(cls_w))
@@ -353,6 +524,12 @@ def main():
         meta={
             "weights": args.weights,
             "test_samples": len(x_test),
+            "use_stats_branch": int(use_stats_branch),
+            "stats_dim": int(args.stats_dim),
+            "stats_mlp_units": list(parse_int_tuple(args.stats_mlp_units)),
+            "fuse_units": int(args.fuse_units),
+            "fusion_mode": str(args.fusion_mode).strip().lower(),
+            "gate_units": int(args.gate_units),
         },
     )
     save_eval(
@@ -370,6 +547,12 @@ def main():
             "test_samples": len(x_test),
             "epochs": args.epochs,
             "lr": args.lr,
+            "use_stats_branch": int(use_stats_branch),
+            "stats_dim": int(args.stats_dim),
+            "stats_mlp_units": list(parse_int_tuple(args.stats_mlp_units)),
+            "fuse_units": int(args.fuse_units),
+            "fusion_mode": str(args.fusion_mode).strip().lower(),
+            "gate_units": int(args.gate_units),
         },
     )
 
