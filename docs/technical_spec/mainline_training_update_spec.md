@@ -22,6 +22,16 @@ This spec defines the required process for any mainline (`main`) model/training 
    - Append one row to `docs/weekly_todo/handoff_log.md`
    - Include command, output path, next owner/action, and risk
 
+## Server Dispatch Guardrails (Mandatory)
+1. Pre-dispatch commit
+   - Before sending any new server training command, commit local changes for this dispatch first.
+   - Include commit SHA in dispatch message and handoff row.
+2. Server execution mode
+   - Weekly training must run under `tmux` sessions (persistent across SSH disconnect).
+3. Artifact root
+   - Weekly training outputs must be stored under `weeklyresult/` (not `result/`) on server-side sync packages.
+   - Recommended path: `weeklyresult/weekly_drone_<year>w<week>/<run_name>/...`
+
 ## Required Artifact Checklist
 - Training config snapshot
 - Model checkpoint path (or pointer)
