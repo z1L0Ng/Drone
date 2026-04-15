@@ -1,0 +1,30 @@
+2026-04-15 12:46:13.036889: I tensorflow/core/util/port.cc:111] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-04-15 12:46:13.065792: E tensorflow/compiler/xla/stream_executor/cuda/cuda_dnn.cc:9342] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-04-15 12:46:13.065842: E tensorflow/compiler/xla/stream_executor/cuda/cuda_fft.cc:609] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-15 12:46:13.065865: E tensorflow/compiler/xla/stream_executor/cuda/cuda_blas.cc:1518] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-04-15 12:46:13.071101: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX_VNNI AMX_TILE AMX_INT8 AMX_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-04-15 12:46:13.609424: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+GPU Ready: 1 devices
+Loading dataset...
+Noise dir: dataset/raw/tellonoise, files=231
+[Paths] MODEL_DIR=saved_models/weekly_drone_2026w15/stats_laux_a020_reuse_strict, RESULT_DIR=result/weekly_drone_2026w15/stats_laux_a020_reuse_strict, TEACHER_CKPT=saved_models/weekly_drone_2026w15/newarch_teacher_anchor/teacher_clean_best.weights.h5, STUDENT_CKPT=saved_models/weekly_drone_2026w15/stats_laux_a020_reuse_strict/student_kd_best.weights.h5
+[Seed] KD_SEED=42
+[Model] teacher_profile=base (num_layers=1, head_size=32, num_heads=4, ff_dim=256, dropout_rate=0.15, fnn_units=[128]), student_profile=base (num_layers=1, head_size=32, num_heads=4, ff_dim=256, dropout_rate=0.15, fnn_units=[128]), student_init_mode=auto, student_init_ckpt=None
+[StatsBranch/Teacher] enabled=True, stats_dim=4, stats_mlp_units=[32, 16], fuse_units=128, fusion_mode=concat, gate_units=16, strict_reuse_shape=True, pitch_range=[50.0,500.0]
+[StatsBranch/Student] enabled=True, stats_dim=4, stats_mlp_units=[32, 16], fuse_units=128, fusion_mode=concat, gate_units=16, pitch_range=[50.0,500.0]
+[AuxLoss] mode=embed_align, loss_type=huber, alpha=0.2
+[Prosody] enabled=True, teacher=False, student=True, class=emergency, e_prob=1.0, e_pitch=[2.0,5.0], e_gain_db=[6.0,10.0]
+[Train] fit_verbose=2, gamma_log_verbose=False
+[EarlyStop] patience=10, teacher_monitor=val_accuracy, student_monitor=val_accuracy
+[Smoke knobs] teacher_steps=full, teacher_val_steps=full, student_steps=full, student_val_steps=full, eval_steps=full, skip_final_eval=False
+[Prewarm] epochs=0, use_ce=True, use_logits=True, alpha=1.0, beta=1.0, temperature=2.0, lr=0.0001, prosody_aug=False
+[Artifacts] save_run_config=True, save_train_history=True, history_dir=result/weekly_drone_2026w15/stats_laux_a020_reuse_strict/history
+
+[Stage 1] Train clean teacher...
+2026-04-15 12:46:14.801342: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1886] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 12239 MB memory:  -> device: 0, name: NVIDIA L40, pci bus id: 0000:e1:00.0, compute capability: 8.9
+[Stage 1] teacher_params=1,759,923
+[Stage 1] Reusing existing teacher checkpoint: saved_models/weekly_drone_2026w15/newarch_teacher_anchor/teacher_clean_best.weights.h5
+
+[Stage 2] Prepare student for distillation...
+[Stage 2] student_params=1,759,923
