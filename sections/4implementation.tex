@@ -1,0 +1,16 @@
+\subsection{Acoustic-Prior-Guided Training Design}
+The cross-language emergency-versus-normal evidence is converted into training decisions through a conservative mapping from motivation to implementation. First, we apply \textbf{class-aware augmentation}: augmentation policies are conditioned on the label so that emergency cues are not washed out by globally uniform perturbations. This choice follows the pooled evidence that pitch-energy-related cues carry stable emergency sensitivity.
+
+Second, we add a lightweight \textbf{stats branch} that explicitly models four scalar descriptors:
+\[
+\{\texttt{pitch\_mean},\ \texttt{pitch\_std},\ \texttt{energy\_env\_std},\ \texttt{pitch\_energy\_corr}\}.
+\]
+Pitch-related statistics are extracted with YIN-style fundamental-frequency estimation~\cite{decheveigne2002yin}, and the feature pipeline follows standard audio tooling practice with librosa~\cite{mcfee2015librosa}. The branch is auxiliary by design and is not presented as a replacement for the main representation pathway.
+
+Third, training uses a multi-objective form:
+\[
+\mathcal{L} = \mathcal{L}_{\text{cls}} + \alpha \cdot \mathcal{L}_{\text{aux}}.
+\]
+Here $\mathcal{L}_{\text{cls}}$ is the primary intent-classification loss, and $\mathcal{L}_{\text{aux}}$ encourages consistency with acoustic priors. The role of $\mathcal{L}_{\text{aux}}$ is to regularize optimization toward emergency-sensitive cues; it is not assumed to guarantee cross-language performance improvements on its own.
+
+If an architecture overview figure already exists in the manuscript, this subsection should reference it for branch placement. Otherwise, the text specification above serves as the implementation-level definition without adding a new complex figure.
