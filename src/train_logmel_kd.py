@@ -917,6 +917,17 @@ class Distiller(tf.keras.Model):
                     return tf.cast(x_input[key], tf.float32)
         return None
 
+    def _adapt_input_for_model(self, x_input, model_obj):
+        # Teacher and student may expose different input arity (e.g. teacher mel-only, student mel+stats).
+        expected_inputs = len(tf.nest.flatten(model_obj.inputs))
+        if expected_inputs <= 1:
+            if isinstance(x_input, (list, tuple)):
+                return x_input[0]
+            return x_input
+        if isinstance(x_input, (list, tuple)):
+            return tuple(x_input[:expected_inputs])
+        return x_input
+
     def _calc_aux_loss(self, mel_embed, stats_embed, stats_target):
         if self.aux_alpha <= 0.0:
             return tf.constant(0.0, dtype=tf.float32)
@@ -945,13 +956,15 @@ class Distiller(tf.keras.Model):
         else:
             x_clean = x
             x_noisy = x
-        stats_target = self._extract_stats_target(x_noisy)
+        teacher_x = self._adapt_input_for_model(x_clean, self.teacher_probe)
+        student_x = self._adapt_input_for_model(x_noisy, self.student_probe)
+        stats_target = self._extract_stats_target(student_x)
 
-        t_out = self.teacher_probe(x_clean, training=False)
+        t_out = self.teacher_probe(teacher_x, training=False)
         t_probs, t_embed, _, _ = self._unpack_probe_outputs(t_out)
 
         with tf.GradientTape() as tape:
-            s_out = self.student_probe(x_noisy, training=True)
+            s_out = self.student_probe(student_x, training=True)
             s_probs, s_embed, s_mel_embed, s_stats_embed = self._unpack_probe_outputs(s_out)
 
             ce_loss = tf.constant(0.0, dtype=tf.float32)
@@ -1008,10 +1021,12 @@ class Distiller(tf.keras.Model):
         else:
             x_clean = x
             x_noisy = x
-        stats_target = self._extract_stats_target(x_noisy)
+        teacher_x = self._adapt_input_for_model(x_clean, self.teacher_probe)
+        student_x = self._adapt_input_for_model(x_noisy, self.student_probe)
+        stats_target = self._extract_stats_target(student_x)
 
-        t_out = self.teacher_probe(x_clean, training=False)
-        s_out = self.student_probe(x_noisy, training=False)
+        t_out = self.teacher_probe(teacher_x, training=False)
+        s_out = self.student_probe(student_x, training=False)
         t_probs, t_embed, _, _ = self._unpack_probe_outputs(t_out)
         s_probs, s_embed, s_mel_embed, s_stats_embed = self._unpack_probe_outputs(s_out)
 
