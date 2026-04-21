@@ -1,0 +1,38 @@
+\section{Training and Implementation}
+\label{sec:training}
+
+\subsection{Task Formulation}
+
+We formulate rotor-noisy command recognition as a sequence-to-label problem. Given a short audio segment $x$, the model predicts
+\[
+y \in \{\texttt{emergency}, \texttt{movement}, \texttt{unknown}\}.
+\]
+This avoids the intermediate transcription step and keeps the optimization target aligned with the control decisions the system actually needs.
+
+\subsection{Noise-Aware Baseline}
+
+The baseline system trains directly on noisy intent examples produced by mixing command audio with recorded drone noise across a bounded SNR range. This baseline is important because it tells us what happens if we only acknowledge the noise problem at the data level. In the current repository, that direct baseline is clearly not sufficient: it reaches $0.72$ overall accuracy and only $0.47$ emergency recall on the noisy test set.
+
+\subsection{Teacher-Student Transfer}
+
+The main improvement path in the completed experiments is teacher-student transfer from cleaner conditions to noisy intent recognition. A clean teacher model provides richer supervision than hard labels alone, and the noisy student is optimized with a combination of classification and distillation losses. The exact variant can differ across runs, but the stable writing point is that \emph{transfer-based training is currently more promising than direct noisy training}.
+
+The completed runs suggest two takeaways that should shape the paper:
+\begin{itemize}
+\item Distillation variants improve both overall accuracy and emergency-sensitive metrics over the direct noisy baseline.
+\item The paper should report model variants in terms of the training idea they instantiate, not only internal run IDs.
+\end{itemize}
+
+\subsection{Class-Aware Augmentation}
+
+The repository already uses emergency-focused pitch and gain perturbation. This belongs in the paper because it connects the safety goal to a concrete training intervention. The current results also show why the paper needs careful ablations: some augmentation settings help, but overly aggressive settings can collapse emergency recall. In other words, the contribution is not ``more augmentation,'' but \emph{label-aware and controlled augmentation}.
+
+\subsection{Auxiliary Acoustic Priors}
+
+There is an emerging line of work in the repository around lightweight acoustic statistics branches and cross-language emergency-sensitive cues. This material is worth keeping as a secondary design extension, but not as the center of the current submission story. The strongest benchmark numbers presently come from the distillation and preprocessing configurations, not from the newest stats-branch variants.
+
+The most defensible structure is therefore:
+\begin{itemize}
+\item main paper: distillation, class-aware augmentation, preprocessing, and deployment pipeline;
+\item optional subsection or later version: auxiliary acoustic-prior branch once the ablation is stable.
+\end{itemize}

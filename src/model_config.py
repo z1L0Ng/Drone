@@ -7,6 +7,7 @@ import os
 # -------------------------
 MODEL_KWARGS_PRESETS = {
     "base": dict(
+        conv_filters=64,
         num_layers=1,
         head_size=32,
         num_heads=4,
@@ -15,6 +16,7 @@ MODEL_KWARGS_PRESETS = {
         fnn_units=[128],
     ),
     "large": dict(
+        conv_filters=64,
         num_layers=2,
         head_size=48,
         num_heads=6,
@@ -23,12 +25,40 @@ MODEL_KWARGS_PRESETS = {
         fnn_units=[256, 128],
     ),
     "xlarge": dict(
+        conv_filters=64,
         num_layers=3,
         head_size=64,
         num_heads=8,
         ff_dim=512,
         dropout_rate=0.20,
         fnn_units=[256, 128],
+    ),
+    "deploy_s": dict(
+        conv_filters=48,
+        num_layers=1,
+        head_size=24,
+        num_heads=3,
+        ff_dim=192,
+        dropout_rate=0.15,
+        fnn_units=[96],
+    ),
+    "deploy_xs": dict(
+        conv_filters=32,
+        num_layers=1,
+        head_size=16,
+        num_heads=2,
+        ff_dim=128,
+        dropout_rate=0.15,
+        fnn_units=[64],
+    ),
+    "deploy_tiny": dict(
+        conv_filters=24,
+        num_layers=1,
+        head_size=8,
+        num_heads=2,
+        ff_dim=64,
+        dropout_rate=0.10,
+        fnn_units=[48],
     ),
 }
 
@@ -42,6 +72,7 @@ def get_model_kwargs(profile: str = "base"):
         "small": "base",
         "medium": "large",
         "xl": "xlarge",
+        "tiny": "deploy_tiny",
     }
     name = alias.get(name, name)
     if name not in MODEL_KWARGS_PRESETS:

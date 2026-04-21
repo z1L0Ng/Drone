@@ -222,3 +222,8 @@ testset/
 #saved_models/**/finetuned_best.weights.h5
 #experiments/**/best_model.ckpt
 saved_models/**/finetuned_local_testset_best.weights.h5
+
+# Local real-world deployment workspace (keep off server sync)
+realworld/
+
+archive/old_raw/

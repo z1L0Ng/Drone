@@ -1,0 +1,27 @@
+\section{Background and Motivation}
+\label{sec:motivation}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{cleanvsnoisy.png}
+    \caption{Illustrative clean-versus-rotor-noisy condition gap from the current draft assets. The paper should use this kind of figure only to motivate the acoustic challenge, not as the main quantitative result.}
+    \label{fig:clean_vs_noisy}
+\end{figure}
+
+\subsection{Rotor Noise Changes the Problem}
+
+UAV propellers generate high-intensity broadband noise with strong temporal fluctuation. Unlike stationary background hum, rotor noise changes with motor speed, load, and maneuvering condition, and it overlaps with the most informative speech bands for short commands. This makes the acoustic environment adversarial in exactly the frequency range where emergency speech cues must remain detectable.
+
+For this paper, the important takeaway is not just that noise exists, but that the deployment environment introduces a persistent train-test mismatch. Models can look acceptable on curated or lightly corrupted data while failing when evaluated on recorded rotor noise. The manuscript should therefore treat synthetic-noise success as necessary but insufficient evidence.
+
+\subsection{Why Intent-Level Modeling First}
+
+A transcript-first pipeline is attractive when the task is open-ended speech interaction, but it is a weak default for our current target. The UAV must respond quickly, run without network dependence, and avoid cascading ASR errors into downstream control logic. A narrow intent taxonomy is better aligned with those constraints.
+
+This is why the current draft should frame the problem as \emph{audio to intent}, not \emph{audio to text to intent}. The system only needs to distinguish a small number of semantic categories robustly enough for safe control. The \emph{unknown} class is equally important because it acts as the guardrail against unintended actuation.
+
+\subsection{How to Use the Cross-Language Analysis}
+
+The repository also contains a more exploratory multilingual acoustic analysis around emergency-versus-normal speech cues. That material is useful as \emph{motivation} for class-aware augmentation and frequency-sensitive design choices, but it is not yet strong enough to anchor the paper's main claim. In the current draft, it should stay in a short motivation paragraph or a compact subsection, not dominate the system story.
+
+The practical writing rule is simple: use cross-language evidence to justify why emergency-sensitive cues may matter, but keep all primary claims tied to the completed UAV intent-recognition experiments.

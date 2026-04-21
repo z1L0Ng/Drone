@@ -1,0 +1,16 @@
+\section{Prototype and Real-World Setup}
+\label{sec:prototype}
+
+This section should carry the \emph{systems} evidence that turns the model into a SenSys paper rather than a speech-model paper. The current draft should keep three concrete elements here.
+
+\subsection{Hardware and Software Stack}
+
+The final paper needs one photo of the UAV prototype and one software-path figure showing microphone capture, feature extraction, model inference, and controller dispatch. The text should specify the onboard compute target, microphone placement, inference runtime environment, and controller interface (for example, UART or MAVLink).
+
+\subsection{Decision Logic and Failsafes}
+
+Prototype deployment should make the safety boundary explicit. Emergency predictions may use a different threshold from movement predictions, and low-confidence segments should be routed to \emph{unknown}. This section is also the right place to describe debounce logic, cooldown windows, or any two-step confirmation rules that prevent repeated false triggers.
+
+\subsection{Real-World Test Protocol}
+
+The real-world evaluation should not be described as an informal demo. It needs a protocol: microphone position, propeller state, speaker distance, number of speakers, command script, repetition count, and failure criteria. Even if these measurements are still being collected, the draft outline should reserve space for them now because this is one of the highest-risk gaps for a systems submission.

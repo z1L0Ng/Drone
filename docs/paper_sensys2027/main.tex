@@ -1,0 +1,42 @@
+\documentclass[sigconf,anonymous]{acmart}
+
+% SenSys submission setup: ACM sigconf, anonymous, two-column.
+\settopmatter{printacmref=false,printfolios=true}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\pagestyle{plain}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\setlist[itemize]{leftmargin=*,topsep=2pt,itemsep=1pt}
+\graphicspath{{figures/}}
+
+\newcommand{\sys}{Talk-to-Me Drone}
+
+\begin{document}
+
+\title{\sys: On-Device Emergency Intent Recognition Under Extreme Rotor Noise}
+
+\begin{abstract}
+Small UAVs need hands-free interaction, but onboard voice control breaks down when rotor noise overlaps with safety-critical speech. This paper drafts \sys, an on-device audio-to-intent pipeline for three command classes: \emph{emergency}, \emph{movement}, and \emph{unknown}. The current manuscript centers on a deployment-oriented training stack rather than a generic speech benchmark: direct intent prediction, class-aware noisy augmentation, and teacher-student transfer from clean to noisy conditions. On the current balanced noisy benchmark at evaluation SNR $=-10$ dB, our best completed configuration improves overall accuracy from $0.72$ to $0.88$ and emergency recall from $0.47$ to $0.79$ over a direct noisy-training baseline. This version reorganizes the paper around the claims that are already supported, while isolating still-missing evidence such as onboard latency and real-flight validation for the next writing round.
+\end{abstract}
+
+\maketitle
+
+\input{sections/1introduction}
+\input{sections/2motivation}
+\input{sections/3system}
+\input{sections/4training}
+\input{sections/5prototype}
+\input{sections/6evaluation}
+\input{sections/7relatedwork}
+\input{sections/8conclusion}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\end{document}

@@ -62,6 +62,7 @@ def build_model(
     input_shape,
     num_classes,
     num_layers=1,
+    conv_filters=64,
     head_size=32,
     num_heads=4,
     ff_dim=256,
@@ -76,19 +77,20 @@ def build_model(
 ):
     """Builds the full ResNet-Branchformer model."""
     spec_input = Input(shape=input_shape)
+    conv_filters = int(conv_filters)
 
     # ResNet part (Feature Extractor)
-    x = Conv2D(filters=64, kernel_size=(3, 3), padding='same')(spec_input)
+    x = Conv2D(filters=conv_filters, kernel_size=(3, 3), padding='same')(spec_input)
     x = BatchNormalization()(x)
     x = Activation('relu')(x)
     x = MaxPooling2D(pool_size=(4, 1))(x)
 
-    x = Conv2D(filters=64, kernel_size=(3, 3), padding='same')(x)
+    x = Conv2D(filters=conv_filters, kernel_size=(3, 3), padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation('relu')(x)
     x = MaxPooling2D(pool_size=(4, 1))(x)
 
-    x = Conv2D(filters=64, kernel_size=(3, 3), padding='same')(x)
+    x = Conv2D(filters=conv_filters, kernel_size=(3, 3), padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation('relu')(x)
     x = MaxPooling2D(pool_size=(2, 1))(x)

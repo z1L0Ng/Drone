@@ -12,6 +12,7 @@ from sklearn.metrics import classification_report
 
 from model import build_model
 from model_config import get_model_kwargs
+from logmel_frontend_shared import extract_logmel as shared_extract_logmel
 
 
 def _env_bool(name: str, default: bool) -> bool:
@@ -508,25 +509,7 @@ def apply_class_conditional_prosody(
 
 
 def extract_logmel(y):
-    mel = librosa.feature.melspectrogram(
-        y=y,
-        sr=SAMPLE_RATE,
-        n_fft=N_FFT,
-        hop_length=HOP_LENGTH,
-        center=CENTER,
-        n_mels=N_MELS,
-        fmin=FMIN,
-        fmax=FMAX,
-        power=2.0,
-    )
-    feat = librosa.power_to_db(mel, ref=np.max, top_db=TOP_DB)
-
-    if feat.shape[1] < MAX_FRAMES:
-        feat = np.pad(feat, ((0, 0), (0, MAX_FRAMES - feat.shape[1])), mode="constant")
-    else:
-        feat = feat[:, :MAX_FRAMES]
-
-    return feat.astype(np.float32)
+    return shared_extract_logmel(y)
 
 
 def extract_stats_features(y):

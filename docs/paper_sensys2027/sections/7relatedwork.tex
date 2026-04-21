@@ -1,0 +1,17 @@
+\section{Related Work}
+
+\subsection{UAV Voice Interfaces Under Noise}
+
+Speech control for UAVs has been explored through ASR-based command interfaces and multimodal extensions. Kite shows that UAV speech control is feasible in principle \cite{oneata19_interspeech}, and follow-on work studies multimodal recognition for more complex interaction settings \cite{oneata2021multimodal}. Other studies explicitly document how UAV operating noise degrades voice-command discrimination \cite{miesikowska2021uavnoise,park2023uavvehicle}. These papers establish the importance of the problem, but they provide less guidance on how to build a fully onboard, emergency-aware intent pipeline under rotor-dominated noise.
+
+\subsection{End-to-End Spoken Intent Understanding}
+
+Outside UAVs, spoken language understanding has moved from transcript-first pipelines toward direct speech-to-intent models \cite{lugosch19_interspeech,kuo20_interspeech,mhiri20_interspeech,ijcai2021p538}. This literature is directly relevant because it motivates our decision to predict intent classes from audio rather than rely on ASR as an intermediate step. Our setting differs in the deployment constraints: small command vocabulary, strong self-noise, and higher cost for emergency misses.
+
+\subsection{Robust Transfer for Speech Models}
+
+Transfer learning and teacher-student training are widely used to improve speech robustness under noisy conditions \cite{park2020improvednoisystudent,baevski2020wav2vec20,yang21c_interspeech}. We build on that line of work, but our emphasis is on how such training choices affect a rotor-noisy UAV intent-recognition pipeline rather than on general-purpose speech representation quality.
+
+\subsection{Speech Command and SLU Resources}
+
+Spoken intent resources such as SLURP and SLUE broaden the evaluation space for speech understanding \cite{bastianelli-etal-2020-slurp,shon2022slue}, while multilingual benchmarks such as ML-SUPERB motivate broader generalization questions \cite{shi23g_interspeech}. These datasets are useful background, but they do not replace closed-loop evaluation under UAV-relevant noise and safety constraints. That gap is exactly why this paper should keep deployment evidence in the center of the narrative.
