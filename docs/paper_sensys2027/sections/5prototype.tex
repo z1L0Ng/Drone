@@ -1,11 +1,11 @@
 \section{Prototype and Real-World Setup}
 \label{sec:prototype}
 
-This section should carry the \emph{systems} evidence that turns the model into a SenSys paper rather than a speech-model paper. The current draft should keep three concrete elements here.
+This section should carry the \emph{systems} evidence that turns the model into a SenSys paper rather than a speech-model paper. The important framing choice is that the prototype is not the contribution by itself. It is one instantiation of a broader voice-safety-layer design for small nearby robots.
 
 \subsection{Hardware and Software Stack}
 
-The final paper needs one photo of the UAV prototype and one software-path figure showing microphone capture, feature extraction, model inference, and controller dispatch. The text should specify the onboard compute target, microphone placement, inference runtime environment, and controller interface (for example, UART or MAVLink).
+The final paper needs one photo or schematic per evaluated platform and one software-path figure showing microphone capture, feature extraction, model inference, and controller dispatch. The text should specify the onboard compute target, microphone placement, inference runtime environment, and controller interface (for example, UART or MAVLink). If the implementation starts from a Tello-class drone and later expands to additional UAVs, that progression should be presented explicitly as cross-platform validation rather than as a silent change in scope.
 
 \subsection{Decision Logic and Failsafes}
 
@@ -13,4 +13,4 @@ Prototype deployment should make the safety boundary explicit. Emergency predict
 
 \subsection{Real-World Test Protocol}
 
-The real-world evaluation should not be described as an informal demo. It needs a protocol: microphone position, propeller state, speaker distance, number of speakers, command script, repetition count, and failure criteria. Even if these measurements are still being collected, the draft outline should reserve space for them now because this is one of the highest-risk gaps for a systems submission.
+The real-world evaluation should not be described as an informal demo. It needs a protocol: platform type, microphone position, propeller state, speaker distance, number of speakers, command script, repetition count, and failure criteria. Even if these measurements are still being collected, the draft outline should reserve space for them now because this is one of the highest-risk gaps for a systems submission. If multiple drones are included, the protocol should make clear what transfers across platforms and what remains platform-specific.

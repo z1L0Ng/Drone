@@ -1,6 +1,6 @@
 # SenSys 2027 Draft Outline
 
-This folder is a cleaned Overleaf-style working draft for the paper. It is organized around the claims that are already supported in the repository instead of the older placeholder structure from the uploaded zip.
+This folder is a cleaned local draft for the paper. The current goal is not to present a finished single-platform UAV system, but to develop a convincing SenSys story around a future-facing voice safety layer for small nearby robots, with current drone experiments as the first concrete instantiation.
 
 ## Format Checklist
 
@@ -14,28 +14,29 @@ Reference: `https://sensys.acm.org/2017/cfp/`
 
 ## Recommended Storyline
 
-- Main claim: rotor-noisy UAV voice control is best framed as an on-device intent-recognition problem with emergency-aware evaluation.
-- Main technical hook: class-aware noise training plus clean-to-noisy teacher-student transfer.
-- Main systems hook: prototype integration, latency, and false-trigger behavior matter as much as classifier accuracy.
-- De-emphasize for now: multilingual generalization claims and stats-branch novelty until their ablations are cleaner.
+- Main claim: in a future world where drones and small robots operate around people, voice should function as a lightweight safety mechanism that keeps robots interruptible and socially usable.
+- Problem framing: this is not ``ASR on a drone'' and not ``one Tello demo''; it is an on-device safety-layer problem under severe self-noise.
+- Main technical hook: narrow spoken-intent abstraction plus noise-robust training and explicit rejection of uncertain audio.
+- Main systems hook: prototype integration, latency, false-trigger behavior, and cross-platform real-world validation matter as much as classifier accuracy.
+- De-emphasize for now: multilingual generalization claims, stats-branch novelty, and any wording that makes the paper sound tied to a single airframe.
 
 ## Section Plan
 
 1. `Introduction`
-   Focus on the systems problem, not just speech robustness.
+   Start from future human-robot co-presence and motivate voice as a safety mechanism, then narrow to rotor-noisy drones as the hardest current instantiation.
 
 2. `Background and Motivation`
    Keep rotor-noise discussion and a short explanation of why intent-level modeling is the right scope.
 
 3. `System Design`
-   Show the onboard pipeline, command taxonomy, and safety boundary.
+   Show the onboard pipeline, command taxonomy, safety boundary, and why the abstraction is platform-agnostic.
 
 4. `Training and Implementation`
    Center this section on the strongest completed recipe:
    preprocessing + class-aware augmentation + teacher-student transfer.
 
 5. `Prototype and Real-World Setup`
-   This is where the paper becomes a SenSys paper rather than a model paper.
+   This is where the paper becomes a SenSys paper rather than a model paper. Do not bind the story to Tello; treat each platform as an instantiation of the same safety-layer design.
 
 6. `Evaluation`
    Lead with completed benchmark results. Then add real-world and latency evidence as hard gates for the next round.
@@ -62,6 +63,7 @@ Reference: `https://sensys.acm.org/2017/cfp/`
 ## Writing Rules For The Next Round
 
 - Every claimed contribution must map to a completed figure, table, or protocol.
+- Avoid intro wording that sounds like the work is already ``done'' in a closed form; use current experiments as validation of a broader systems direction.
 - If a result is exploratory, say so and keep it out of the contribution list.
 - Prefer one strong story over two half-supported stories.
 - For SenSys, the paper will be judged on system clarity and evaluation discipline, not only on model novelty.

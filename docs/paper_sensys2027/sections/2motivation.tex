@@ -4,24 +4,38 @@
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{cleanvsnoisy.png}
-    \caption{Illustrative clean-versus-rotor-noisy condition gap from the current draft assets. The paper should use this kind of figure only to motivate the acoustic challenge, not as the main quantitative result.}
+    \caption{Illustrative clean-versus-rotor-noisy contrast. The role of this figure is to motivate why nearby drones are a difficult speech environment, not to serve as the paper's main quantitative evidence.}
     \label{fig:clean_vs_noisy}
 \end{figure}
 
-\subsection{Rotor Noise Changes the Problem}
+\subsection{From Convenience Interface to Safety Layer}
 
-UAV propellers generate high-intensity broadband noise with strong temporal fluctuation. Unlike stationary background hum, rotor noise changes with motor speed, load, and maneuvering condition, and it overlaps with the most informative speech bands for short commands. This makes the acoustic environment adversarial in exactly the frequency range where emergency speech cues must remain detectable.
+If drones are to coexist with people in everyday environments, then human-drone interaction cannot be framed only as a convenience feature. It must also support timely human intervention. A person near a drone should be able to interrupt it, redirect it, or de-escalate its behavior without needing expert tooling, a handset, or a perfectly functioning network connection. This is especially important when drones operate in close proximity to uninvolved people.
 
-For this paper, the important takeaway is not just that noise exists, but that the deployment environment introduces a persistent train-test mismatch. Models can look acceptable on curated or lightly corrupted data while failing when evaluated on recorded rotor noise. The manuscript should therefore treat synthetic-noise success as necessary but insufficient evidence.
+This motivation is consistent with both prior systems work and current regulatory direction. Existing UAV speech-interface research shows that spoken interaction is feasible in principle \cite{oneata19_interspeech,oneata2021multimodal}, while EU drone regulations explicitly frame UAS deployment in terms of safety, security, privacy, data protection, and operational responsibility \cite{eu2019uasops,eu2019uasdesign}. More broadly, the EU AI Act emphasizes human-centric and trustworthy AI with a high level of protection of health and safety \cite{eu2024aiact}. These sources do not imply that voice is the only answer, but they do support the need for interaction mechanisms that preserve human oversight in realistic deployment settings.
 
-\subsection{Why Intent-Level Modeling First}
+Under this view, the paper is not mainly about adding speech recognition to a drone. It is about designing a lightweight \emph{voice safety layer}: a system component that lets nearby humans naturally express high-priority intents and lets the drone respond conservatively when the signal is uncertain.
 
-A transcript-first pipeline is attractive when the task is open-ended speech interaction, but it is a weak default for our current target. The UAV must respond quickly, run without network dependence, and avoid cascading ASR errors into downstream control logic. A narrow intent taxonomy is better aligned with those constraints.
+\subsection{Why Small Drones Are the Hardest First Instantiation}
 
-This is why the current draft should frame the problem as \emph{audio to intent}, not \emph{audio to text to intent}. The system only needs to distinguish a small number of semantic categories robustly enough for safe control. The \emph{unknown} class is equally important because it acts as the guardrail against unintended actuation.
+Small drones are a strong target for this idea because they combine close-proximity operation with severe acoustic self-interference. The same vehicle that should remain interruptible near people also generates rotor noise close to its microphones. That noise is broadband, non-stationary, and coupled to propulsion state, which makes it fundamentally different from background office noise or household ambience. Prior UAV-focused studies have already shown that voice-command recognition deteriorates in the presence of hovering drones and challenging operating environments \cite{miesikowska2021uavnoise,park2023uavvehicle}.
 
-\subsection{How to Use the Cross-Language Analysis}
+This matters for paper positioning. The manuscript should stay centered on drones, because drones are already a sufficiently challenging and important setting on their own. A brief future-looking point is still reasonable: if the interaction abstraction works well for drones, similar ideas may later matter for other nearby robots. But that is outlook, not the subject of this paper.
 
-The repository also contains a more exploratory multilingual acoustic analysis around emergency-versus-normal speech cues. That material is useful as \emph{motivation} for class-aware augmentation and frequency-sensitive design choices, but it is not yet strong enough to anchor the paper's main claim. In the current draft, it should stay in a short motivation paragraph or a compact subsection, not dominate the system story.
+\subsection{Why Intent-Level Modeling Is the Right Initial Scope}
 
-The practical writing rule is simple: use cross-language evidence to justify why emergency-sensitive cues may matter, but keep all primary claims tied to the completed UAV intent-recognition experiments.
+Once the problem is framed as a safety layer, transcript-first speech processing becomes a weak default. The system does not need to recover arbitrary language with perfect lexical fidelity. It needs to recognize a small number of operationally meaningful states with low latency and conservative failure behavior. Spoken language understanding has increasingly moved toward direct speech-to-intent modeling, showing that useful intent decisions can be learned without full transcripts \cite{lugosch19_interspeech,kuo20_interspeech,mhiri20_interspeech}.
+
+That direction is a better match for our setting for three reasons. First, onboard execution is easier to justify when the output space is narrow. Second, the \emph{unknown} class can be elevated to a first-class safety mechanism rather than treated as leftover error. Third, the evaluation target becomes more honest: instead of asking whether the system can transcribe speech in rotor noise, we ask whether it can reliably identify when a human is trying to stop, direct, or disengage from a nearby drone.
+
+This is why the current paper adopts a narrow abstraction of \emph{emergency}, \emph{movement}, and \emph{unknown}. That taxonomy is not the end state of human-robot conversation. It is the minimal interface that makes the safety-layer idea experimentally testable.
+
+\subsection{Why the Evaluation Should Not Be Tied to One Airframe}
+
+The real-world setup should also reflect this drone-centered framing. A Tello-class drone is a useful engineering starting point, but a paper built entirely around one airframe risks telling the wrong story. The stronger claim is that a common voice-safety abstraction can be instantiated across drone platforms, even if each platform introduces different microphones, propulsion signatures, and controller interfaces.
+
+For that reason, the evaluation should separate \emph{what is airframe-specific} from \emph{what should transfer across drones}. Airframe-specific aspects include rotor spectrum, microphone mounting, and control APIs. More stable aspects include the safety-oriented command abstraction, the need for an explicit rejection path, and the requirement that human interruption remain possible under self-noise. This separation will make the paper more robust as the prototype expands beyond a single drone.
+
+\subsection{Scope of This Draft}
+
+This draft does not claim that the full future-world problem is solved. Its narrower purpose is to establish a credible first systems path for drones: define the safety-layer abstraction, instantiate it on self-noisy drone platforms, and evaluate whether the resulting voice interface remains usable under realistic acoustic interference. The manuscript should therefore use the broader motivation only to justify the problem choice, while keeping its main empirical claims grounded in the current drone-based evidence.
