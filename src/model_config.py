@@ -60,6 +60,37 @@ MODEL_KWARGS_PRESETS = {
         dropout_rate=0.10,
         fnn_units=[48],
     ),
+    "xiao_time16": dict(
+        conv_filters=64,
+        num_layers=1,
+        head_size=32,
+        num_heads=4,
+        ff_dim=256,
+        dropout_rate=0.15,
+        fnn_units=[128],
+        branchformer_time_pool=2,
+    ),
+    "xiao_bottleneck256": dict(
+        conv_filters=64,
+        num_layers=1,
+        head_size=32,
+        num_heads=4,
+        ff_dim=128,
+        dropout_rate=0.15,
+        fnn_units=[128],
+        branchformer_bottleneck_dim=256,
+    ),
+    "xiao_time16_bottleneck256": dict(
+        conv_filters=64,
+        num_layers=1,
+        head_size=32,
+        num_heads=4,
+        ff_dim=128,
+        dropout_rate=0.15,
+        fnn_units=[128],
+        branchformer_time_pool=2,
+        branchformer_bottleneck_dim=256,
+    ),
 }
 
 # Backward-compatible default used by existing training/inference scripts.
@@ -73,6 +104,9 @@ def get_model_kwargs(profile: str = "base"):
         "medium": "large",
         "xl": "xlarge",
         "tiny": "deploy_tiny",
+        "time16": "xiao_time16",
+        "bottleneck256": "xiao_bottleneck256",
+        "time16_bottleneck256": "xiao_time16_bottleneck256",
     }
     name = alias.get(name, name)
     if name not in MODEL_KWARGS_PRESETS:

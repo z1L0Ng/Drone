@@ -226,7 +226,17 @@ def resolve_distill_variant(variant: str):
 
 
 def _fmt_model_kwargs(kwargs: dict) -> str:
-    keys = ["num_layers", "head_size", "num_heads", "ff_dim", "dropout_rate", "fnn_units"]
+    keys = [
+        "num_layers",
+        "conv_filters",
+        "head_size",
+        "num_heads",
+        "ff_dim",
+        "dropout_rate",
+        "fnn_units",
+        "branchformer_time_pool",
+        "branchformer_bottleneck_dim",
+    ]
     parts = []
     for key in keys:
         if key in kwargs:

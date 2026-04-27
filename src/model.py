@@ -4,7 +4,7 @@ import tensorflow as tf
 from keras.models import Model
 from keras.layers import (
     Input, Conv2D, BatchNormalization, Activation, MaxPooling2D, Dropout,
-    Permute, Reshape, Dense, LayerNormalization, Add, MultiHeadAttention,
+    MaxPooling1D, Permute, Reshape, Dense, LayerNormalization, Add, MultiHeadAttention,
     GlobalAveragePooling1D, DepthwiseConv1D, Multiply, Lambda, Conv1D, Concatenate
 )
 
@@ -74,6 +74,8 @@ def build_model(
     fuse_units=128,
     fusion_mode="concat",
     gate_units=16,
+    branchformer_time_pool=1,
+    branchformer_bottleneck_dim=None,
 ):
     """Builds the full ResNet-Branchformer model."""
     spec_input = Input(shape=input_shape)
@@ -109,7 +111,23 @@ def build_model(
     
     # Reshape 层会自动将最后两个维度 (Freq, Channels) 合并
     x = Reshape((time_steps, -1))(x)
-    
+
+    branchformer_time_pool = int(branchformer_time_pool or 1)
+    if branchformer_time_pool > 1:
+        x = MaxPooling1D(
+            pool_size=branchformer_time_pool,
+            name="branchformer_time_pool",
+        )(x)
+
+    if branchformer_bottleneck_dim is not None:
+        branchformer_bottleneck_dim = int(branchformer_bottleneck_dim)
+        if branchformer_bottleneck_dim > 0 and branchformer_bottleneck_dim != int(x.shape[-1]):
+            x = Dense(
+                branchformer_bottleneck_dim,
+                activation="relu",
+                name="branchformer_entry_bottleneck",
+            )(x)
+
     # 动态获取特征维度，用于传递给 Branchformer Block
     # Reshape 之后，x.shape[-1] 就代表了 Freq * Channels
     feature_dim = x.shape[-1]
