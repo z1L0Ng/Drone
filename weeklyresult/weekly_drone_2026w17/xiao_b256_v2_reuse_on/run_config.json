@@ -1,0 +1,103 @@
+{
+  "paths": {
+    "processed_data_path": "dataset/processed/data_paths.npz",
+    "encoder_path": "saved_models/label_encoder.joblib",
+    "noise_source_dir": "dataset/raw/tellonoise",
+    "model_dir": "saved_models/weekly_drone_2026w17/xiao_b256_v2_reuse_on",
+    "result_dir": "weeklyresult/weekly_drone_2026w17/xiao_b256_v2_reuse_on",
+    "history_dir": "weeklyresult/weekly_drone_2026w17/xiao_b256_v2_reuse_on/history",
+    "teacher_ckpt": "/files1/Zilong/Drone/saved_models/weekly_drone_2026w14/baseline/teacher_clean_best.weights.h5",
+    "student_ckpt": "saved_models/weekly_drone_2026w17/xiao_b256_v2_reuse_on/student_kd_best.weights.h5"
+  },
+  "train": {
+    "batch_size": 32,
+    "teacher_epochs": 100,
+    "student_epochs": 100,
+    "learning_rate": 0.0001,
+    "reuse_teacher": true,
+    "strict_reuse_teacher_shape": true,
+    "random_seed": 42,
+    "teacher_model_profile": "base",
+    "student_model_profile": "xiao_bottleneck256",
+    "student_init_mode": "auto",
+    "student_init_ckpt": null,
+    "earlystop_patience": 15,
+    "teacher_monitor": "val_accuracy",
+    "student_monitor": "val_accuracy"
+  },
+  "stats_branch": {
+    "teacher": {
+      "use_stats_branch": false,
+      "stats_dim": 4,
+      "stats_mlp_units": [
+        32,
+        16
+      ],
+      "fuse_units": 128,
+      "fusion_mode": "concat",
+      "gate_units": 16
+    },
+    "student": {
+      "use_stats_branch": false,
+      "stats_dim": 4,
+      "stats_mlp_units": [
+        32,
+        16
+      ],
+      "fuse_units": 128,
+      "fusion_mode": "concat",
+      "gate_units": 16
+    },
+    "pitch_fmin": 50.0,
+    "pitch_fmax": 500.0
+  },
+  "noise": {
+    "noise_mix_prob": 1.0,
+    "min_snr_db": -15.0,
+    "max_snr_db": -5.0,
+    "eval_snr_db": -10.0
+  },
+  "prosody": {
+    "enable_class_prosody_aug": true,
+    "teacher_enable_prosody_aug": false,
+    "student_enable_prosody_aug": true,
+    "emergency_class_name": "emergency",
+    "emergency_prob": 1.0,
+    "emergency_pitch_min": 2.0,
+    "emergency_pitch_max": 5.0,
+    "emergency_gain_db_min": 6.0,
+    "emergency_gain_db_max": 10.0,
+    "non_emergency_prob": 0.0,
+    "non_emergency_pitch_min": 0.0,
+    "non_emergency_pitch_max": 0.0,
+    "non_emergency_gain_db_min": 0.0,
+    "non_emergency_gain_db_max": 0.0
+  },
+  "distillation": {
+    "variant": "ce_logits",
+    "alpha_ce": 1.0,
+    "logits_beta": 1.0,
+    "embed_gamma_max": 1.0,
+    "temperature": 2.0,
+    "use_embed_projection": true,
+    "embed_warmup_epochs": 30,
+    "embed_ramp_epochs": 70
+  },
+  "aux_loss": {
+    "aux_alpha": 0.0,
+    "aux_mode": "embed_align",
+    "aux_loss_type": "huber"
+  },
+  "prewarm": {
+    "prewarm_epochs": 0,
+    "prewarm_lr": 0.0001,
+    "prewarm_alpha_ce": 1.0,
+    "prewarm_logits_beta": 1.0,
+    "prewarm_temperature": 2.0,
+    "prewarm_use_ce": true,
+    "prewarm_use_logits": true,
+    "prewarm_enable_prosody_aug": false,
+    "prewarm_patience": 5,
+    "prewarm_monitor": "val_accuracy"
+  }
+}
