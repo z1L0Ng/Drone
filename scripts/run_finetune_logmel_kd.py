@@ -21,7 +21,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 
 from model import build_model
-from model_config import MODEL_KWARGS
+from model_config import get_model_kwargs
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 
@@ -352,6 +352,7 @@ def main():
     parser.add_argument("--testset", default="testset")
     parser.add_argument("--encoder", default="saved_models/label_encoder.joblib")
     parser.add_argument("--weights", default="saved_models/logmel_kd/student_kd_best.weights.h5")
+    parser.add_argument("--model-profile", default="base")
     parser.add_argument("--finetuned-weights", default="saved_models/logmel_kd/finetuned_best.weights.h5")
     parser.add_argument("--output", default="result/finetune/logmel_kd")
     parser.add_argument("--split-cache", default="result/finetune/logmel_kd_split_indices.npz")
@@ -428,7 +429,7 @@ def main():
         stats_dim=args.stats_dim,
     )
 
-    model_kwargs = dict(MODEL_KWARGS)
+    model_kwargs = get_model_kwargs(args.model_profile)
     if use_stats_branch:
         model_kwargs.update(
             use_stats_branch=True,

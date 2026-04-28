@@ -9,7 +9,17 @@ from keras.layers import (
 )
 
 # 这个设计是正确的，保持不变
-def branchformer_block(x, head_size, num_heads, ff_dim, input_feature_dim, dropout=0.1, kernel_size=31, block_idx=0):
+def branchformer_block(
+    x,
+    head_size,
+    num_heads,
+    ff_dim,
+    input_feature_dim,
+    dropout=0.1,
+    kernel_size=31,
+    block_idx=0,
+    branchformer_conv_impl="grouped_conv1d",
+):
     """A single Branchformer block."""
     prefix = f"branchformer{block_idx}"
 
@@ -37,7 +47,25 @@ def branchformer_block(x, head_size, num_heads, ff_dim, input_feature_dim, dropo
     conv_in = Conv1D(input_feature_dim, kernel_size=1, name=f"{prefix}_conv_in")(x_ln_conv)
     conv_in = Multiply(name=f"{prefix}_conv_glu")([conv_in, conv_gates])
     
-    conv_in = Conv1D(input_feature_dim, kernel_size, padding='same', groups=input_feature_dim, name=f"{prefix}_conv_dwise")(conv_in)
+    branchformer_conv_impl = str(branchformer_conv_impl).strip().lower()
+    if branchformer_conv_impl == "depthwise_conv1d":
+        # TFLite converts this to DEPTHWISE_CONV_2D, which TFLM supports.
+        conv_in = DepthwiseConv1D(
+            kernel_size,
+            padding='same',
+            depth_multiplier=1,
+            name=f"{prefix}_conv_dwise",
+        )(conv_in)
+    elif branchformer_conv_impl == "grouped_conv1d":
+        # Keras/TFLite converts this to grouped CONV_2D; desktop TFLite supports
+        # it, but TFLM Conv2D does not. Keep as default for checkpoint
+        # compatibility with existing runs.
+        conv_in = Conv1D(input_feature_dim, kernel_size, padding='same', groups=input_feature_dim, name=f"{prefix}_conv_dwise")(conv_in)
+    else:
+        raise ValueError(
+            f"Unsupported branchformer_conv_impl={branchformer_conv_impl}; "
+            "expected grouped_conv1d or depthwise_conv1d"
+        )
     conv_in = BatchNormalization(name=f"{prefix}_conv_bn")(conv_in)
     conv_in = Activation('swish', name=f"{prefix}_conv_swish")(conv_in)
     
@@ -76,6 +104,7 @@ def build_model(
     gate_units=16,
     branchformer_time_pool=1,
     branchformer_bottleneck_dim=None,
+    branchformer_conv_impl="grouped_conv1d",
 ):
     """Builds the full ResNet-Branchformer model."""
     spec_input = Input(shape=input_shape)
@@ -138,7 +167,8 @@ def build_model(
             x, head_size, num_heads, ff_dim, 
             input_feature_dim=feature_dim, # 将动态计算的维度传入
             dropout=dropout_rate, 
-            block_idx=i
+            block_idx=i,
+            branchformer_conv_impl=branchformer_conv_impl,
         )
 
     # Classification Head (mel branch)

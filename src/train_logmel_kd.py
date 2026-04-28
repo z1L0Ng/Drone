@@ -236,6 +236,7 @@ def _fmt_model_kwargs(kwargs: dict) -> str:
         "fnn_units",
         "branchformer_time_pool",
         "branchformer_bottleneck_dim",
+        "branchformer_conv_impl",
     ]
     parts = []
     for key in keys:
