@@ -150,8 +150,9 @@ Artifact integrity gate before deployment:
 - At manager audit time on 2026-04-29, the expected `saved_models/.../B_small_teacher_student/`
   and `weeklyresult/.../B_small_teacher_student/` directories were not present in
   the current working tree.
-- Deployment agent should not start board work until these artifacts are
-  restored or regenerated and `run_config.json` is available.
+- Restored on 2026-04-29 from `/private/tmp/drone_repo_cleanup_20260429_105129/`.
+- Deployment agent may proceed from the restored `student_kd_best.weights.h5` and
+  `run_config.json`.
 
 Next deployment task:
 

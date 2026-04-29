@@ -48,14 +48,15 @@ Project target: SenSys 2027 first-round submission.
   - The resume log reports saved outputs under `saved_models/weekly_drone_2026w17/B_small_teacher_student/` and `weeklyresult/weekly_drone_2026w17/B_small_teacher_student/`.
   - At manager audit time on 2026-04-29, those two expected directories were not present in this working tree.
   - Commit `6698cd389f5d4849ba8c456152927f3f39dc70ff` is local `HEAD` and contains the required training-script callback-mode fix plus paper draft updates, but it does not contain the `B_small_teacher_student` checkpoint/result tree.
-  - Deployment handoff is blocked until checkpoint and `weeklyresult` files are restored or explicitly regenerated.
+  - Restored on 2026-04-29 from `/private/tmp/drone_repo_cleanup_20260429_105129/`.
+  - Deployment handoff artifact gate is now satisfied for checkpoint/result presence.
 
 ## Daily Execution Checklist
 - [x] Audit git branch, HEAD, and status before updating management docs.
 - [x] Audit latest `weeklyresult/` week and W17 local logs.
 - [x] Update W17 weekly TODO and runbook.
 - [x] Append W17 row to `docs/weekly_todo/handoff_log.md`.
-- [ ] Restore or confirm `B_small_teacher_student` checkpoint and `weeklyresult` artifact tree.
+- [x] Restore or confirm `B_small_teacher_student` checkpoint and `weeklyresult` artifact tree.
 - [x] Sync Notion weekly page with W17 status and next-stage owners.
 - [ ] Dispatch deployment agent after artifact integrity gate is satisfied.
 - [ ] Dispatch writing plan after deployment gate has a first result or a clearly documented blocker.
@@ -70,14 +71,14 @@ Project target: SenSys 2027 first-round submission.
 
 ## Priority Items
 ### Priority 1: Deployment Candidate Integrity
-- [ ] Confirm the expected checkpoint exists:
+- [x] Confirm the expected checkpoint exists:
   - `saved_models/weekly_drone_2026w17/B_small_teacher_student/student_kd_best.weights.h5`
   - `saved_models/weekly_drone_2026w17/B_small_teacher_student/teacher_clean_best.weights.h5`
-- [ ] Confirm the expected result tree exists:
+- [x] Confirm the expected result tree exists:
   - `weeklyresult/weekly_drone_2026w17/B_small_teacher_student/run_config.json`
   - `weeklyresult/weekly_drone_2026w17/B_small_teacher_student/classification_report_noisy.txt`
   - `weeklyresult/weekly_drone_2026w17/B_small_teacher_student/history/student_history.csv`
-- [ ] If artifacts are missing, recover them before deployment. Do not dispatch board work from metric summaries alone.
+- [x] If artifacts are missing, recover them before deployment. Do not dispatch board work from metric summaries alone.
 
 ### Priority 2: Deployment Agent Handoff
 - [ ] Hand deployment agent the recovered `B_small_teacher_student` checkpoint.
@@ -102,5 +103,6 @@ Project target: SenSys 2027 first-round submission.
   - Done: recorded local testset summaries for original and finetuned `B_small_teacher_student`.
   - Done: corrected Notion mapping so W17 content is on the `2026/4/30` meeting page, not `2026/4/23`.
   - Done: confirmed `6698cd389f5d4849ba8c456152927f3f39dc70ff` is present as local `HEAD`; its necessary code/paper contents are already in the working tree.
-  - Blocker: expected checkpoint/result directories for `B_small_teacher_student` are not present in the current working tree despite being referenced by logs and eval summaries.
-  - Next: recover artifacts, then dispatch deployment agent; after first deployment evidence, pivot writing toward SenSys 2027 first-round narrative.
+  - Done: restored `B_small_teacher_student` checkpoint and `weeklyresult` tree from `/private/tmp/drone_repo_cleanup_20260429_105129/`.
+  - Done: updated Notion `2026/4/30` page to mark artifact recovery complete.
+  - Next: dispatch deployment agent; after first deployment evidence, pivot writing toward SenSys 2027 first-round narrative.

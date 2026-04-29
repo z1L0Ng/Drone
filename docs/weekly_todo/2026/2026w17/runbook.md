@@ -26,8 +26,8 @@ Commit/code status:
 - This commit contains the necessary `src/train_logmel_kd.py` callback-mode fix
   for Keras monitor handling and the current SenSys draft updates.
 - This commit does not contain the `B_small_teacher_student` checkpoint/result
-  tree. Those runtime artifacts still need to be restored or regenerated before
-  deployment.
+  tree. Those runtime artifacts were restored on 2026-04-29 from
+  `/private/tmp/drone_repo_cleanup_20260429_105129/`.
 
 Run before deployment dispatch:
 
@@ -46,6 +46,15 @@ Required files:
 
 If any required file is missing, recover artifacts before deployment. Do not
 start board work from summary files alone.
+
+Restored artifact audit on 2026-04-29:
+
+- `saved_models/weekly_drone_2026w17/B_small_teacher_student/student_kd_best.weights.h5`
+- `saved_models/weekly_drone_2026w17/B_small_teacher_student/teacher_clean_best.weights.h5`
+- `saved_models/weekly_drone_2026w17/B_small_teacher_student/finetuned_testset.weights.h5`
+- `weeklyresult/weekly_drone_2026w17/B_small_teacher_student/run_config.json`
+- `weeklyresult/weekly_drone_2026w17/B_small_teacher_student/classification_report_noisy.txt`
+- `weeklyresult/weekly_drone_2026w17/B_small_teacher_student/history/student_history.csv`
 
 ## 3) Deployment Agent Dispatch
 Use this once the artifact integrity gate passes:
