@@ -3,50 +3,50 @@
 
 \subsection{Evaluation Questions}
 
-The evaluation should answer four questions:
+The current evidence should answer four conservative questions:
 \begin{itemize}
-\item \textbf{RQ1:} Does noise-aware training substantially improve performance over direct noisy training?
-\item \textbf{RQ2:} Do the gains hold on safety-relevant metrics such as emergency recall and emergency F1?
-\item \textbf{RQ3:} Which training ideas are already well supported, and which are still exploratory?
-\item \textbf{RQ4:} Does the prototype remain viable under onboard latency and real-world acoustic conditions?
+\item \textbf{RQ1:} What completed noisy-set result is stable enough to anchor the paper narrative?
+\item \textbf{RQ2:} How does the deployment-oriented \texttt{w17} branch compare with that anchor on the same reported noisy-set metrics?
+\item \textbf{RQ3:} Which numbers support a model-quality claim, and which numbers only support deployment feasibility checks?
+\item \textbf{RQ4:} What remains ongoing before the paper can claim completed ESP32/TFLM execution?
 \end{itemize}
 
-\subsection{Current Completed Benchmark Evidence}
+\subsection{Noisy-Set Intent Results}
 
-Table~\ref{tab:current_noisy_results} consolidates the strongest completed noisy-set results currently visible in the repository. All runs below use evaluation SNR $=-10$ dB on a balanced three-class test set. The table is intentionally simple because the main writing need right now is to anchor the narrative with trustworthy evidence.
+Table~\ref{tab:current_noisy_results} reports only results that are present under the current allowed evidence paths. The main anchor is \texttt{weekly\_drone\_2026w14/preprocess\_ext}. The \texttt{w17} rows are deployment-oriented candidates and are not treated as replacements unless they clearly exceed the anchor. All rows below use the noisy classification reports with total support $9984$.
 
 \begin{table}[t]
     \centering
-    \caption{Current completed noisy-set results from the repository.}
+    \caption{Noisy-set intent results from the current evidence paths.}
     \label{tab:current_noisy_results}
-    \begin{tabular}{lccc}
+    \begin{tabular}{lcccc}
         \toprule
-        Variant & Acc. & Emerg. R & Emerg. F1 \\
+        Run & Acc. & Emerg. P & Emerg. R & Emerg. F1 \\
         \midrule
-        Direct noisy baseline (`E0`) & 0.72 & 0.47 & 0.57 \\
-        Stats+KD draft (`E2\_newTS`) & 0.79 & 0.66 & 0.73 \\
-        CE+logits KD (`branch\_trial`) & 0.84 & 0.69 & 0.79 \\
-        Preprocess+embed KD (`preprocess\_ext`) & 0.88 & 0.79 & 0.87 \\
+        \texttt{w14/preprocess\_ext} & 0.88 & 0.96 & 0.79 & 0.87 \\
+        \texttt{w17/B\_small} & 0.87 & 0.94 & 0.79 & 0.86 \\
+        \texttt{w17/time16} & 0.80 & 0.87 & 0.59 & 0.70 \\
+        \texttt{w17/b256\_reuse\_on} & 0.77 & 0.87 & 0.53 & 0.66 \\
+        \texttt{w17/b256\_reuse\_off} & 0.77 & 0.89 & 0.51 & 0.65 \\
+        \texttt{w17/b256\_melonly} & 0.73 & 0.83 & 0.42 & 0.56 \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-Two conclusions are already defensible from this table. First, transfer-based and preprocessing-aware variants consistently outperform the direct noisy baseline. Second, the paper should prioritize the `preprocess\_ext` and `branch\_trial` families because they currently offer the clearest evidence. By contrast, the newer stats-branch line is promising but not yet the strongest completed result.
+The table supports a narrow conclusion: \texttt{w14/preprocess\_ext} remains the paper's main result anchor. The \texttt{w17/B\_small} run is close on the reported noisy set and uses \texttt{xiao\_bottleneck256\_tflm} for both teacher and student profiles, but it does not improve the anchor's reported accuracy or emergency F1. The other \texttt{w17} deployment candidates show the cost of shrinking the model before the training recipe has fully recovered accuracy.
 
-\subsection{What the Current Results Say}
+\subsection{Training and Configuration Provenance}
 
-The current evidence supports a narrow but important claim: robust emergency intent recognition under rotor-like noise depends on \emph{how} supervision is transferred and regularized, not merely on adding more noisy data. The direct baseline misses over half of emergency commands on the noisy test set, whereas the best completed configuration raises emergency recall by $32$ percentage points.
+The anchor run uses \texttt{base} teacher and student profiles, reuses the \texttt{w14} clean teacher checkpoint, trains the student for up to $50$ epochs with batch size $32$, and evaluates noisy data at $-10$ dB SNR. Its class-aware augmentation enables emergency pitch and gain perturbation for the student path. These details matter because the paper should not describe \texttt{preprocess\_ext} as a generic compression or deployment run. It is the stable noise-robust training anchor.
 
-The same results also constrain the paper story. Some auxiliary ideas can improve performance relative to the baseline, but not all of them beat the strongest preprocessing and distillation configuration. This is why the main paper should be written around the best-supported training recipe instead of promising every exploratory branch as a co-equal contribution.
+The \texttt{w17/B\_small} run changes the model profile to \texttt{xiao\_bottleneck256\_tflm} for both teacher and student while keeping the same reported noisy-evaluation setup. That makes it useful as an early same-family deployment candidate, but its status is still ongoing because board-side \texttt{Invoke()} success has not been established in the evidence files.
 
-\subsection{Still-Missing Evaluation for SenSys}
+\subsection{Deployment Evidence and Its Limits}
 
-The benchmark evidence above is necessary, but it is not enough for submission. The next writing round must add:
-\begin{itemize}
-\item onboard latency and memory measurements;
-\item real-world rotor-noise tests with a fixed protocol;
-\item false-trigger analysis for the \emph{unknown} and emergency paths;
-\item at least one ablation that isolates preprocessing, augmentation, and distillation contributions.
-\end{itemize}
+The Phase 2 artifacts provide deployment diagnostics, not a finished onboard evaluation. For the \texttt{w14/preprocess\_ext} full-integer export, the host-side TFLite profile reports input shape $[1,256,32,1]$, $165$ tensors, $104$ operators, and a largest visible runtime tensor of $524288$ bytes with shape $[1,256,32,64]$. The same profile also reports an anonymous temporary tensor of $1179648$ bytes with shape $[1,64,32,576]$, so the deployment pressure is not just flatbuffer size.
 
-These items are not optional polish. They are the difference between a strong speech-model draft and a systems paper with a credible deployment claim.
+The ESP32 budget file records a current full-integer TFLM arena requirement of $8225824$ bytes, above the target range of $4194304$ to $6291456$ bytes for the local pipeline. A later \texttt{xiao\_bottleneck256} board trace allocates within a $4194304$ byte arena but fails during \texttt{Invoke()} at \texttt{Conv2D Eval}. The handoff therefore identifies \texttt{xiao\_bottleneck256\_tflm} as the next candidate because local export checks show the temporal depthwise layer as \texttt{DEPTHWISE\_CONV\_2D=1}. This is an operator-compatibility step, not final deployment evidence.
+
+\subsection{Current Evaluation Boundary}
+
+The paper can currently claim that \texttt{w14/preprocess\_ext} is the strongest stable noisy-set anchor among the allowed evidence paths, and that \texttt{w17/B\_small} is a close deployment-oriented candidate still under convergence. It should not claim completed ESP32/TFLM inference, final latency, final memory fit, or robust cross-platform deployment until the board-side gate records successful \texttt{AllocateTensors()}, successful \texttt{Invoke()}, and printed output labels for the selected candidate.

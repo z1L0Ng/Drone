@@ -55,6 +55,13 @@ def _env_int_tuple(name: str, default):
     return tuple(vals)
 
 
+def _monitor_mode(monitor: str) -> str:
+    name = str(monitor or "").lower()
+    if "loss" in name or "error" in name:
+        return "min"
+    return "max"
+
+
 # ==================== GPU ====================
 gpus = tf.config.list_physical_devices("GPU")
 if gpus:
@@ -1241,9 +1248,23 @@ if not teacher_loaded:
     )
     class_weight_dict = dict(enumerate(class_weights))
 
+    teacher_monitor_mode = _monitor_mode(TEACHER_MONITOR)
     teacher_callbacks = [
-        ModelCheckpoint(TEACHER_CKPT, save_best_only=True, monitor=TEACHER_MONITOR, save_weights_only=True, verbose=0),
-        EarlyStopping(monitor=TEACHER_MONITOR, patience=EARLYSTOP_PATIENCE, restore_best_weights=True, verbose=0),
+        ModelCheckpoint(
+            TEACHER_CKPT,
+            save_best_only=True,
+            monitor=TEACHER_MONITOR,
+            mode=teacher_monitor_mode,
+            save_weights_only=True,
+            verbose=0,
+        ),
+        EarlyStopping(
+            monitor=TEACHER_MONITOR,
+            mode=teacher_monitor_mode,
+            patience=EARLYSTOP_PATIENCE,
+            restore_best_weights=True,
+            verbose=0,
+        ),
     ]
 
     teacher_fit_kwargs = {}
@@ -1317,7 +1338,13 @@ if PREWARM_EPOCHS > 0 and (PREWARM_USE_CE or PREWARM_USE_LOGITS):
     )
 
     prewarm_callbacks = [
-        EarlyStopping(monitor=PREWARM_MONITOR, patience=PREWARM_PATIENCE, restore_best_weights=True, verbose=0),
+        EarlyStopping(
+            monitor=PREWARM_MONITOR,
+            mode=_monitor_mode(PREWARM_MONITOR),
+            patience=PREWARM_PATIENCE,
+            restore_best_weights=True,
+            verbose=0,
+        ),
     ]
 
     prewarm_fit_kwargs = {}
@@ -1411,7 +1438,13 @@ student_callbacks = [
         warmup_epochs=embed_warmup_epochs,
         ramp_epochs=embed_ramp_epochs,
     ),
-    EarlyStopping(monitor=STUDENT_MONITOR, patience=EARLYSTOP_PATIENCE, restore_best_weights=True, verbose=0),
+    EarlyStopping(
+        monitor=STUDENT_MONITOR,
+        mode=_monitor_mode(STUDENT_MONITOR),
+        patience=EARLYSTOP_PATIENCE,
+        restore_best_weights=True,
+        verbose=0,
+    ),
 ]
 
 student_fit_kwargs = {}
