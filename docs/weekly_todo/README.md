@@ -23,5 +23,13 @@ Each weekly `todo.md` must include:
   - pre-meeting weekly report write-up
 - `docs/overleaf/` is reserved for paper drafting only (not weekly report drafts).
 
+## Cadence And Project Target
+- Weekly planning follows the Thursday noon meeting cadence. The week label
+  should follow the planning/meeting cycle, not only the calendar ISO week.
+- Current paper target: SenSys 2027 first-round submission.
+- Weekly management docs should keep experiment conclusions conservative:
+  reproducibility first, deployability second, writing claims only after gates
+  are documented.
+
 ## Template
 - Start from: `docs/weekly_todo/_templates/weekly_todo_template.md`

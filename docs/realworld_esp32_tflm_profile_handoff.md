@@ -93,3 +93,72 @@ For the next candidate, the local gate is:
    - `AllocateTensors()` passes
    - `Invoke()` returns
    - `top_label` prints
+
+## Latest W17 Training Receipt
+
+Date: 2026-04-29
+
+Run:
+
+- `weekly_drone_2026w17/B_small_teacher_student`
+
+Why local:
+
+- Server resources were occupied, so this run was completed locally as a
+  documented exception. This does not change the default policy: future
+  full-dataset training remains server-side unless explicitly approved.
+
+Evidence log:
+
+- `logs/weekly_drone_2026w17_B_small_teacher_student_resume_20260429_030603.log`
+
+Model configuration from the log:
+
+- teacher profile: `xiao_bottleneck256_tflm`
+- student profile: `xiao_bottleneck256_tflm`
+- teacher params: `712,067`
+- student params: `712,067`
+- Branchformer temporal convolution implementation: `depthwise_conv1d`
+- stats branch disabled for both teacher and student
+
+Metrics from the completion log:
+
+- best visible student validation accuracy: `0.8635`
+- clean test accuracy: `0.8862`
+- noisy test accuracy at `SNR=-10 dB`: `0.8728`
+
+Local testset summaries:
+
+- original: `result/weekly_wrapup_2026w17/B_small_teacher_student_testset_eval/summary.md`
+  - overall acc `0.6990`
+  - emergency recall `0.6319`
+  - emergency F1 `0.5698`
+- finetuned: `result/weekly_wrapup_2026w17/B_small_teacher_student_finetuned_testset_eval/summary.md`
+  - overall acc `0.7201`
+  - emergency recall `0.6482`
+  - emergency F1 `0.5940`
+
+Artifact integrity gate before deployment:
+
+- The log reports saved outputs at:
+  - `saved_models/weekly_drone_2026w17/B_small_teacher_student/teacher_clean_best.weights.h5`
+  - `saved_models/weekly_drone_2026w17/B_small_teacher_student/student_kd_best.weights.h5`
+  - `weeklyresult/weekly_drone_2026w17/B_small_teacher_student/classification_report_noisy.txt`
+- Commit `6698cd389f5d4849ba8c456152927f3f39dc70ff` is local `HEAD` and
+  contains the required Keras callback-mode fix in `src/train_logmel_kd.py`, but
+  it does not contain the `B_small_teacher_student` checkpoint/result tree.
+- At manager audit time on 2026-04-29, the expected `saved_models/.../B_small_teacher_student/`
+  and `weeklyresult/.../B_small_teacher_student/` directories were not present in
+  the current working tree.
+- Deployment agent should not start board work until these artifacts are
+  restored or regenerated and `run_config.json` is available.
+
+Next deployment task:
+
+1. Recover/confirm `student_kd_best.weights.h5`.
+2. Export full-integer TFLite.
+3. Confirm op list includes `DEPTHWISE_CONV_2D=1`.
+4. Run XIAO smoke:
+   - `AllocateTensors()`
+   - `Invoke()`
+   - `top_label`

@@ -4,7 +4,10 @@
 - Drone project only.
 - Server: training with full dataset.
 - Local: coding, evaluation, plotting, reporting.
-- Do not run full training locally for weekly mainline updates.
+- Do not run full training locally for weekly mainline updates unless the PI/user
+  explicitly approves a documented exception, such as temporary server resource
+  contention. Any exception must record the reason, local log path, output paths,
+  and whether artifacts are present in the current workspace.
 
 ## Global Server Execution Rules (Effective 2026-04-15)
 1. Server result root must use `weeklyresult/` (not `result/`) for weekly training artifacts.
@@ -43,8 +46,13 @@
 4. Push result summaries only (no large checkpoints)
 
 ## Week-Specific Contract (Current)
-- Weekly tag in use: `drone_2026w15`
-- Meeting checkpoint: `2026-04-16` (pre-meeting summary must exist)
+- Weekly cadence: Thursday noon planning/meeting cycle.
+- Weekly tag in use: `drone_2026w17`
+- Meeting checkpoint: `2026-04-30 noon CDT` (pre-meeting summary must exist)
+- Paper target: SenSys 2027 first-round submission.
+- W17 exception: `B_small_teacher_student` training was completed locally because
+  server resources were occupied. Evidence log:
+  `logs/weekly_drone_2026w17_B_small_teacher_student_resume_20260429_030603.log`.
 
 ## Recommended Log Naming
 - `logs/weekly_${WEEKLY_TAG}_${task}_${timestamp}.log`
