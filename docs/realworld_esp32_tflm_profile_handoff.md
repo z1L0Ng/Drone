@@ -163,3 +163,40 @@ Next deployment task:
    - `AllocateTensors()`
    - `Invoke()`
    - `top_label`
+
+## Latest W17 Deployment Receipt
+
+Date: 2026-04-30
+
+Deployment-agent report:
+
+- `docs/realworld_esp32_weekly_project_report_handoff.md`
+
+Candidate:
+
+- model: `B_small_teacher_student`
+- profile: `xiao_bottleneck256_tflm`
+- frozen model copy: `realworld/esp32/models/B_small_teacher_student/`
+- full-integer TFLite: `realworld/esp32/phase2_artifacts/B_small_teacher_student_full_integer.tflite`
+- precheck: `weeklyresult/weekly_drone_2026w17/B_small_teacher_student/tflm_candidate_precheck.json`
+
+Compatibility gate:
+
+- flatbuffer size: `780416` bytes
+- quantization: full-integer int8 I/O
+- op mix: `CONV_2D=6`, `DEPTHWISE_CONV_2D=1`, `FULLY_CONNECTED=11`, `SOFTMAX=2`
+- grouped temporal `CONV_2D`: not detected
+
+Board-side result:
+
+- stable firmware: `realworld/esp32/firmware/esp32_local_cdc_fast/esp32_local_cdc_fast.ino`
+- local loop: onboard mic capture -> logmel frontend -> int8 TFLM inference -> USB CDC result reporting
+- stability report: `weeklyresult/weekly_drone_2026w17/realworld/esp32_bench/local_cdc_fast_v4_stability30_report.md`
+- stability result: `30/30` triggers succeeded, drop rate `0.0`, no uniform raw outputs
+- timing: capture p50 about `926 ms`, frontend p50 about `55 ms`, inference p50 about `2094 ms`, total p50 about `3075 ms`
+
+Meeting decision:
+
+- Treat the current ESP32 local inference implementation as the W18 demo baseline.
+- Do not prioritize more compression or retraining unless the safe-control demo proves `~2.1 s` inference latency unacceptable.
+- Next technical gate is not model feasibility; it is safe control integration and repeatable demo evidence.

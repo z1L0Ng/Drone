@@ -1,0 +1,250 @@
+{
+  "candidate_name": "B_small_teacher_student",
+  "created_at_utc": "2026-04-29T20:53:48Z",
+  "tflite_path": "/Users/zilongzeng/Research/Drone/realworld/esp32/phase2_artifacts/B_small_teacher_student_full_integer.tflite",
+  "tflite_sha256": "f7ca60ef3598cdd77fdb913897cde2d292823db28d7046c0fae46c27bcbfbbfb",
+  "tflite_bytes": 780416,
+  "quantization": "full_integer_int8_io_dense_per_tensor",
+  "dense_per_channel_allowed": false,
+  "representative_per_class": 128,
+  "op_counts": {
+    "ADD": 19,
+    "BATCH_MATMUL": 2,
+    "CONV_2D": 6,
+    "DEPTHWISE_CONV_2D": 1,
+    "DEQUANTIZE": 3,
+    "EXPAND_DIMS": 3,
+    "FULLY_CONNECTED": 11,
+    "LOGISTIC": 3,
+    "MAX_POOL_2D": 3,
+    "MEAN": 7,
+    "MUL": 16,
+    "NEG": 3,
+    "PACK": 1,
+    "QUANTIZE": 3,
+    "RESHAPE": 8,
+    "RSQRT": 3,
+    "SHAPE": 1,
+    "SOFTMAX": 2,
+    "SQUARED_DIFFERENCE": 3,
+    "STRIDED_SLICE": 1,
+    "TRANSPOSE": 6
+  },
+  "fully_connected_quantization": [
+    {
+      "op_index": 11,
+      "filter_tensor": 53,
+      "filter_shape": [
+        256,
+        512
+      ],
+      "scales_len": 1,
+      "quantized_dimension": 0
+    },
+    {
+      "op_index": 12,
+      "filter_tensor": 51,
+      "filter_shape": [
+        128,
+        256
+      ],
+      "scales_len": 1,
+      "quantized_dimension": 0
+    },
+    {
+      "op_index": 13,
+      "filter_tensor": 49,
+      "filter_shape": [
+        256,
+        128
+      ],
+      "scales_len": 1,
+      "quantized_dimension": 0
+    },
+    {
+      "op_index": 28,
+      "filter_tensor": 44,
+      "filter_shape": [
+        128,
+        256
+      ],
+      "scales_len": 1,
+      "quantized_dimension": 0
+    },
+    {
+      "op_index": 32,
+      "filter_tensor": 42,
+      "filter_shape": [
+        128,
+        256
+      ],
+      "scales_len": 1,
+      "quantized_dimension": 0
+    },
+    {
+      "op_index": 40,
+      "filter_tensor": 39,
+      "filter_shape": [
+        128,
+        256
+      ],
+      "scales_len": 1,
+      "quantized_dimension": 0
+    },
+    {
+      "op_index": 47,
+      "filter_tensor": 37,
+      "filter_shape": [
+        256,
+        128
+      ],
+      "scales_len": 1,
+      "quantized_dimension": 0
+    },
+    {
+      "op_index": 83,
+      "filter_tensor": 23,
+      "filter_shape": [
+        128,
+        256
+      ],
+      "scales_len": 1,
+      "quantized_dimension": 0
+    },
+    {
+      "op_index": 86,
+      "filter_tensor": 21,
+      "filter_shape": [
+        256,
+        128
+      ],
+      "scales_len": 1,
+      "quantized_dimension": 0
+    },
+    {
+      "op_index": 102,
+      "filter_tensor": 17,
+      "filter_shape": [
+        128,
+        256
+      ],
+      "scales_len": 1,
+      "quantized_dimension": 0
+    },
+    {
+      "op_index": 103,
+      "filter_tensor": 15,
+      "filter_shape": [
+        3,
+        128
+      ],
+      "scales_len": 1,
+      "quantized_dimension": 0
+    }
+  ],
+  "compatibility_gate": {
+    "dense_per_channel_bad": [],
+    "has_depthwise_temporal_conv": true,
+    "grouped_temporal_conv2d_detected": false,
+    "desktop_probe_raw_output": [
+      127,
+      -128,
+      -128
+    ],
+    "desktop_probe_dequant": [
+      0.99609375,
+      0.0,
+      0.0
+    ],
+    "board_allocate_gate": "pending_reflash",
+    "board_invoke_gate": "pending_reflash",
+    "board_numeric_gate": "pending_reflash"
+  },
+  "model_info": {
+    "candidate_name": "B_small_teacher_student",
+    "source_path": "/Users/zilongzeng/Research/Drone/saved_models/weekly_drone_2026w17/B_small_teacher_student/student_kd_best.weights.h5",
+    "frozen_path": "/Users/zilongzeng/Research/Drone/realworld/esp32/models/B_small_teacher_student/student_kd_best.weights.h5",
+    "copied_at_utc": "2026-04-29T20:21:51Z",
+    "sha256": "5f216ef74add9388bff4ec045e001d987e5ce74709cd1aba3e147657c668ec0a",
+    "source_sha256": "5f216ef74add9388bff4ec045e001d987e5ce74709cd1aba3e147657c668ec0a",
+    "model_mode": "mel_only",
+    "model_profile": "xiao_bottleneck256_tflm",
+    "teacher_model_profile": "xiao_bottleneck256_tflm",
+    "use_stats_branch": false,
+    "stats_branch": {
+      "teacher": {
+        "use_stats_branch": false,
+        "stats_dim": 4,
+        "stats_mlp_units": [
+          32,
+          16
+        ],
+        "fuse_units": 128,
+        "fusion_mode": "concat",
+        "gate_units": 16
+      },
+      "student": {
+        "use_stats_branch": false,
+        "stats_dim": 4,
+        "stats_mlp_units": [
+          32,
+          16
+        ],
+        "fuse_units": 128,
+        "fusion_mode": "concat",
+        "gate_units": 16
+      },
+      "pitch_fmin": 50.0,
+      "pitch_fmax": 500.0
+    },
+    "label_encoder_source_path": "/Users/zilongzeng/Research/Drone/saved_models/label_encoder.joblib",
+    "label_encoder_path": "/Users/zilongzeng/Research/Drone/realworld/esp32/models/B_small_teacher_student/label_encoder.joblib",
+    "label_encoder_sha256": "7164f6483e1d7dcd99eda068b365b8f1ee56125314cae9ae13f7c6d1731c6411",
+    "source_result_dir": "/Users/zilongzeng/Research/Drone/weeklyresult/weekly_drone_2026w17/B_small_teacher_student",
+    "run_config_path": "/Users/zilongzeng/Research/Drone/weeklyresult/weekly_drone_2026w17/B_small_teacher_student/run_config.json",
+    "classification_report_noisy_path": "/Users/zilongzeng/Research/Drone/weeklyresult/weekly_drone_2026w17/B_small_teacher_student/classification_report_noisy.txt",
+    "notes": "Frozen from weekly_drone_2026w17/B_small_teacher_student student_kd_best.weights.h5 for ESP32 TFLM candidate testing. Do not fall back to mutable saved_models path during deployment tests."
+  },
+  "firmware_manifest": {
+    "candidate_name": "B_small_teacher_student",
+    "prepared_at_utc": "2026-04-29T20:53:22Z",
+    "firmware_dir": "/Users/zilongzeng/Research/Drone/realworld/esp32/firmware/esp32_tflm_candidate_test",
+    "tflite_path": "/Users/zilongzeng/Research/Drone/realworld/esp32/phase2_artifacts/B_small_teacher_student_full_integer.tflite",
+    "tflite_sha256": "f7ca60ef3598cdd77fdb913897cde2d292823db28d7046c0fae46c27bcbfbbfb",
+    "tflite_bytes": 780416,
+    "keras_weights": "/Users/zilongzeng/Research/Drone/realworld/esp32/models/B_small_teacher_student/student_kd_best.weights.h5",
+    "keras_profile": "xiao_bottleneck256_tflm",
+    "probe_wav": "/Users/zilongzeng/Research/Drone/dataset/raw/emergency/stop/197f4153_nohash_3.wav",
+    "arena_bytes": 4194304,
+    "force_ansi_conv": true,
+    "generated_files": {
+      "config": "/Users/zilongzeng/Research/Drone/realworld/esp32/firmware/esp32_tflm_candidate_test/config.h",
+      "model_data": "/Users/zilongzeng/Research/Drone/realworld/esp32/firmware/esp32_tflm_candidate_test/model_data.h",
+      "probe_input": "/Users/zilongzeng/Research/Drone/realworld/esp32/firmware/esp32_tflm_candidate_test/probe_input.h",
+      "probe_meta": "/Users/zilongzeng/Research/Drone/realworld/esp32/firmware/esp32_tflm_candidate_test/probe_input_meta.json"
+    }
+  },
+  "probe_input_meta": {
+    "wav_path": "/Users/zilongzeng/Research/Drone/dataset/raw/emergency/stop/197f4153_nohash_3.wav",
+    "array_name": "g_probe_input_data",
+    "input_shape": [
+      1,
+      256,
+      32,
+      1
+    ],
+    "input_quantization": [
+      0.3137255012989044,
+      127
+    ],
+    "output_quantization": [
+      0.00390625,
+      -128
+    ],
+    "keras_pred_label": "emergency",
+    "keras_confidence": 1.0,
+    "tflite_pred_label": "emergency",
+    "tflite_confidence": 0.99609375,
+    "labels_match": true
+  }
+}
