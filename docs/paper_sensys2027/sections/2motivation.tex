@@ -1,33 +1,44 @@
 \section{Background and Motivation}
 \label{sec:motivation}
 
-\begin{figure}[t]
+\begin{figure}[b]
     \centering
     \includegraphics[width=\linewidth]{cleanvsnoisy.png}
-    \caption{Illustrative clean-versus-rotor-noisy contrast. The role of this figure is to motivate why nearby drones are a difficult speech environment, not to serve as the paper's main quantitative evidence.}
+    \caption{Clean versus rotor-noisy log-mel example used for motivation. Quantitative results are reported separately.}
     \label{fig:clean_vs_noisy}
 \end{figure}
 
-\subsection{From Convenience Interface to Safety Layer}
+\subsection{From Voice Commands to Emergency Interruption}
 
-Small drones increasingly operate close enough to people that interaction cannot be treated only as a convenience feature. A nearby person may need to interrupt a drone, redirect it, or de-escalate its behavior without a handset, specialist tooling, or a reliable network path. In that setting, speech is attractive because it is natural and immediate, but it is also fragile: the vehicle that should remain interruptible is itself a strong noise source.
+For a drone operating near people, voice is most useful when it supports interruption. A person should be able to express a high-priority intent such as stop or hold without assuming a handset, cloud path, or trained operator interface is available. This paper therefore treats voice as a safety-oriented input component, not as a convenience interface for general drone piloting.
 
-This paper therefore frames drone speech control as a \emph{voice safety layer}. The layer is intentionally narrower than open-ended conversation. It maps short audio windows into a small set of operational intents, routes uncertain inputs to an explicit rejection path, and leaves final command dispatch to safety logic rather than to raw classifier output.
+The component should remain conservative. It maps short audio windows into a small set of safety-relevant events and leaves final command decisions to downstream logic. Emergency interruption is the central event. Movement and unknown are supporting outcomes: movement keeps ordinary control-like speech distinct from interruption, while unknown prevents unsupported or ambiguous audio from entering the control stack.
 
-The motivation is consistent with prior UAV speech-interface work, which shows that spoken interaction with drones is feasible in principle \cite{oneata19_interspeech,oneata2021multimodal}, and with UAV-noise studies showing that drone operating noise can degrade voice-command discrimination \cite{miesikowska2021uavnoise,park2023uavvehicle}. Current European drone regulations also frame UAS deployment around safety, security, privacy, data protection, and operational responsibility \cite{eu2019uasops,eu2019uasdesign}. These sources motivate the problem, but the empirical claims in this draft are grounded in the repository results described in Section~\ref{sec:evaluation}.
+\subsection{Why Intent-Level Modeling Fits Emergency Use}
 
-\subsection{Why Intent-Level Modeling Fits the Drone Setting}
+Transcript-first processing is not the natural first step for this use case. Spoken language understanding work has shown that intent decisions can be learned directly from speech without full transcripts \cite{lugosch19_interspeech,kuo20_interspeech,mhiri20_interspeech}. For nearby drones, that direction matches the operational need: detect whether a short window contains an emergency interruption event and avoid treating every other utterance as a command.
 
-The system does not need to recover arbitrary transcripts. It needs to identify whether speech near a drone expresses an emergency action, an ordinary movement action, or an unsupported or uncertain utterance. Direct speech-to-intent modeling is a better fit for that objective than a transcript-first pipeline, and prior spoken language understanding work has shown that useful intent decisions can be learned directly from audio \cite{lugosch19_interspeech,kuo20_interspeech,mhiri20_interspeech}.
+The abstraction is deliberately narrow: \emph{emergency}, \emph{movement}, and \emph{unknown}. It is not meant to cover open-ended human-drone conversation. The narrow contract is the reason the recognizer can be connected to safety logic at all: it asks for a small emergency-oriented decision and makes non-matching audio explicit instead of silently folding it into a command class.
 
-The repository evidence uses the same narrow abstraction: \emph{emergency}, \emph{movement}, and \emph{unknown}. This taxonomy is not a complete model of human-drone conversation. It is a conservative first interface for testing whether a drone can preserve safety-relevant intent recognition under rotor-like noise.
+\subsection{Why Rotor Self-Noise Is Central}
 
-\subsection{Why Drone Noise Is the Main Technical Pressure}
+Small drones create their own acoustic interference. The microphone is close to the rotors, the noise changes with operating state, and the resulting speech condition differs from quiet indoor command recognition. Prior UAV speech-interface and UAV-noise studies motivate this setting \cite{oneata19_interspeech,oneata2021multimodal,miesikowska2021uavnoise,park2023uavvehicle}.
 
-Small drones combine limited onboard resources with severe self-noise. Rotor noise is close to the microphone, changes with propulsion state, and is not well represented by quiet indoor speech benchmarks. The key technical question is therefore not whether a speech model can work in clean audio. It is whether a compact intent recognizer can remain useful when training and evaluation explicitly include rotor-like interference.
+The design therefore stays drone-centered. Cross-language, cross-speaker, and cross-platform questions are useful future context, but the core path is onboard emergency intent recognition, embedded inference, and a safe control bridge under rotor-noisy conditions.
 
-The current writing should keep this pressure at the center. Cross-language and broader speaker-variation questions are useful motivation for why the abstraction should not be tied to a single phrase list, but they are not the main contribution of this draft. The current contribution is drone-centered: robust emergency-aware intent recognition under self-noise, with an ongoing path toward embedded execution.
+\subsection{Why Embedded Locality Matters}
 
-\subsection{Scope of This Draft}
+Emergency interruption is most useful when it remains available during the same conditions that make other interfaces fragile. A phone app may not be open, a network path may not be reliable, and a remote service can add an avoidable dependency. The voice component therefore needs a local embedded path: audio capture, feature extraction, recognition, and event reporting should occur on or near the drone before the control bridge decides what to do.
 
-This draft does not claim that the full deployment problem is solved. The stable empirical anchor is the \texttt{w14} \texttt{preprocess\_ext} line, which provides the strongest reproducible noisy-set evidence currently selected for the paper. The ESP32/TFLM work is written as a deployment-constrained candidate path: it exposes concrete operator and memory limits, identifies \texttt{xiao\_bottleneck256\_tflm} as the next compatibility-oriented branch, and remains an ongoing convergence effort rather than a completed onboard result.
+This locality requirement turns speech recognition into a systems problem. The model cannot be chosen only by offline accuracy; it must also export to an operator set that the embedded runtime can execute, fit the memory budget, and return enough diagnostics for the bridge to audit timing and confidence. The embedded student in this paper is not presented as a better recognizer than the anchor model. It is the candidate that makes the same emergency-event contract testable on the ESP32/TFLM path.
+
+\subsection{Why a Bridge Is Part of the Design}
+
+An emergency classifier alone is not a safety component. The output needs a bridge that understands vehicle state, manual override, command eligibility, and acknowledgement or timeout behavior. This is especially important because the same audio interface may see emergency utterances, ordinary movement requests, background speech, and rotor-dominated noise. The bridge is the point where emergency events become auditable system behavior rather than raw classifier decisions.
+
+The bridge also prevents the paper from overclaiming. A runtime log can show that the board produced labels and timings; it cannot show that the drone behaved safely. A dry-run dispatcher can show that event plumbing is wired; it cannot show flight behavior. The design therefore separates event generation, bridge logging, and eventual control validation.
+
+\subsection{Design Requirements}
+
+The system imposes four requirements. First, the recognizer must prioritize emergency interruption behavior under rotor-noisy conditions. Second, the embedded path must fit ESP32/TFLM operator and memory constraints so that the interruption component can run locally. Third, the output contract must include a guardrail for unsupported audio rather than forcing every utterance into a command. Fourth, the control bridge must log state transitions and command decisions before any live-control claim is made.
+% TODO(validation): Add labeled semantic accuracy, false-trigger accounting, and no-propeller bridge validation before broadening the visible claims in this section.

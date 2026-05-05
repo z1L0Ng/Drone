@@ -4,6 +4,9 @@
 \settopmatter{printacmref=false,printfolios=true}
 \renewcommand\footnotetextcopyrightpermission[1]{}
 \pagestyle{plain}
+\acmConference[SenSys '27]{ACM Conference on Embedded Networked Sensor Systems}{2027}{}
+\acmYear{2027}
+\copyrightyear{2027}
 
 \usepackage{graphicx}
 \usepackage{booktabs}
@@ -19,18 +22,20 @@
 
 \begin{document}
 
-\title{\sys: On-Device Emergency Intent Recognition Under Extreme Rotor Noise}
+\title{\sys: On-Device Emergency Voice Interruption for Small UAVs Under Rotor Noise}
 
 \begin{abstract}
-Small drones need a lightweight way for nearby people to interrupt, redirect, or safely stop them in everyday environments. We argue that voice can serve as such a safety mechanism, but only if the system remains usable under the drone's own self-noise and without dependence on cloud infrastructure. This paper frames the problem as an on-device, emergency-aware audio-to-intent layer for drones operating near humans. The current design uses a narrow command abstraction, explicit rejection of uncertain audio, and noise-robust training based on class-aware augmentation and clean-to-noisy teacher-student transfer. Our present implementation is drone-centered and is intended to generalize across drone platforms rather than remain bound to a single Tello-style airframe. This draft therefore prioritizes story and system framing first, while using current noisy-benchmark and prototype evidence as the initial validation path. Future work may extend similar ideas to other nearby robots, but that is not the subject of this paper.
+Small drones operating near people need an emergency interruption path that does not depend on a handset, cloud service, or perfect network connection. This paper presents a drone-side voice safety component for that setting. The component listens through rotor self-noise, recognizes short emergency-oriented intent events, and exposes those events to a conservative control bridge rather than treating speech as a direct flight-command channel. The recognizer is deliberately narrow: emergency interruption is the primary event, movement is an auxiliary intent class, and unknown is a guardrail for audio that should not enter the control stack. We implement the recognizer with a noise-aware anchor model and an embedded student for ESP32/TFLM deployment. The prototype runs microphone capture, log-mel extraction, int8 inference, and USB CDC event reporting on a XIAO ESP32-S3. Offline noisy-set results establish the recognizer anchor, while board-side runtime measurements establish the embedded event path. The remaining validation is system-level: labeled real-world acoustic testing, false-trigger accounting, and no-propeller control-bridge logs are required before making live-flight safety claims.
+% TODO(evidence): Before submission, add labeled real-world acoustic validation, false-trigger accounting, and no-propeller control-bridge validation. Current repo evidence supports noisy-set recognizer results and ESP32 runtime stability only.
+% Evidence map: anchor recognizer = weeklyresult/weekly_drone_2026w14/preprocess_ext; embedded student = weeklyresult/weekly_drone_2026w17/B_small_teacher_student; ESP32 runtime = weeklyresult/weekly_drone_2026w17/realworld/esp32_bench/local_cdc_fast_v4_stability30_report.md.
 \end{abstract}
 
 \maketitle
 
 \input{sections/1introduction}
 \input{sections/2motivation}
-\input{sections/3system}
-\input{sections/4training}
+\input{sections/3architecture}
+\input{sections/4recognizer}
 \input{sections/5prototype}
 \input{sections/6evaluation}
 \input{sections/7relatedwork}

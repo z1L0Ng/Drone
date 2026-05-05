@@ -1,0 +1,28 @@
+\begin{figure}[t]
+    \centering
+    \begingroup
+    \setlength{\fboxsep}{3pt}
+    \setlength{\tabcolsep}{2pt}
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{c c c c c c c}
+        \fbox{\parbox[c][0.52cm][c]{1.45cm}{\centering\scriptsize XIAO\\microphone}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.45cm}{\centering\scriptsize Audio\\window}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.55cm}{\centering\scriptsize Log-mel\\features}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.55cm}{\centering\scriptsize Int8 TFLM\\inference}} \\
+        \multicolumn{7}{c}{$\downarrow$} \\
+        \fbox{\parbox[c][0.52cm][c]{1.45cm}{\centering\scriptsize Label +\\confidence}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.45cm}{\centering\scriptsize Timing +\\raw output}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.55cm}{\centering\scriptsize USB CDC\\event}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.55cm}{\centering\scriptsize Bridge\\record}}
+    \end{tabular}%
+    }
+    \endgroup
+    \caption{Prototype data path. The board is used as a local voice-event source: it captures audio, computes features, runs integer inference, and reports event fields for bridge-side logging.}
+    \label{fig:prototype_pipeline}
+\end{figure}

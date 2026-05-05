@@ -1,0 +1,61 @@
+\section{System Architecture}
+\label{sec:system}
+
+\input{figures/system_architecture}
+
+\subsection{Voice as an Emergency Event Source}
+
+The system treats speech as an emergency event source for a nearby drone. It is not an open-ended speech assistant and it is not a direct speech-to-flight controller. Its role is to convert short onboard audio windows into safety-relevant events and expose enough state for a conservative controller to ignore, hold, escalate, or forward the event. Figure~\ref{fig:system_architecture} shows the resulting architecture.
+
+Let $x_t$ be an onboard audio window at time $t$ and let $\phi(\cdot)$ denote the log-mel frontend. The recognizer computes
+\[
+(\hat{y}_t, c_t) = f_{\theta}(\phi(x_t)),
+\qquad
+\hat{y}_t \in \{\texttt{emergency}, \texttt{movement}, \texttt{unknown}\},
+\]
+where $c_t$ is the confidence attached to the predicted intent. A reject policy then converts the raw recognizer output into a safety event:
+\[
+e_t =
+\begin{cases}
+\texttt{unknown}, & c_t < \tau,\\
+\hat{y}_t, & c_t \geq \tau,
+\end{cases}
+\]
+where $\tau$ is a control-interface threshold. The threshold is not the paper's main contribution; it is the guardrail that keeps low-confidence audio from becoming an emergency or movement event.
+% TODO(validation): Tune and report tau only after labeled real-world acoustic validation.
+
+\subsection{Emergency-Centered Intent Contract}
+
+The recognizer produces one of three labels:
+\begin{itemize}
+\item \textbf{Emergency:} a high-priority interrupt event eligible for hold, stop, or operator escalation.
+\item \textbf{Movement:} a coarse action request that requires additional context before becoming a directional flight command.
+\item \textbf{Unknown:} a reject path for unsupported, uncertain, or out-of-contract audio.
+\end{itemize}
+
+Emergency is the event that motivates the system. Movement and unknown exist to make that event usable in a control stack. Movement prevents ordinary control-like speech from being collapsed into interruption, and unknown prevents the recognizer from forcing unsupported audio into one of the actionable classes. A nearby drone should prefer a logged hold/no-op over executing an ambiguous utterance. Likewise, movement is deliberately weaker than a motion command: it must be paired with a direction source, manual override, or policy gate before entering the flight-control layer.
+
+\subsection{Safety-Event Semantics}
+
+The bridge sees the recognizer output as an event, not as a command. An emergency event can request a high-priority transition such as hold or operator review, but the selected action still depends on the vehicle safety state. A movement event is even more restricted: it can be logged as evidence that a person is trying to direct the drone, but it cannot determine direction, distance, or velocity by itself. Unknown is treated as a non-actionable event unless a separate policy chooses to log repeated unknown activity.
+
+This event semantics lets the system handle common failure modes conservatively. Low confidence becomes unknown. A movement-like utterance without a direction source becomes a logged non-command. A repeated emergency event can be escalated to the operator or hold state without claiming that the recognizer alone has verified danger. These behaviors are design requirements for the bridge and must be validated with command/state logs before any live-control claim.
+% TODO(validation): Replace these design semantics with a measured bridge-state transition table after no-propeller validation.
+
+\subsection{Embedded Inference Contract}
+
+The recognizer runs near the drone because the interruption path should not depend on cloud connectivity or a handset. The embedded path captures an onboard audio window, computes log-mel features, runs an integer TFLM-compatible recognizer, and emits label, confidence, timing, and raw-output diagnostics. The emitted record is intentionally more verbose than a command because the bridge needs enough state to decide whether an event should affect the vehicle.
+
+The paper separates the model-quality recognizer from the embedded student. The anchor recognizer defines the noisy intent behavior used for model evaluation. The embedded student keeps the same label contract while adapting the architecture to ESP32/TFLM operator and memory constraints.
+% Evidence: anchor recognizer = weeklyresult/weekly_drone_2026w14/preprocess_ext; embedded student = weeklyresult/weekly_drone_2026w17/B_small_teacher_student.
+
+\subsection{Control Bridge and Log}
+
+The control bridge consumes voice events but remains responsible for action policy. The bridge is the boundary between recognition and actuation: the recognizer can raise an emergency event, but the bridge decides whether the vehicle state permits a hold, an operator escalation, or no action. A bridge record has the form
+\[
+\ell_t = (e_t, c_t, \Delta_t, s_t, a_t, r_t),
+\]
+where $\Delta_t$ is inference latency, $s_t$ is the safety state before the event, $a_t$ is the selected action, and $r_t$ records acknowledgement or timeout. This log is the mechanism that keeps the voice layer auditable: it records whether a voice event was rejected, held, escalated, or forwarded.
+
+The design can include a trigger gate and circular buffer before full inference so the student recognizer does not run continuously. That gate is an optimization layer, not the safety argument itself. The safety argument comes from emergency-centered event semantics, the guardrail for uncertain audio, and the command/state log.
+% TODO(validation): Add no-propeller bridge logs and gate false-trigger accounting before claiming closed-loop safety behavior.

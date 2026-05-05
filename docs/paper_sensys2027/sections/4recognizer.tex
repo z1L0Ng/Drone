@@ -1,0 +1,45 @@
+\section{Emergency Intent Recognizer}
+\label{sec:recognizer}
+
+\input{figures/recognizer_architecture}
+
+\subsection{Recognition Contract}
+
+The recognizer is a short-window intent classifier rather than a transcript generator. Given the feature sequence $\phi(x_t)$, it estimates a distribution
+\[
+p_{\theta}(y \mid \phi(x_t)), \qquad
+y \in \{\texttt{emergency}, \texttt{movement}, \texttt{unknown}\}.
+\]
+Emergency is the primary class for the safety component. Movement and unknown are included so that the recognizer can separate emergency interruption from ordinary control-like speech and from audio outside the contract. The predicted label and confidence become the event passed to the bridge in Section~\ref{sec:system}. The recognizer therefore does not produce a flight command; it produces a constrained event for later policy logic.
+
+\subsection{Model Architecture}
+
+Figure~\ref{fig:recognizer_architecture} summarizes the model design. The anchor recognizer takes a log-mel spectrogram as input, extracts local time-frequency structure with a convolutional frontend, reshapes the feature map into a temporal sequence, and applies a Branchformer-style temporal block before global pooling and a three-way classifier. This architecture matches the speech setting: local spectral structure matters, but the final decision also depends on temporal evidence across the short command window.
+
+The embedded student keeps the same label contract but changes the recognizer path for ESP32/TFLM. It uses a bottlenecked temporal representation and a depthwise temporal convolution path so that the exported integer model maps to TFLM-compatible operators. This lets the deployed recognizer remain part of the same architecture family without treating the embedded student as the model-quality leader.
+% Evidence: anchor model summary = weeklyresult/weekly_drone_2026w16/realworld/esp32_bench/keras_model_summary_preprocess_ext_w14_wide.txt.
+% Evidence: embedded student op check = weeklyresult/weekly_drone_2026w17/B_small_teacher_student/tflm_candidate_precheck.json.
+
+The figure intentionally stays at the architectural level. The paper does not need to reproduce a full Keras summary in the body. Instead, it needs to explain why the architecture has two roles. The anchor recognizer carries the stronger temporal modeling used for noisy-set recognition. The embedded student preserves the same input and output contract while replacing the temporal path with components that are easier to export and invoke on the microcontroller runtime. This split lets the evaluation compare model quality and deployment feasibility without pretending they are the same objective.
+
+\subsection{Noise-Aware Training}
+
+The training design matches the acoustic problem: the recognizer is optimized for rotor-contaminated audio rather than quiet indoor commands. Training mixes command examples with drone-noise recordings and uses clean-to-noisy teacher-student transfer so that the noisy recognizer can inherit structure from a cleaner teacher while learning the self-noisy condition. The training recipe is used to support emergency-oriented recognition under drone noise; it is not a claim about general speech robustness.
+
+The student objective combines supervised cross-entropy with an embedding-alignment term:
+\[
+\mathcal{L}
+=
+\mathcal{L}_{\mathrm{CE}}(y, p_{\theta})
+ + \lambda(t)\,
+\lVert h_s(\phi(x)) - P h_t(\phi(x_{\mathrm{clean}})) \rVert_2^2,
+\]
+where $h_s$ and $h_t$ are student and teacher embeddings, $P$ is the projection used to align embedding dimensions, and $\lambda(t)$ schedules the transfer weight during training. This keeps the method tied to the recognizer design rather than to a general speech-recognition objective.
+% Evidence: embed_only distillation and warmup/ramp settings are in weeklyresult/weekly_drone_2026w14/preprocess_ext/run_config.json.
+
+\subsection{Anchor and Embedded Student}
+
+The paper uses two publishable roles for the model instances. The \emph{anchor recognizer} is the model-quality instance used to evaluate emergency-oriented noisy intent recognition. The \emph{embedded student} is the deployment instance used to exercise the ESP32/TFLM path. The distinction is important: the embedded student demonstrates compatibility with deployment constraints, while the anchor recognizer remains the model result used to characterize noisy-set behavior.
+% Internal mapping: anchor recognizer = w14/preprocess_ext; embedded student = B_small_teacher_student.
+
+The deployment comparison is therefore framed as a constrained-design tradeoff. A smaller student may sacrifice some recognition margin, but it provides the artifact that can be quantized, checked for runtime operators, and exercised on the board. The paper should not describe the embedded student as the winner of the recognizer study unless later evidence shows that it improves the anchor on the same metrics. Its role is to connect the emergency voice component to the embedded systems path.

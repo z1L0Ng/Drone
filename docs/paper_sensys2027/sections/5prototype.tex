@@ -1,16 +1,32 @@
-\section{Prototype and Real-World Setup}
+\section{Prototype}
 \label{sec:prototype}
 
-This section should carry the \emph{systems} evidence that turns the model into a SenSys paper rather than a speech-model paper. The important framing choice is that the prototype is not the contribution by itself. It is one instantiation of a broader voice-safety-layer design for small nearby robots.
+\input{figures/prototype_pipeline}
 
-\subsection{Hardware and Software Stack}
+\subsection{Embedded Voice-Event Source}
 
-The final paper needs one photo or schematic per evaluated platform and one software-path figure showing microphone capture, feature extraction, model inference, and controller dispatch. The text should specify the onboard compute target, microphone placement, inference runtime environment, and controller interface (for example, UART or MAVLink). If the implementation starts from a Tello-class drone and later expands to additional UAVs, that progression should be presented explicitly as cross-platform validation rather than as a silent change in scope.
+The prototype turns the recognizer into an embedded emergency voice-event source. The hardware baseline is the XIAO ESP32-S3 Sense running local microphone capture, log-mel feature extraction, int8 TFLM inference, and USB CDC result reporting. The board does not issue flight commands; it emits the event fields needed by the control bridge. Figure~\ref{fig:prototype_pipeline} summarizes the data path.
 
-\subsection{Decision Logic and Failsafes}
+\subsection{Onboard Inference Path}
 
-Prototype deployment should make the safety boundary explicit. Emergency predictions may use a different threshold from movement predictions, and low-confidence segments should be routed to \emph{unknown}. This section is also the right place to describe debounce logic, cooldown windows, or any two-step confirmation rules that prevent repeated false triggers.
+A host trigger over USB CDC causes the ESP32 to capture a $1$ s onboard audio window, compute the log-mel frontend, run the embedded student as an int8 TFLM model, and return predicted label, confidence, timing, and raw output. The full-integer artifact is $780416$ bytes, and the exported operator mix includes one \texttt{DEPTHWISE\_CONV\_2D} for the temporal convolution. These details matter because the prototype is constrained by TFLM operator support as much as by model accuracy.
+% Evidence: full-integer artifact and op mix from weeklyresult/weekly_drone_2026w17/B_small_teacher_student/tflm_candidate_precheck.json.
 
-\subsection{Real-World Test Protocol}
+\subsection{Voice Event Output}
 
-The real-world evaluation should not be described as an informal demo. It needs a protocol: platform type, microphone position, propeller state, speaker distance, number of speakers, command script, repetition count, and failure criteria. Even if these measurements are still being collected, the draft outline should reserve space for them now because this is one of the highest-risk gaps for a systems submission. If multiple drones are included, the protocol should make clear what transfers across platforms and what remains platform-specific.
+The embedded path emits a voice event rather than a direct control command. The event contains predicted label, confidence, inference timing, total timing, and raw-output diagnostics. A $30$-trigger USB CDC stability run records success rate $1.0000$, drop rate $0.0000$, inference p50 $2094.0$ ms, total p50 $3075.0$ ms, and raw uniform count $0$. These measurements characterize runtime stability for the local inference loop. They do not establish labeled real-world semantic accuracy.
+% Evidence: weeklyresult/weekly_drone_2026w17/realworld/esp32_bench/local_cdc_fast_v4_stability30_report.md.
+% TODO(validation): Add labeled real-world semantic accuracy before using these runtime logs as recognition-performance evidence.
+
+\subsection{Control-Bridge Interface}
+
+The bridge consumes voice events and produces logged state transitions. At minimum, each bridge record should include predicted label, confidence, safety state, selected command, command send event, and acknowledgement or timeout. Emergency events are eligible for hold or operator escalation, while movement events require an additional policy source before any directional action. The dry-run dispatcher exercises this interface without sending drone UDP packets, which makes it useful for validating state transitions before no-propeller or live experiments.
+% Evidence: dry-run dispatcher evidence is weeklyresult/weekly_drone_2026w18/realworld/tello_dryrun/20260504_local_cdc_replay_report.md.
+% TODO(validation): Add no-propeller bridge logs before claiming live control behavior.
+
+The prototype keeps the bridge host-mediated for this draft. That choice is conservative: it lets the board remain a voice-event source while the host records bridge decisions, command eligibility, and acknowledgement behavior. A later design can move more of the bridge onto the vehicle, but the paper does not need that migration to argue for the emergency voice component. What matters is that the interface between recognition and control is explicit and logged.
+
+\subsection{Trigger Gate and Buffer}
+
+The architecture can add a board-side trigger gate and circular buffer before full inference so the student recognizer does not run continuously. The gate is an efficiency and false-trigger-control component, not the safety claim itself. It must be validated against silence, background, rotor-like noise, and speech-trigger cases before it becomes part of the reported mechanism.
+% TODO(validation): Existing gate/buffer work is preliminary and should stay out of visible claims until false-trigger behavior is controlled.
