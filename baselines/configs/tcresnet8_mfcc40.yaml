@@ -1,0 +1,18 @@
+extends: baselines/configs/common_offline.yaml
+
+baseline:
+  name: tcresnet8_mfcc40
+  family: tc_resnet
+  variant: tcresnet8
+  role: model_plus_frontend
+  upstream: hyperconnect/TC-ResNet
+
+frontend:
+  type: mfcc
+
+model:
+  input_shape: [40, 32, 1]
+  num_classes: 3
+  channels: [16, 24, 32, 48]
+  kernel_size: 9
+  dropout_rate: 0.10

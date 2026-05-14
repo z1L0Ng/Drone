@@ -1,0 +1,19 @@
+extends: baselines/configs/common_offline.yaml
+
+baseline:
+  name: dscnn_s_mfcc40
+  family: ds_cnn
+  variant: dscnn_s
+  role: model_plus_frontend
+  upstream: ARM-software/ML-KWS-for-MCU
+
+frontend:
+  type: mfcc
+
+model:
+  input_shape: [40, 32, 1]
+  num_classes: 3
+  stem_filters: 32
+  depthwise_blocks: 4
+  pointwise_filters: 64
+  dropout_rate: 0.10

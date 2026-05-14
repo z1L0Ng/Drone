@@ -1,0 +1,61 @@
+experiment:
+  weekly_tag: drone_2026w19
+  output_root: weeklyresult/weekly_drone_2026w19/offline_baselines
+  seed: 42
+  comparison_layer: offline_recognition
+
+data:
+  processed_data_path: dataset/processed/data_paths.npz
+  encoder_path: saved_models/label_encoder.joblib
+  noise_source_dir: dataset/raw/tellonoise
+  labels:
+    - emergency
+    - movement
+    - unknown
+
+audio:
+  sample_rate: 16000
+  duration_sec: 1.0
+  target_len: 16000
+
+frontend:
+  type: logmel
+  n_mels: 256
+  n_mfcc: 40
+  n_fft: 1024
+  hop_length: 512
+  center: false
+  fmin: 50
+  fmax: null
+  top_db: 80.0
+  max_frames: 32
+
+noise:
+  noise_mix_prob: 1.0
+  min_snr_db: -15.0
+  max_snr_db: -5.0
+  eval_snr_db: -10.0
+
+train:
+  batch_size: 32
+  max_epochs: 50
+  earlystop_patience: 10
+  optimizer: adam
+  learning_rate: 0.0001
+  loss: categorical_crossentropy
+  metric: accuracy
+  class_weight: balanced
+
+outputs:
+  required_files:
+    - run_config.json
+    - source_manifest.json
+    - classification_report_noisy.txt
+    - metrics.json
+    - confusion_matrix.npy
+    - confusion_matrix.png
+    - history/train_history.csv
+    - checkpoints/best.weights.h5
+    - receipts/startup_first30.txt
+    - receipts/completion_last50.txt
+    - receipts/result_tree.txt

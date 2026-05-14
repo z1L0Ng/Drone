@@ -1,0 +1,18 @@
+extends: baselines/configs/common_offline.yaml
+
+baseline:
+  name: tcresnet8_logmel
+  family: tc_resnet
+  variant: tcresnet8
+  role: offline_quality
+  upstream: hyperconnect/TC-ResNet
+
+frontend:
+  type: logmel
+
+model:
+  input_shape: [256, 32, 1]
+  num_classes: 3
+  channels: [16, 24, 32, 48]
+  kernel_size: 9
+  dropout_rate: 0.10

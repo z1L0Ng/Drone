@@ -1,0 +1,18 @@
+extends: baselines/configs/common_offline.yaml
+
+baseline:
+  name: bcresnet1_logmel
+  family: bc_resnet
+  variant: bcresnet1
+  role: offline_quality
+  upstream: Qualcomm-AI-research/bcresnet
+
+frontend:
+  type: logmel
+
+model:
+  input_shape: [256, 32, 1]
+  num_classes: 3
+  base_filters: 16
+  width_multiplier: 1.0
+  dropout_rate: 0.10

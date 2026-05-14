@@ -1,0 +1,22 @@
+name: drone-trackd-baselines
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.11
+  - pip
+  - ipykernel
+  - numpy<2.0
+  - scipy
+  - scikit-learn
+  - matplotlib
+  - pandas
+  - pyyaml
+  - joblib
+  - pip:
+      - tensorflow==2.20.0
+      - keras==3.11.3
+      - librosa
+      - soundfile
+      - tqdm
