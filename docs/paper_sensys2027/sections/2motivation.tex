@@ -8,17 +8,17 @@
     \label{fig:clean_vs_noisy}
 \end{figure}
 
-\subsection{From Voice Commands to Talk-to-the-Drone Interaction}
+\subsection{From Voice Commands to Safety-Mediated Interaction}
 
-For a drone operating near people, voice is most useful when it becomes a natural way to express intent while still respecting safety boundaries. A person should be able to ask the drone to move, hold, stop, or respond to a safety-critical situation without assuming a handset, cloud path, or trained operator interface is available. This paper therefore treats voice as a UAV safety interaction layer, not as a convenience wrapper around general drone piloting.
+For a drone operating near people, voice is most useful when it becomes a natural way to express intent while still respecting safety boundaries. A person should be able to ask the drone to move, hold, stop, or respond to a safety-critical situation without assuming a handset, cloud path, or trained operator interface is available. This paper therefore treats voice as a safety-mediated UAV interaction layer, not as a convenience wrapper around general drone piloting.
 
-The layer should remain conservative. It maps short audio windows into a small set of interaction states and leaves final command decisions to downstream logic. Movement captures ordinary control-oriented speech but remains pending until policy supplies context. Emergency captures the safety-critical part of talking to a drone. Unknown prevents unsupported or ambiguous audio from entering the control stack.
+The layer should remain conservative. It maps short audio windows into a small set of interaction states and leaves final command decisions to downstream logic. Movement captures ordinary control-oriented speech but remains pending until policy supplies context. Emergency captures the safety-critical part of talking to a drone. Unknown/fallback prevents unsupported or ambiguous audio from entering the control stack.
 
 \subsection{Why Intent-Level Modeling Fits Drone Voice Interaction}
 
 Transcript-first processing is not the natural first step for this use case. Spoken language understanding work has shown that intent decisions can be learned directly from speech without full transcripts \cite{lugosch19_interspeech,kuo20_interspeech,mhiri20_interspeech}. For nearby drones, that direction matches the operational need: detect whether a short window contains a small set of drone-relevant intents and avoid treating every other utterance as a command.
 
-The abstraction is deliberately narrow: \emph{emergency}, \emph{movement}, and \emph{unknown}. It is not meant to cover open-ended human-drone conversation. The narrow contract is the reason the recognizer can be connected to safety logic at all: it turns voice into a small intent-state decision and makes non-matching audio explicit instead of silently folding it into a command class.
+The abstraction is deliberately narrow: \emph{emergency}, \emph{movement}, and \emph{unknown/fallback}. It is not meant to cover open-ended human-drone conversation. The narrow contract is the reason the recognizer can be connected to safety logic at all: it turns voice into a small intent-state event and makes non-matching audio explicit instead of silently folding it into a command class.
 
 \subsection{Why Rotor Self-Noise Is Central}
 
@@ -40,5 +40,5 @@ The bridge also prevents the paper from overclaiming. A runtime log can show tha
 
 \subsection{Design Requirements}
 
-The system imposes four requirements. First, the recognizer must preserve safety-critical emergency behavior while supporting ordinary movement intent under rotor-noisy conditions. Second, the embedded path must fit ESP32/TFLM operator and memory constraints so that the voice layer can run locally. Third, the output contract must include fallback/no-action behavior for unsupported audio rather than forcing every utterance into a command. Fourth, the control bridge must log state transitions and command decisions before any live-control claim is made.
+The system imposes four requirements. First, the voice interface must be mediated by safety states rather than exposed as direct command input. Second, the recognizer must preserve safety-critical emergency behavior while supporting ordinary movement intent under rotor-noisy conditions. Third, the embedded path must fit ESP32/TFLM operator and memory constraints so that safety events can be generated locally. Fourth, the control bridge must log state transitions and command decisions before any live-control claim is made.
 % TODO(validation): Add labeled semantic accuracy, false-trigger accounting, and no-propeller bridge validation before broadening the visible claims in this section.

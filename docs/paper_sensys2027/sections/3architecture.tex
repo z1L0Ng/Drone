@@ -3,9 +3,9 @@
 
 \input{figures/system_architecture}
 
-\subsection{Voice as an Interaction Event Source}
+\subsection{Safety-State Mediation}
 
-The system treats speech as a safety-relevant interaction source for a nearby drone. It is not an open-ended speech assistant and it is not a direct speech-to-flight controller. Its role is to convert short onboard audio windows into intent/state events and expose enough state for a conservative controller to ignore, hold, escalate, or forward the event. Figure~\ref{fig:system_architecture} shows the resulting architecture.
+The system treats speech as a safety-relevant interaction source for a nearby drone. It is not an open-ended speech assistant and it is not a direct speech-to-flight controller. Its role is to convert short onboard audio windows into constrained intent/state events and expose enough state for a conservative controller to ignore, hold, escalate, or forward the event. Figure~\ref{fig:system_architecture} shows the resulting architecture.
 
 Let $x_t$ be an onboard audio window at time $t$ and let $\phi(\cdot)$ denote the log-mel frontend. The recognizer computes
 \[
@@ -21,7 +21,7 @@ e_t =
 g(\hat{y}_t), & c_t \geq \tau,
 \end{cases}
 \]
-where $g(\cdot)$ maps recognized intent into the bridge-visible state: movement becomes pending interaction, emergency becomes safety-critical handling, and unknown becomes fallback/no-action behavior. The threshold $\tau$ is not the paper's main contribution; it is the guardrail that keeps low-confidence audio from becoming an actionable state.
+where $g(\cdot)$ maps recognized intent into the bridge-visible state: movement becomes pending interaction, emergency becomes safety-critical handling, and unknown becomes fallback/no-action behavior. The threshold $\tau$ is a guardrail that keeps low-confidence audio from becoming an actionable state.
 % TODO(validation): Tune and report tau only after labeled real-world acoustic validation.
 
 \subsection{Safety-Aware Intent Contract}
@@ -33,7 +33,7 @@ The recognizer produces one of three intent states:
 \item \textbf{Unknown / fallback:} a no-action or safe-hold path for unsupported, uncertain, or out-of-contract audio.
 \end{itemize}
 
-This intent-to-state abstraction is the safety mechanism for talk-to-the-drone interaction. Movement makes ordinary control-oriented speech visible without directly executing it. Emergency gives the interface a safety-critical state that can be handled differently by the bridge. Unknown prevents the recognizer from forcing unsupported audio into one of the actionable classes. A nearby drone should prefer a logged hold/no-op over executing an ambiguous utterance. Likewise, movement is deliberately weaker than a motion command: it must be paired with a direction source, manual override, or policy gate before entering the flight-control layer.
+This intent-to-state abstraction is the safety mechanism for talk-to-the-drone interaction. Movement makes ordinary control-oriented speech visible without directly executing it. Emergency gives the interface a safety-critical state that can be handled differently by the bridge. Unknown prevents the recognizer from forcing unsupported audio into one of the actionable classes. A nearby drone should prefer a logged hold/no-op over executing an ambiguous utterance. Likewise, movement is deliberately weaker than a motion command: it must be paired with a direction source, manual override, or policy gate before entering the control layer.
 
 \subsection{Interaction-to-Control Semantics}
 
@@ -42,7 +42,7 @@ The bridge sees the recognizer output as an event, not as a command. An emergenc
 This event semantics lets the system handle common failure modes conservatively. Low confidence becomes unknown. A movement-like utterance without a direction source becomes a logged non-command. A repeated emergency event can be escalated to the operator or hold state without claiming that the recognizer alone has verified danger. These behaviors are design requirements for the bridge and must be validated with command/state logs before any live-control claim.
 % TODO(validation): Replace these design semantics with a measured bridge-state transition table after no-propeller validation.
 
-\subsection{Embedded Inference Contract}
+\subsection{Deployment-Constrained Event Generation}
 
 The recognizer runs near the drone because the safety interaction path should not depend on cloud connectivity or a handset. The embedded path captures an onboard audio window, computes log-mel features, runs an integer TFLM-compatible recognizer, and emits label, confidence, timing, and raw-output diagnostics. The emitted record is intentionally more verbose than a command because the bridge needs enough state to decide whether an event should affect the vehicle.
 

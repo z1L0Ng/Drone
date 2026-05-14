@@ -5,12 +5,12 @@
 
 \subsection{Recognition Contract}
 
-The recognizer is a short-window intent classifier rather than a transcript generator. Given the feature sequence $\phi(x_t)$, it estimates a distribution
+The recognizer is the acoustic component of the safety-state mediation path rather than a transcript generator or command selector. Given the feature sequence $\phi(x_t)$, it estimates a distribution
 \[
 p_{\theta}(y \mid \phi(x_t)), \qquad
 y \in \{\texttt{emergency}, \texttt{movement}, \texttt{unknown}\}.
 \]
-The three outputs make voice interaction controllable by serving as intent-state evidence for the bridge. Movement captures ordinary control-oriented speech, emergency captures safety-critical speech, and unknown captures audio outside the contract. The predicted label and confidence become the event passed to the bridge in Section~\ref{sec:system}. The recognizer therefore does not produce a flight command; it produces a constrained event for later policy logic.
+The outputs make voice interaction controllable by serving as intent-state evidence for the bridge. Movement captures ordinary control-oriented speech, emergency captures safety-critical speech, and unknown/fallback captures audio outside the contract. The predicted label and confidence become the event passed to the bridge in Section~\ref{sec:system}. The recognizer therefore does not produce a flight command; it produces a constrained event for later policy logic.
 
 \subsection{Model Architecture}
 
@@ -22,9 +22,9 @@ The embedded student keeps the same label contract but changes the recognizer pa
 
 The figure intentionally stays at the architectural level. The paper does not need to reproduce a full Keras summary in the body. Instead, it needs to explain why the architecture has two roles. The anchor recognizer carries the stronger temporal modeling used for noisy-set recognition. The embedded student preserves the same input and output contract while replacing the temporal path with components that are easier to export and invoke on the microcontroller runtime. This split lets the evaluation compare model quality and deployment feasibility without pretending they are the same objective.
 
-\subsection{Noise-Aware Training}
+\subsection{Rotor-Noise-Centered Training}
 
-The training design matches the acoustic problem: the recognizer is optimized for rotor-contaminated audio rather than quiet indoor commands. Training mixes command examples with drone-noise recordings and uses clean-to-noisy teacher-student transfer so that the noisy recognizer can inherit structure from a cleaner teacher while learning the self-noisy condition. The training recipe is used to support safety-aware intent recognition under drone noise; it is not a claim about general speech robustness.
+The training design matches the acoustic problem: the recognizer is optimized for rotor-contaminated audio rather than quiet indoor commands. Training mixes command examples with drone-noise recordings and uses clean-to-noisy teacher-student transfer so that the noisy recognizer can inherit structure from a cleaner teacher while learning the self-noisy condition. The training recipe supports safety-state event recognition under drone self-noise; it is not a claim about general speech robustness.
 
 The student objective combines supervised cross-entropy with an embedding-alignment term:
 \[
@@ -39,7 +39,7 @@ where $h_s$ and $h_t$ are student and teacher embeddings, $P$ is the projection 
 
 \subsection{Anchor and Embedded Student}
 
-The paper uses two publishable roles for the model instances. The \emph{anchor recognizer} is the model-quality instance used to evaluate noisy intent-state recognition. The \emph{embedded student} is the deployment instance used to exercise the ESP32/TFLM path. The distinction is important: the embedded student demonstrates compatibility with deployment constraints, while the anchor recognizer remains the model result used to characterize noisy-set behavior.
+The paper uses two publishable roles for the model instances. The \emph{anchor recognizer} is the model-quality instance used to evaluate rotor-noisy intent-state recognition. The \emph{embedded student} is the deployment instance used to exercise the ESP32/TFLM path. The distinction is important: the embedded student demonstrates compatibility with deployment constraints, while the anchor recognizer remains the model result used to characterize noisy-set behavior.
 % Internal mapping: anchor recognizer = w14/preprocess_ext; embedded student = B_small_teacher_student.
 
 The deployment comparison is therefore framed as a constrained-design tradeoff. A smaller student may sacrifice some recognition margin, but it provides the artifact that can be quantized, checked for runtime operators, and exercised on the board. The paper should not describe the embedded student as the winner of the recognizer study unless later evidence shows that it improves the anchor on the same metrics. Its role is to connect the safety interaction layer to the embedded systems path.

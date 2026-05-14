@@ -1,6 +1,6 @@
 # SenSys 2027 Design-First Draft Outline
 
-This folder is the local working draft for a SenSys 2027 first-round submission. The compiled paper should read as a system-design paper for a voice-driven UAV safety interaction mechanism under rotor noise, with intent recognition as the mechanism that converts voice into auditable intent/state events. It should not read as generic speech classification, noisy keyword spotting, ASR, an emergency-only safety interface, or a weekly evidence report. Incomplete validation should be tracked with LaTeX source comments until it is ready to appear in the compiled document.
+This folder is the local working draft for a SenSys 2027 first-round submission. The compiled paper should read as a system-design paper for a safety-state mediated voice interaction architecture for small UAVs, where natural human speech is converted into constrained onboard intent/state events under rotor self-noise and passed to a conservative control boundary rather than being treated as direct flight commands. It should not read as generic speech classification, noisy keyword spotting, ASR, an emergency-only safety interface, or a weekly evidence report. Incomplete validation should be tracked with LaTeX source comments until it is ready to appear in the compiled document.
 
 ## Format Checklist
 
@@ -12,7 +12,7 @@ This folder is the local working draft for a SenSys 2027 first-round submission.
 
 ## Core Thesis
 
-A drone-side UAV safety interaction layer can make talking to small UAVs more natural and controllable under severe self-noise when it uses narrow on-device intent-state recognition as the safety mechanism, deployment-constrained local event generation as the runtime path, and a conservative control bridge as the action boundary.
+A drone-side voice interaction layer can make talking to small UAVs more natural and controllable under severe self-noise when it uses safety-state mediation: narrow on-device recognition converts speech into constrained intent/state events, deployment-constrained local inference generates those events near the vehicle, and a conservative control bridge remains the action boundary.
 
 The system architecture is:
 
@@ -39,7 +39,7 @@ The paper should present this as the intended system contract. Repo evidence is 
 ## Section Plan
 
 1. `Introduction`
-   State the systems problem and talk-to-the-drone safety interaction design. Avoid opening with evidence staging. End with exactly four contributions: Safety Interaction Layer, Intent-State Modeling, Rotor-Noise Robust On-Device Recognition, and Evaluation and Reproducibility Plan.
+   State the systems problem and talk-to-the-drone safety interaction design. Avoid opening with evidence staging. End with exactly four contributions: Safety-mediated Voice Interaction, Intent-to-State Abstraction, Rotor-Noise-Centered Recognition, and Deployment-Constrained Safety Event Generation.
 
 2. `Background and Motivation`
    Motivate rotor self-noise and narrow intent-state recognition for voice-driven UAV safety interaction. Cross-language and cross-platform material belongs only as future context.
@@ -48,13 +48,13 @@ The paper should present this as the intended system contract. Repo evidence is 
    Present the full architecture: voice input, on-device intent-state recognizer, fallback guardrail, embedded inference, control bridge, and interaction/state logging.
 
 4. `On-Device Intent Recognizer`
-   Define the recognizer contract, explain the high-level model architecture, name `w14 preprocess_ext` as the anchor, and keep `B_small_teacher_student` as the deployment candidate.
+   Define the recognizer contract, explain the high-level model architecture, name `w14 preprocess_ext` as the rotor-noisy anchor in source comments or evidence tables, and keep `B_small_teacher_student` as the deployment candidate.
 
 5. `Prototype and Real-World Setup`
    Describe how the prototype instantiates the architecture on XIAO ESP32-S3. Keep incomplete bridge and acoustic validation as source TODOs until evidence is ready.
 
 6. `Evaluation`
-   Organize the evaluation as a recognition-to-interaction stack: offline baselines, frontend ablation, noise robustness, embedded deployment comparison, board runtime and quantization fidelity, speaker/distance/language robustness, drone interaction behavior, and artifact-release protocol. Keep missing measurements in LaTeX comments until result files exist.
+   Organize the evaluation as validation for the four novelty claims: offline baselines and frontend ablation for the recognizer, noise robustness for rotor-centered design, embedded deployment comparison and board runtime for constrained safety event generation, and speaker/distance/language plus drone-interaction protocols for interaction-level validation. Keep missing measurements in LaTeX comments until result files exist.
 
 7. `Related Work`
    Keep UAV speech interfaces, direct spoken intent modeling, robust transfer, and embedded deployment constraints separate.

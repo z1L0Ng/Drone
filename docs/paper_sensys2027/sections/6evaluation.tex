@@ -1,7 +1,7 @@
 \section{Evaluation}
 \label{sec:evaluation}
 
-The evaluation follows the full talk-to-the-drone stack: offline intent quality, feature representation, noise robustness, embedded deployment, board-side runtime, speaker, distance, and language variation, drone interaction behavior, and reproducible artifact packaging. This organization separates recognition evidence from systems evidence so that model accuracy is not confused with a validated control claim.
+The evaluation is organized around the safety-state mediated interaction architecture rather than only the recognizer. It follows the full talk-to-the-drone stack: offline intent quality, feature representation, rotor-noise robustness, embedded deployment, board-side runtime, speaker, distance, and language variation, drone interaction behavior, and reproducible artifact packaging. This organization separates recognition evidence from systems evidence so that model accuracy is not confused with a validated control claim.
 
 \begin{table}[t]
     \centering
@@ -26,7 +26,7 @@ The evaluation follows the full talk-to-the-drone stack: offline intent quality,
 
 \subsection{Offline Intent Recognition Against Baselines}
 
-The first evaluation compares the anchor recognizer against baseline recognizers on the same held-out noisy intent set. The primary metrics are overall accuracy, macro F1, and per-class precision, recall, and F1 for movement, emergency, and unknown. Emergency is reported explicitly because it is the safety-critical class, while movement and unknown show whether the recognizer preserves ordinary interaction intent and unsupported-audio rejection.
+The first evaluation compares the anchor recognizer against baseline recognizers on the same held-out noisy intent set. The primary metrics are overall accuracy, macro F1, and per-class precision, recall, and F1 for movement, emergency, and unknown. Emergency is reported explicitly because it is the safety-critical state, while movement and unknown show whether the recognizer preserves ordinary interaction intent and fallback behavior.
 
 \begin{table}[t]
     \centering
@@ -62,7 +62,7 @@ The third evaluation measures how recognition degrades as rotor noise becomes st
 
 \subsection{Embedded Deployment Comparison}
 
-The fourth evaluation compares deployment candidates by the constraints that matter on ESP32/TFLM: exported artifact size, quantization mode, operator mix, unsupported operators, arena or tensor-memory estimate, and whether the artifact can be invoked by the runtime. This comparison is not a model-quality leaderboard. It identifies which recognizers can plausibly serve as local voice-interaction event sources.
+The fourth evaluation compares deployment candidates by the constraints that matter on ESP32/TFLM: exported artifact size, quantization mode, operator mix, unsupported operators, arena or tensor-memory estimate, and whether the artifact can be invoked by the runtime. This comparison is not a model-quality leaderboard. It identifies which recognizers can plausibly serve as local safety-event sources.
 
 The embedded student exports a full-integer artifact of $780416$ bytes with \texttt{CONV\_2D=6}, \texttt{DEPTHWISE\_CONV\_2D=1}, and no grouped temporal \texttt{CONV\_2D} detected. These values support deployment feasibility for the candidate path, not labeled recognition behavior on the board.
 % Evidence: TFLM export provenance from weeklyresult/weekly_drone_2026w17/B_small_teacher_student/tflm_candidate_precheck.json.
@@ -71,7 +71,7 @@ The embedded student exports a full-integer artifact of $780416$ bytes with \tex
 
 \subsection{On-Board Runtime and Quantization Fidelity}
 
-The fifth evaluation measures the local event path on the board: microphone capture, log-mel frontend, int8 TFLM inference, and USB CDC reporting. Runtime metrics include trigger count, success rate, drop rate, inference latency, total latency, and raw-output sanity checks. Quantization fidelity compares desktop float, desktop int8, and board-side int8 outputs for the same probe inputs.
+The fifth evaluation measures deployment-constrained safety event generation on the board: microphone capture, log-mel frontend, int8 TFLM inference, and USB CDC reporting. Runtime metrics include trigger count, success rate, drop rate, inference latency, total latency, and raw-output sanity checks. Quantization fidelity compares desktop float, desktop int8, and board-side int8 outputs for the same probe inputs.
 
 \begin{table}[t]
     \centering
