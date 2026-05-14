@@ -918,16 +918,29 @@ Manager decision:
 - [ ] Track D: decide MFCC fairness rule for baseline table vs frontend
   ablation.
 - [ ] Track D: decide 3-row vs 5-row baseline table for the first-round draft.
-- [ ] Track D: decide local vs server/tmux execution for offline baselines.
-- [ ] Track D: approve isolated conda environment plan before installing
+- [x] Track D: decide local vs server/tmux execution for offline baselines.
+- [x] Track D: approve isolated conda environment plan before installing
   dependencies.
-- [ ] Track D: approve project-local baseline code layout before importing or
+- [x] Track D: approve project-local baseline code layout before importing or
   copying external baseline code.
 - [x] Track D: receive exact run plan before baseline implementation/training.
-- [ ] Track D: integrate baseline code/env/adapters/run scripts into repo before
+- [x] Track D: integrate baseline code/env/adapters/run scripts into repo before
   any server training dispatch.
-- [ ] Track D: commit and push Track D integration branch before server env
+- [x] Track D: commit and push Track D integration branch before server env
   deployment.
+- [x] Track D: run first-batch log-mel baseline training on server.
+- [x] Track D: receive complete server handoff with per-class metrics,
+  startup/completion receipts, and tarball path.
+- [x] Track D: update `main` with current paper draft before result-branch
+  synchronization.
+- [x] Track D: server-created local result commit
+  `91153291ef3ead3ea75c7e7cb273150b549ce899`.
+- [x] Track D: server-created and verified Git bundle for result commit.
+- [x] Track D: import server result commit to local by Git bundle because
+  server cannot push to GitHub.
+- [x] Track D: inspect per-class baseline reports before paper integration.
+- [ ] Track D: decide whether to merge result branch into `main` or keep as
+  evidence branch.
 - [ ] Track D: add verified citations to `references.bib` after approval.
 - [x] Track B: dry command dispatch receipt accepted and synced.
 - [x] Track A: design/prep receipt accepted with board validation blocker.
@@ -955,6 +968,214 @@ Manager decision:
   `docs/weekly_todo/handoff_log.md`.
 - [x] Append Track D baseline literature/model shortlist receipt to
   `docs/weekly_todo/handoff_log.md`.
+- [x] Append Track D result-commit push-blocker receipt to
+  `docs/weekly_todo/handoff_log.md`.
+
+## Track D Git Result Handoff Status
+Update time: 2026-05-14 03:01 CDT.
+
+Current local state:
+- local branch: `main`
+- local/remote `main`: `54fb1654e8fb5bd914f281d89c087bb560f529b8`
+- local workspace: clean before this PM sync.
+- latest local weekly result directory remains `weekly_drone_2026w18`; W19
+  result artifacts are not yet present locally.
+
+Server result commit:
+- branch: `codex/track-d-baseline-results-20260514`
+- commit: `91153291ef3ead3ea75c7e7cb273150b549ce899`
+- parent/source commit:
+  `420c4e4bc0bb00f5fe900195d9a9790d4d69e9c1`
+- commit message: `Add W19 Track D first-batch baseline results`
+- diff: `34 files changed, 745 insertions(+)`
+- server status after commit: clean.
+
+Server push blocker:
+- `git push origin codex/track-d-baseline-results-20260514` failed because the
+  server has no GitHub HTTPS credentials:
+  `fatal: could not read Username for 'https://github.com': No such device or
+  address`.
+- SSH push is also unavailable:
+  `git@github.com: Permission denied (publickey)`.
+
+Committed artifact scope:
+- `weeklyresult/weekly_drone_2026w19/offline_baselines/`
+- `weeklyresult/weekly_drone_2026w19/offline_baselines_trackd_firstbatch_20260514.tar.gz`
+- No code, paper, or weekly todo files were changed on the server result
+  branch.
+
+Result summary:
+
+| baseline | accuracy | macro_f1 | checkpoint |
+| --- | ---: | ---: | --- |
+| `tcresnet8_logmel` | `0.840927` | `0.840687` | `weeklyresult/weekly_drone_2026w19/offline_baselines/tcresnet8_logmel/checkpoints/best.weights.h5` |
+| `bcresnet1_logmel` | `0.796962` | `0.793465` | `weeklyresult/weekly_drone_2026w19/offline_baselines/bcresnet1_logmel/checkpoints/best.weights.h5` |
+| `dscnn_s_logmel` | `0.606615` | `0.600723` | `weeklyresult/weekly_drone_2026w19/offline_baselines/dscnn_s_logmel/checkpoints/best.weights.h5` |
+
+Per-class notes:
+- `tcresnet8_logmel` is strongest overall by accuracy and macro F1.
+- `bcresnet1_logmel` has the highest emergency recall (`0.8969`) but weaker
+  movement recall (`0.6472`).
+- `dscnn_s_logmel` is substantially weaker in this first-batch configuration.
+
+Next synchronization method:
+- Use `git bundle` from the server result branch, then import the bundle
+  locally.
+- This preserves the server-created commit SHA without requiring GitHub
+  credentials on the server.
+- Do not merge into `main` until the local bundle import is audited.
+
+## Track D Server Git Auth Diagnosis
+Update time: 2026-05-14 03:07 CDT.
+
+Server diagnosis:
+- Checked-out server branch during diagnosis: `main`
+- Server HEAD: `f9740f00b79f8e5966510a8936767024e7e7b310`
+- Server `main` status: clean but `[origin/main: behind 8]`
+- Result branch exists locally:
+  `codex/track-d-baseline-results-20260514`
+- Result branch commit:
+  `91153291ef3ead3ea75c7e7cb273150b549ce899`
+- Remote:
+  `origin https://github.com/z1L0Ng/Drone.git` for fetch and push.
+
+Auth/config findings:
+- No `remote.origin.pushurl`.
+- No `remote.pushDefault`.
+- No `branch.main.pushRemote`.
+- No `branch.codex/track-d-baseline-results-20260514.pushRemote`.
+- No `credential.helper`.
+- `SSH_AUTH_SOCK` is empty.
+- `gh` is not installed.
+- `ssh -T git@github.com` fails with `Permission denied (publickey)`.
+- `git push --dry-run origin codex/track-d-baseline-results-20260514` fails
+  with:
+  `fatal: could not read Username for 'https://github.com': No such device or address`.
+
+Manager interpretation:
+- This is an authentication/session issue, not a `codex/` branch permission
+  issue.
+- If the same server user/repo previously pushed successfully, that push must
+  have used a different available auth path at the time: an interactive
+  credential prompt/cache, a different clone/session, a temporary credential,
+  or an ssh-agent/key that is not available now.
+- The current server session has no usable GitHub auth through HTTPS, SSH, or
+  GitHub CLI.
+- Since result commit `91153291...` already exists locally on the server, the
+  cleanest provenance-preserving path remains `git bundle` import on the local
+  machine.
+
+Next action:
+- Ask server to create a bundle containing
+  `codex/track-d-baseline-results-20260514`, verify it, and provide the bundle
+  file for local import.
+
+## Track D Git Bundle Ready
+Update time: 2026-05-14 03:09 CDT.
+
+Server bundle status:
+- server branch: `codex/track-d-baseline-results-20260514`
+- server branch HEAD:
+  `91153291ef3ead3ea75c7e7cb273150b549ce899`
+- server `git status --short`: clean
+- bundle path: `/tmp/trackd_results_20260514.bundle`
+- bundle size: `5.4M`
+
+Bundle verification:
+- `/tmp/trackd_results_20260514.bundle is okay`
+- contains:
+  `91153291ef3ead3ea75c7e7cb273150b549ce899 refs/heads/codex/track-d-baseline-results-20260514`
+- requires:
+  `420c4e4bc0bb00f5fe900195d9a9790d4d69e9c1`
+
+Manager interpretation:
+- The server-created Git commit is now packaged as a verified bundle.
+- This preserves the result commit SHA and parent/source commit without relying
+  on server GitHub credentials.
+- Local result sync is still pending until the bundle is copied to the local
+  machine and fetched into a local branch.
+
+Next local import target:
+- Copy `/tmp/trackd_results_20260514.bundle` from the server to a local path,
+  e.g. `/Users/zilongzeng/Research/Drone/.handoff/trackd_results_20260514.bundle`.
+- Fetch the bundle into local branch
+  `codex/track-d-baseline-results-20260514`.
+- Audit result tree before any merge into `main`.
+
+## Track D Local Bundle Import And Audit
+Update time: 2026-05-14 03:16 CDT.
+
+Local import:
+- local bundle path:
+  `.handoff/trackd_results_20260514.bundle`
+- local bundle size: `5.4M`
+- `git bundle verify`: passed.
+- fetched local branch:
+  `codex/track-d-baseline-results-20260514`
+- fetched branch HEAD:
+  `91153291ef3ead3ea75c7e7cb273150b549ce899`
+
+Commit/file-scope audit:
+- `git show --stat` confirms result commit:
+  `91153291 Add W19 Track D first-batch baseline results`
+- diff vs source commit `420c4e4...` contains only
+  `weeklyresult/weekly_drone_2026w19/`.
+- Result commit contains 34 files, including:
+  - three `checkpoints/best.weights.h5`
+  - three `classification_report_noisy.txt`
+  - three `metrics.json`
+  - three confusion matrix `.npy/.png` pairs
+  - three `history/train_history.csv`
+  - three `run_config.json`
+  - three `source_manifest.json`
+  - startup/completion/result-tree receipts
+  - `offline_baselines_trackd_firstbatch_20260514.tar.gz`
+- No code, paper, or weekly todo files are in the result commit.
+
+Size audit:
+- tarball blob size: `2821746` bytes.
+- `tcresnet8_logmel` checkpoint: `1421792` bytes.
+- `bcresnet1_logmel` checkpoint: `1553776` bytes.
+- `dscnn_s_logmel` checkpoint: `340824` bytes.
+
+Metric audit from imported Git objects:
+
+| model | accuracy | macro F1 | emergency F1 | movement F1 | unknown F1 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `w14 preprocess_ext` anchor | `0.88` | `0.88` | `0.87` | `0.88` | `0.90` |
+| `B_small_teacher_student` deployment candidate | `0.87` | `0.87` | `0.86` | `0.87` | `0.88` |
+| `tcresnet8_logmel` | `0.8409` | `0.8407` | `0.8638` | `0.8136` | `0.8446` |
+| `bcresnet1_logmel` | `0.7970` | `0.7935` | `0.8269` | `0.7381` | `0.8154` |
+| `dscnn_s_logmel` | `0.6066` | `0.6007` | `0.6658` | `0.5162` | `0.6201` |
+
+Interpretation:
+- None of the first-batch baselines beats `w14 preprocess_ext` on overall
+  accuracy or macro F1.
+- `tcresnet8_logmel` is the strongest first-batch baseline overall.
+- `bcresnet1_logmel` has the highest emergency recall among the baselines
+  (`0.8969`) but lower emergency precision and substantially lower movement
+  recall than `tcresnet8_logmel`.
+- `dscnn_s_logmel` is weak under this exact protocol.
+- Paper claim should be: the project model anchor remains stronger than the
+  first-batch compact KWS baselines under the same noisy-eval protocol.
+- Do not claim deployment feasibility or safety validation from these offline
+  baseline results.
+
+Receipt caveat:
+- The committed Git tree contains `completion_last50.txt` and
+  `result_tree.txt` for each baseline.
+- The text inside `completion_last50.txt` has an internal `result_tree:` list
+  that does not include `completion_last50.txt` / `result_tree.txt` themselves.
+  Treat this as a receipt-generation-order limitation, not as missing files.
+
+Merge consideration:
+- Do not merge immediately during this audit step.
+- Merging `codex/track-d-baseline-results-20260514` into `main` will bring both
+  the Track D baseline scaffold lineage and W19 result artifacts, because the
+  result branch is based on `420c4e4...`.
+- Recommended next decision: either merge the result branch into `main` after
+  accepting scaffold+results together, or keep it as an evidence branch and
+  manually curate paper-facing tables.
 
 ## Risks
 - Track B and Track A output files are ignored by `.gitignore`; final
