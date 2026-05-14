@@ -898,6 +898,209 @@ Manager decision:
 - [ ] External repo download or vendoring not approved.
 - [ ] Full baseline training not approved.
 
+## Track D Receipt: Baseline Scaffold Implementation
+Receipt time: 2026-05-13 20:30 CDT.
+
+Scope:
+- Repo-integrated scaffold only.
+- No commit by Track D agent.
+- No push.
+- No dependency installation.
+- No external download or vendoring.
+- No paper edit.
+- No weekly todo / handoff edit by Track D agent.
+- No full training.
+
+Audit:
+- branch: `codex/track-d-baseline-integration-20260513`
+- HEAD: `44312bb634530966d7a875393e2806f9e9d6de4f`
+- dirty status before manager sync: untracked scaffold only:
+  `baselines/` and `scripts/run_trackd_offline_baseline.py`.
+
+Implemented scaffold:
+- `baselines/README.md`
+- `baselines/environment.yml`
+- `baselines/configs/*.yaml`
+- `baselines/common/*.py`
+- `baselines/bc_resnet/{model.py,adapter.py,UPSTREAM.md}`
+- `baselines/tc_resnet/{model.py,adapter.py,UPSTREAM.md}`
+- `baselines/ds_cnn/{model.py,adapter.py,UPSTREAM.md}`
+- `scripts/run_trackd_offline_baseline.py`
+
+Manager validation:
+- [x] Source compile check passed:
+  `python -m compileall -q baselines scripts/run_trackd_offline_baseline.py`.
+- [x] Trailing whitespace check passed:
+  `rg -n "[ \t]+$" baselines scripts/run_trackd_offline_baseline.py`
+  returned no matches.
+- [x] Smoke + data-loader check passed:
+  `conda run -n drone python scripts/run_trackd_offline_baseline.py --config baselines/configs/bcresnet1_logmel.yaml --mode smoke --check-data-loader`.
+- [x] Smoke output confirmed:
+  - baseline: `bcresnet1_logmel`
+  - log-mel shape: `(256, 32, 1)`
+  - MFCC shape: `(40, 32, 1)`
+  - labels: `emergency`, `movement`, `unknown`
+  - split: train/val/test = `30024/10008/10008`
+  - synthetic output shape: `(1, 3)`
+  - parameter count: `116099`
+
+Observed issue:
+- Smoke emitted Matplotlib/font cache warnings because
+  `/Users/zilongzeng/.matplotlib` and font cache directories were not writable.
+- Future local/server commands should set `MPLCONFIGDIR` to a writable path,
+  e.g. `/tmp/matplotlib` or a job-local temp directory.
+
+Current boundary:
+- Runner intentionally disables full training in this scaffold.
+- No server training can be dispatched until the next implementation pass adds
+  train loop, checkpoint save, noisy eval, receipts, and result tree writing,
+  then the branch is committed and pushed.
+
+Next manager decision:
+- Decide whether to approve Track D implementation pass for:
+  train loop, checkpointing, noisy evaluation, metric files, receipt writing,
+  and local tiny train smoke.
+
+## Track D Receipt: Training And Evaluation Plumbing
+Receipt time: 2026-05-13 21:20 CDT.
+
+Scope:
+- Track D baseline training/evaluation plumbing only.
+- No dependency installation.
+- No external download or vendoring.
+- No commit.
+- No push.
+- No paper edit.
+- No weekly todo / handoff edit by the evaluation agent.
+- No full training.
+
+Audit:
+- branch: `codex/track-d-baseline-integration-20260513`
+- HEAD: `44312bb634530966d7a875393e2806f9e9d6de4f`
+- scaffold remains untracked under `baselines/` and
+  `scripts/run_trackd_offline_baseline.py`.
+- PM docs remain modified by manager sync:
+  `docs/weekly_todo/2026/2026w18/todo.md` and
+  `docs/weekly_todo/handoff_log.md`.
+
+Changed scaffold files:
+- `baselines/common/runner.py`: config loading, explicit training loops,
+  `tiny-train` mode, noisy eval, and output writing.
+- `scripts/run_trackd_offline_baseline.py`: `smoke`, `tiny-train`, and guarded
+  `train` modes.
+- `baselines/common/noise.py`: noise sampling now reads 1 s clips instead of
+  whole noise recordings.
+- `baselines/common/receipts.py`: source manifest and text receipt helpers.
+- `baselines/common/metrics.py`: writable `MPLCONFIGDIR` handling.
+
+PM validation:
+- [x] Source compile check passed:
+  `python -m compileall -q baselines scripts/run_trackd_offline_baseline.py`.
+- [x] Runner help confirms modes:
+  `smoke`, `tiny-train`, and `train`; full train requires
+  `--allow-full-train`.
+- [x] Smoke + data-loader check passed:
+  `conda run -n drone python scripts/run_trackd_offline_baseline.py --config baselines/configs/bcresnet1_logmel.yaml --mode smoke --check-data-loader`.
+- [x] Smoke output confirmed:
+  - baseline: `bcresnet1_logmel`
+  - labels: `emergency`, `movement`, `unknown`
+  - split: train/val/test = `30024/10008/10008`
+  - log-mel shape: `(256, 32, 1)`
+  - MFCC shape: `(40, 32, 1)`
+  - output shape: `(1, 3)`
+  - parameter count: `116099`
+- [x] Manager tiny-train validation passed:
+  `conda run -n drone python scripts/run_trackd_offline_baseline.py --config baselines/configs/dscnn_s_mfcc40.yaml --mode tiny-train --output-root /private/tmp/drone_trackd_manager_tiny --tiny-train-samples 12 --tiny-val-samples 6 --tiny-eval-samples 6 --tiny-epochs 1 --tiny-batch-size 3`.
+- [x] Tiny-train wrote the required output schema under
+  `/private/tmp/drone_trackd_manager_tiny/dscnn_s_mfcc40/`:
+  - `run_config.json`
+  - `source_manifest.json`
+  - `classification_report_noisy.txt`
+  - `metrics.json`
+  - `confusion_matrix.npy`
+  - `confusion_matrix.png`
+  - `history/train_history.csv`
+  - `checkpoints/best.weights.h5`
+  - `receipts/startup_first30.txt`
+  - `receipts/completion_last50.txt`
+  - `receipts/result_tree.txt`
+
+Implementation decision:
+- Local Keras `model.fit()` reportedly hung even on tiny arrays in the current
+  `drone` environment, so the runner now uses explicit `GradientTape` loops for
+  tiny and future full train modes.
+- Full training is still guarded by `--allow-full-train`; this guard must stay
+  in place for server dispatch.
+
+Current gate:
+- [x] Track D train loop, checkpointing, noisy eval, and receipt writing have
+  scaffold-level PM smoke validation.
+- [ ] Track D branch is not committed or pushed, so it is not yet a server SHA.
+- [ ] Server conda environment is not created/verified.
+- [ ] Full baseline training is not approved.
+
+Recommended next step:
+- Review the Track D scaffold diff, then stage only `baselines/` and
+  `scripts/run_trackd_offline_baseline.py` for a code commit if approved.
+- Keep weekly management docs as a separate commit unless explicitly deciding
+  to combine management sync and code scaffold.
+
+## Track C Receipt: Novelty And Contribution Framing Update
+Receipt time: 2026-05-13 21:00 CDT.
+
+Scope:
+- Writing-framing receipt only.
+- No paper edits by manager.
+- No model changes.
+- No experiments.
+- No ESP32 firmware changes.
+- No server dispatch.
+
+Accepted core novelty:
+- The paper should define "talking to the drone" as a
+  `safety-state mediated interaction layer`, not as a normal speech-command
+  interface.
+- Speech should not be described as directly becoming a flight action.
+- Under rotor self-noise, speech is locally recognized as a safety-relevant
+  intent/state event and then passed through a conservative control boundary.
+
+Accepted top-level wording for the next writing pass:
+`We contribute a safety-state mediated voice interaction architecture for small
+UAVs, showing how natural human speech can be converted into constrained
+onboard intent events under rotor self-noise and passed to a conservative
+control boundary instead of being treated as direct flight commands.`
+
+Accepted novelty axes:
+1. Safety-mediated voice interaction for UAVs:
+   this is not a voice assistant or direct speech-to-flight-control system; the
+   recognizer produces constrained, auditable, safety-relevant events.
+2. Intent-to-state abstraction instead of command classification:
+   `emergency` is safety-critical handling, `movement` is pending ordinary
+   interaction that still needs downstream policy, and `unknown/fallback`
+   maps to no-action or safe-hold behavior.
+3. Rotor-noise-centered recognition design:
+   the problem is drone self-noise, not clean speech or generic noisy keyword
+   spotting; `w14 preprocess_ext` remains the rotor-noisy recognizer anchor.
+4. Deployment-constrained safety event generation:
+   `B_small_teacher_student` supports the ESP32/TFLM path for microphone
+   capture, feature extraction, int8 inference, and event reporting before the
+   control bridge, but it should not be written as the main-model winner.
+
+Phrases to avoid as the novelty statement:
+- `we classify emergency/movement/unknown`
+- `we build an interrupt path`
+- `we deploy a model on ESP32`
+- `we overcome noise`
+- `we validate drone safety`
+
+Manager decision:
+- [x] Accept this framing as the next Track C writing direction.
+- [ ] Integrate the framing into `main.tex`, `1introduction.tex`,
+  `2motivation.tex`, `3architecture.tex`, `4recognizer.tex`,
+  `6evaluation.tex`, and `8conclusion.tex`.
+- [ ] Keep speaker/language generalization, artifact release, and safety
+  validation as conditional claims unless the corresponding evidence is added.
+
 ## 2026-05-04 Remaining Checklist
 - [x] Track C: finish paper outline audit and rewrite plan.
 - [x] Track C: core writing objective / claim / draft review memo accepted.
@@ -909,8 +1112,12 @@ Manager decision:
   stack.
 - [x] Track C: accept current framing convergence toward voice-driven UAV safety
   mechanism.
+- [x] Track C: accept novelty framing as safety-state mediated voice
+  interaction under rotor self-noise.
 - [ ] Track C: rewrite advisor-suggested contribution candidates into formal
   paper contributions or conditional evaluation-backed claims.
+- [ ] Track C: integrate novelty framing into paper abstract, introduction,
+  motivation, architecture, recognizer, evaluation, and conclusion.
 - [ ] Track C: fix `git diff --check` for paper sources.
 - [x] Track D: initialize evaluation track plan bound to
   `sections/6evaluation.tex`.
@@ -924,8 +1131,10 @@ Manager decision:
 - [ ] Track D: approve project-local baseline code layout before importing or
   copying external baseline code.
 - [x] Track D: receive exact run plan before baseline implementation/training.
-- [ ] Track D: integrate baseline code/env/adapters/run scripts into repo before
-  any server training dispatch.
+- [x] Track D: integrate baseline scaffold/env/adapters/run scripts into repo
+  before any server training dispatch.
+- [x] Track D: implement train loop, checkpoint, noisy eval, and receipt writing
+  before server training dispatch.
 - [ ] Track D: commit and push Track D integration branch before server env
   deployment.
 - [ ] Track D: add verified citations to `references.bib` after approval.
@@ -951,9 +1160,13 @@ Manager decision:
   `docs/weekly_todo/handoff_log.md`.
 - [x] Append Track C framing/contribution validation receipt to
   `docs/weekly_todo/handoff_log.md`.
+- [x] Append Track C novelty/contribution framing receipt to
+  `docs/weekly_todo/handoff_log.md`.
 - [x] Append Track D evaluation initialization plan to
   `docs/weekly_todo/handoff_log.md`.
 - [x] Append Track D baseline literature/model shortlist receipt to
+  `docs/weekly_todo/handoff_log.md`.
+- [x] Append Track D training/evaluation plumbing receipt to
   `docs/weekly_todo/handoff_log.md`.
 
 ## Risks
