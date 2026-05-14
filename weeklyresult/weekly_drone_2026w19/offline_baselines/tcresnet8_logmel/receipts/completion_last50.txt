@@ -1,0 +1,18 @@
+Track D offline baseline completion receipt
+run_mode=train
+baseline=tcresnet8_logmel
+checkpoint=weeklyresult/weekly_drone_2026w19/offline_baselines/tcresnet8_logmel/checkpoints/best.weights.h5
+classification_report=weeklyresult/weekly_drone_2026w19/offline_baselines/tcresnet8_logmel/classification_report_noisy.txt
+metrics=weeklyresult/weekly_drone_2026w19/offline_baselines/tcresnet8_logmel/metrics.json
+accuracy=0.840927
+macro_f1=0.840687
+result_tree:
+./classification_report_noisy.txt
+./confusion_matrix.npy
+./confusion_matrix.png
+./metrics.json
+./run_config.json
+./source_manifest.json
+receipts/startup_first30.txt
+history/train_history.csv
+checkpoints/best.weights.h5

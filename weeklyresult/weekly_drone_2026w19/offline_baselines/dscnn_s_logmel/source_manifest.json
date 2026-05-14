@@ -1,0 +1,10 @@
+{
+  "baseline": "dscnn_s_logmel",
+  "git_branch": "",
+  "git_head": "420c4e4bc0bb00f5fe900195d9a9790d4d69e9c1",
+  "keras_version": "3.11.3",
+  "python_version": "3.11.15",
+  "run_mode": "train",
+  "scaffold": "project-local minimal reimplementation",
+  "tensorflow_version": "2.20.0"
+}

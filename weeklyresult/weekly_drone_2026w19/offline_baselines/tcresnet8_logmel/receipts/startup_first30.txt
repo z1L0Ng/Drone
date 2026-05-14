@@ -1,0 +1,18 @@
+Track D offline baseline startup receipt
+run_mode=train
+baseline=tcresnet8_logmel
+family=tc_resnet
+frontend=logmel
+output_dir=weeklyresult/weekly_drone_2026w19/offline_baselines/tcresnet8_logmel
+processed_data_path=dataset/processed/data_paths.npz
+encoder_path=saved_models/label_encoder.joblib
+noise_source_dir=dataset/raw/tellonoise
+eval_snr_db=-10.0
+train_count=30024
+val_count=10008
+eval_count=10008
+git_branch=
+git_head=420c4e4bc0bb00f5fe900195d9a9790d4d69e9c1
+python_version=3.11.15
+tensorflow_version=2.20.0
+keras_version=3.11.3

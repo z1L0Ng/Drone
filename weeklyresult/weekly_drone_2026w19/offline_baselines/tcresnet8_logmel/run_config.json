@@ -1,0 +1,99 @@
+{
+  "audio": {
+    "duration_sec": 1.0,
+    "sample_rate": 16000,
+    "target_len": 16000
+  },
+  "baseline": {
+    "family": "tc_resnet",
+    "name": "tcresnet8_logmel",
+    "role": "offline_quality",
+    "upstream": "hyperconnect/TC-ResNet",
+    "variant": "tcresnet8"
+  },
+  "data": {
+    "encoder_path": "saved_models/label_encoder.joblib",
+    "labels": [
+      "emergency",
+      "movement",
+      "unknown"
+    ],
+    "noise_source_dir": "dataset/raw/tellonoise",
+    "processed_data_path": "dataset/processed/data_paths.npz"
+  },
+  "execution": {
+    "effective_batch_size": 32,
+    "effective_epochs": 50,
+    "eval_samples": 10008,
+    "noise_files": 231,
+    "output_dir": "weeklyresult/weekly_drone_2026w19/offline_baselines/tcresnet8_logmel",
+    "run_mode": "train",
+    "train_samples": 30024,
+    "val_samples": 10008
+  },
+  "experiment": {
+    "comparison_layer": "offline_recognition",
+    "output_root": "weeklyresult/weekly_drone_2026w19/offline_baselines",
+    "seed": 42,
+    "weekly_tag": "drone_2026w19"
+  },
+  "frontend": {
+    "center": false,
+    "fmax": null,
+    "fmin": 50,
+    "hop_length": 512,
+    "max_frames": 32,
+    "n_fft": 1024,
+    "n_mels": 256,
+    "n_mfcc": 40,
+    "top_db": 80.0,
+    "type": "logmel"
+  },
+  "model": {
+    "channels": [
+      16,
+      24,
+      32,
+      48
+    ],
+    "dropout_rate": 0.1,
+    "input_shape": [
+      256,
+      32,
+      1
+    ],
+    "kernel_size": 9,
+    "num_classes": 3
+  },
+  "noise": {
+    "eval_snr_db": -10.0,
+    "max_snr_db": -5.0,
+    "min_snr_db": -15.0,
+    "noise_mix_prob": 1.0
+  },
+  "outputs": {
+    "required_files": [
+      "run_config.json",
+      "source_manifest.json",
+      "classification_report_noisy.txt",
+      "metrics.json",
+      "confusion_matrix.npy",
+      "confusion_matrix.png",
+      "history/train_history.csv",
+      "checkpoints/best.weights.h5",
+      "receipts/startup_first30.txt",
+      "receipts/completion_last50.txt",
+      "receipts/result_tree.txt"
+    ]
+  },
+  "train": {
+    "batch_size": 32,
+    "class_weight": "balanced",
+    "earlystop_patience": 10,
+    "learning_rate": 0.0001,
+    "loss": "categorical_crossentropy",
+    "max_epochs": 50,
+    "metric": "accuracy",
+    "optimizer": "adam"
+  }
+}
