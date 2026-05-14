@@ -1177,6 +1177,40 @@ Merge consideration:
   accepting scaffold+results together, or keep it as an evidence branch and
   manually curate paper-facing tables.
 
+## Local/Server Branch Sync Closeout
+Update time: 2026-05-14 03:26 CDT.
+
+Local cleanup:
+- Local branch: `main`
+- Local `git status --short`: clean.
+- `.handoff/` is retained locally and excluded via `.git/info/exclude`.
+
+Local and GitHub branch state:
+- `main` / `origin/main`:
+  `b6c42e565a89c939a6d550924732e532d8a685c2`
+- `codex/track-d-baseline-integration-20260513` / remote:
+  `420c4e4bc0bb00f5fe900195d9a9790d4d69e9c1`
+- `codex/track-d-baseline-results-20260514` / remote:
+  `91153291ef3ead3ea75c7e7cb273150b549ce899`
+
+Server sync confirmation:
+- Server path: `/files1/Zilong/Drone`
+- Server branch after sync: `main`
+- Server `git status --short`: clean.
+- Server `main`:
+  `b6c42e565a89c939a6d550924732e532d8a685c2`
+- Server `origin/main`:
+  `b6c42e565a89c939a6d550924732e532d8a685c2`
+- Server retained local result branch:
+  `codex/track-d-baseline-results-20260514`
+  at `91153291ef3ead3ea75c7e7cb273150b549ce899`.
+
+Closeout decision:
+- `main` is synchronized between local, GitHub, and server.
+- Track D integration and result branches are synchronized between local and
+  GitHub, and the result branch still exists on the server.
+- No merge of Track D result branch into `main` has been performed.
+
 ## Risks
 - Track B and Track A output files are ignored by `.gitignore`; final
   preservation needs an explicit policy for whether to force-add selected
