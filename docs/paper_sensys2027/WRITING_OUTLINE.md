@@ -1,6 +1,6 @@
 # SenSys 2027 Design-First Draft Outline
 
-This folder is the local working draft for a SenSys 2027 first-round submission. The compiled paper should read as a system-design paper for a drone-side emergency voice safety component, not as a weekly evidence report. Incomplete validation should be tracked with LaTeX source comments until it is ready to appear in the compiled document.
+This folder is the local working draft for a SenSys 2027 first-round submission. The compiled paper should read as a system-design paper for a voice-driven UAV safety interaction mechanism under rotor noise, with intent recognition as the mechanism that converts voice into auditable intent/state events. It should not read as generic speech classification, noisy keyword spotting, ASR, an emergency-only safety interface, or a weekly evidence report. Incomplete validation should be tracked with LaTeX source comments until it is ready to appear in the compiled document.
 
 ## Format Checklist
 
@@ -12,11 +12,11 @@ This folder is the local working draft for a SenSys 2027 first-round submission.
 
 ## Core Thesis
 
-A drone-side voice safety component can make small UAVs more interruptible under severe self-noise when it is framed as emergency-oriented intent recognition first, deployment-constrained local event generation second, and conservative control-bridge integration third.
+A drone-side UAV safety interaction layer can make talking to small UAVs more natural and controllable under severe self-noise when it uses narrow on-device intent-state recognition as the safety mechanism, deployment-constrained local event generation as the runtime path, and a conservative control bridge as the action boundary.
 
 The system architecture is:
 
-`voice input -> log-mel frontend -> emergency intent recognizer -> event guardrail -> embedded inference -> control bridge -> safety event log`
+`voice input -> log-mel frontend -> on-device intent-state recognizer -> fallback guardrail -> embedded inference -> control bridge -> interaction/state log`
 
 The paper should present this as the intended system contract. Repo evidence is tracked in source comments and used only where the compiled claim is already defensible:
 
@@ -29,7 +29,7 @@ The paper should present this as the intended system contract. Repo evidence is 
 
 | Claim | Evidence path | Paper wording |
 | --- | --- | --- |
-| System architecture is an emergency voice safety component for nearby drones. | System design text in this draft; no single result file needed. | Present as the design contribution and evaluation object. |
+| System architecture is a voice-driven UAV safety interaction layer for nearby drones. | System design text in this draft; no single result file needed. | Present as the design contribution and evaluation object. |
 | `w14 preprocess_ext` is the main noisy-set anchor. | `weeklyresult/weekly_drone_2026w14/preprocess_ext/classification_report_noisy.txt`; `run_config.json` | Use as the model-quality anchor for the recognizer. |
 | `B_small_teacher_student` is the deployment candidate. | `weeklyresult/weekly_drone_2026w17/B_small_teacher_student/*`; `tflm_candidate_precheck.json` | Use as the embedded candidate; do not call it the winner. |
 | ESP32 local inference is feasible as a runtime path. | `weeklyresult/weekly_drone_2026w17/realworld/esp32_bench/local_cdc_fast_v4_stability30_report.md` | Runtime stability and latency evidence only. |
@@ -39,22 +39,22 @@ The paper should present this as the intended system contract. Repo evidence is 
 ## Section Plan
 
 1. `Introduction`
-   State the systems problem and emergency-interruption design. Avoid opening with evidence staging. End with design-first contributions.
+   State the systems problem and talk-to-the-drone safety interaction design. Avoid opening with evidence staging. End with exactly four contributions: Safety Interaction Layer, Intent-State Modeling, Rotor-Noise Robust On-Device Recognition, and Evaluation and Reproducibility Plan.
 
 2. `Background and Motivation`
-   Motivate rotor self-noise and emergency-oriented narrow intent recognition. Cross-language and cross-platform material belongs only as future context.
+   Motivate rotor self-noise and narrow intent-state recognition for voice-driven UAV safety interaction. Cross-language and cross-platform material belongs only as future context.
 
 3. `System Architecture`
-   Present the full architecture: voice input, emergency intent recognizer, event guardrail, embedded inference, control bridge, and safety event logging.
+   Present the full architecture: voice input, on-device intent-state recognizer, fallback guardrail, embedded inference, control bridge, and interaction/state logging.
 
-4. `Emergency Intent Recognizer`
+4. `On-Device Intent Recognizer`
    Define the recognizer contract, explain the high-level model architecture, name `w14 preprocess_ext` as the anchor, and keep `B_small_teacher_student` as the deployment candidate.
 
 5. `Prototype and Real-World Setup`
    Describe how the prototype instantiates the architecture on XIAO ESP32-S3. Keep incomplete bridge and acoustic validation as source TODOs until evidence is ready.
 
 6. `Evaluation`
-   Separate existing evidence, missing evidence, and planned validation. Keep the evidence table, but do not let it drive the paper narrative.
+   Organize the evaluation as a recognition-to-interaction stack: offline baselines, frontend ablation, noise robustness, embedded deployment comparison, board runtime and quantization fidelity, speaker/distance/language robustness, drone interaction behavior, and artifact-release protocol. Keep missing measurements in LaTeX comments until result files exist.
 
 7. `Related Work`
    Keep UAV speech interfaces, direct spoken intent modeling, robust transfer, and embedded deployment constraints separate.
@@ -72,19 +72,23 @@ The paper should present this as the intended system contract. Repo evidence is 
 
 ## Figure/Table Plan
 
-- System architecture figure: voice input -> log-mel frontend -> emergency intent recognizer -> event guardrail -> control bridge -> safety event log.
+- System architecture figure: voice input -> log-mel frontend -> on-device intent recognizer -> event guardrail -> control bridge -> interaction event log.
 - Recognizer architecture figure: w14 anchor recognizer and B_small deployed student as compact blocks, not a full Keras layer list.
 - Prototype dataflow figure: XIAO microphone -> audio window -> log-mel features -> int8 TFLM inference -> USB CDC event -> bridge record.
-- Recognizer design table: three-way intent contract and reject behavior.
-- Deployment candidate table: w14 anchor vs B_small deployment candidate.
-- Runtime table: ESP32 local event path success/drop/timing summary.
-- Validation matrix: existing evidence, missing evidence, and planned validation for recognizer, runtime, control bridge, and gate/buffer.
+- Offline recognition table: anchor recognizer and verified baseline rows on the same noisy-set split.
+- Frontend ablation table: log-mel, MFCC, and other compact representations under matched training/evaluation settings.
+- Noise robustness figure: accuracy, emergency F1, movement F1, and unknown false accept rate across SNR or rotor-noise conditions.
+- Deployment candidate table: anchor recognizer, embedded student, and compact baselines with TFLite size, operator mix, memory estimate, and compatibility gate.
+- Runtime and quantization table: ESP32 success/drop/timing plus float/int8/board output agreement.
+- Speaker/distance/language robustness figure: per-condition accuracy, emergency recall, unknown false accepts, and missed-event rate.
+- Drone interaction figure: speech input -> ESP32 event -> bridge decision -> command/state log -> drone-side response.
 - Control-log schema table: predicted label, confidence, latency, state transition, command selection, send event, ack/timeout.
+- Artifact-release checklist: result manifests, run configurations, model/export artifacts, evaluation scripts, and bridge-log schemas that are actually included in the release package.
 
 ## Thursday 2026-05-07 Meeting Questions
 
-- Should the paper use the phrase "voice safety component" or the more conservative "safety-oriented interrupt interface"?
-- Is current ESP32 inference latency acceptable for an interrupt/hold interface, or should emergency handling require a faster pre-gate?
+- Should the paper use "voice interaction layer", "talk-to-the-drone interface", or another publishable system name?
+- Is current ESP32 inference latency acceptable for a voice-interaction event source, or should safety-critical intents require a faster pre-gate?
 - What evidence is required for first-round submission: live dry-run, no-prop bench, or low-risk flight?
 - Should Track A appear in the paper at all, or stay as meeting-only feasibility material until false triggers are controlled?
 - Should all multi-platform wording be removed until another drone platform is tested?

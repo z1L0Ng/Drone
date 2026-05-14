@@ -440,13 +440,495 @@ Required follow-up writing pass:
   no flight evidence, no labeled real-world semantic accuracy, no validated
   gate/safety mechanism, no multi-platform validation.
 
+## Track C Receipt: Talk-To-The-Drone Framing Revision
+Receipt time: 2026-05-05 22:57 CDT.
+
+Scope:
+- Paper writing and figure organization only.
+- No model changes.
+- No experiments.
+- No `realworld` firmware changes.
+- `references.bib` unchanged.
+
+Audit:
+- branch: `main`
+- HEAD: `20f4942a09dec7126be4b7cf504c624d7abf1fda`
+- current dirty files are under `docs/paper_sensys2027/` only before this PM
+  sync.
+- `main.tex` compile path now uses:
+  `1introduction`, `2motivation`, `3architecture`, `4recognizer`,
+  `5prototype`, `6evaluation`, `7relatedwork`, `8conclusion`.
+- Active section files are:
+  `1introduction.tex`, `2motivation.tex`, `3architecture.tex`,
+  `4recognizer.tex`, `5prototype.tex`, `6evaluation.tex`,
+  `7relatedwork.tex`, `8conclusion.tex`.
+- Old duplicate section files `3overview/3system/4implementation/4training`
+  are no longer present in `docs/paper_sensys2027/sections/`.
+
+Changed paper files:
+- `docs/paper_sensys2027/WRITING_OUTLINE.md`
+- `docs/paper_sensys2027/main.tex`
+- `docs/paper_sensys2027/figures/system_architecture.tex`
+- `docs/paper_sensys2027/figures/recognizer_architecture.tex`
+- `docs/paper_sensys2027/figures/prototype_pipeline.tex`
+- `docs/paper_sensys2027/sections/1introduction.tex`
+- `docs/paper_sensys2027/sections/2motivation.tex`
+- `docs/paper_sensys2027/sections/3architecture.tex`
+- `docs/paper_sensys2027/sections/4recognizer.tex`
+- `docs/paper_sensys2027/sections/5prototype.tex`
+- `docs/paper_sensys2027/sections/6evaluation.tex`
+- `docs/paper_sensys2027/sections/7relatedwork.tex`
+- `docs/paper_sensys2027/sections/8conclusion.tex`
+
+Validation:
+- `git diff --check -- docs/paper_sensys2027` passed.
+- Visible paper grep for `interrupt`, `interruption`, `AI`, `agent`, `Agent`
+  returned no matches.
+- `latexmk`, `pdflatex`, and `tectonic` are unavailable in the local
+  environment, so PDF compile was not run.
+
+Accepted framing:
+- [x] The paper is no longer framed as an emergency-only interrupt path.
+- [x] New mainline: talk-to-the-drone voice interaction under rotor noise.
+- [x] On-device intent recognition is the safety mechanism.
+- [x] `emergency` is a safety-critical intent class, not the sole paper target.
+- [x] `unknown/reject` is kept as part of the safety-aware interface, not as the
+  core contribution.
+- [x] ESP32 runtime, Track B dry-run, and Track A gate/buffer are not written as
+  validated safety or flight evidence.
+- [x] Internal run names such as `w14` and `B_small` are kept for evidence
+  mapping and comments, not as visible paper narrative.
+
+Current evaluation stack:
+1. Offline baseline comparison.
+2. Frontend ablation.
+3. Noise robustness curve.
+4. Embedded deployment comparison.
+5. On-board runtime / quantization fidelity.
+6. Speaker and distance robustness.
+7. Drone interaction / bridge behavior.
+
+Visible repo-backed numbers currently retained:
+- `w14` anchor.
+- `B_small` embedded student.
+- TFLM artifact.
+- ESP32 30-trigger runtime.
+
+Missing experiments now tracked with LaTeX `% TODO(evaluation)` comments:
+- frontend ablation.
+- noise robustness curve.
+- speaker/distance live labeled data.
+- deployment comparison table.
+- quantization fidelity.
+- no-propeller bridge logs.
+- drone interaction figure/table.
+
+## Track D Plan: Evaluation Agent Initialization
+Planning time: 2026-05-05 23:49 CDT.
+
+Purpose:
+- Start a dedicated evaluation track that is explicitly bound to the current
+  local SenSys draft, especially `docs/paper_sensys2027/sections/6evaluation.tex`.
+- Keep this agent adaptable after the 2026-05-07 meeting, because the advisor
+  may change which evaluation layers matter most.
+- First evaluation item: offline baseline comparison against suitable baseline
+  recognizers from related literature.
+
+Binding to draft:
+- Current draft mainline: talk-to-the-drone voice interaction under rotor noise.
+- Evaluation section currently defines seven layers:
+  1. Offline baseline comparison.
+  2. Frontend ablation.
+  3. Noise robustness curve.
+  4. Embedded deployment comparison.
+  5. On-board runtime / quantization fidelity.
+  6. Speaker and distance robustness.
+  7. Drone interaction / bridge behavior.
+- The evaluation agent must maintain a mapping from each planned experiment to:
+  paper subsection, claim supported, required metrics, repo paths, and missing
+  artifacts.
+
+Initial scope for Track D:
+- [ ] Read `sections/6evaluation.tex` and `WRITING_OUTLINE.md`.
+- [ ] Search related literature and papers for baseline recognizers suitable
+  for direct speech-to-intent / keyword-style drone voice interaction.
+- [ ] Propose 3-5 baseline model families with justification, citation,
+  reproducibility path, expected input representation, and compute footprint.
+- [ ] Decide which baselines are fair for the current dataset and labels:
+  movement / emergency / unknown.
+- [ ] Produce an evaluation design note before any training or implementation.
+
+Baseline selection criteria:
+- Must be relevant to audio intent recognition, keyword spotting, or compact
+  speech command classification.
+- Must be runnable or reasonably reproducible locally/server-side.
+- Must support the same input/label contract or have a defensible adaptation.
+- Must include enough implementation detail in paper or official repo to avoid
+  speculative reproduction.
+- Must be evaluated with the same split, same noise protocol, and same metrics
+  as the anchor recognizer.
+- Embedded baselines are preferred for later layers, but first comparison may
+  include non-embedded recognizers if they are clearly identified as
+  offline-quality baselines.
+
+Allowed first-step output:
+- Literature table.
+- Baseline shortlist.
+- Reproducibility risk table.
+- Exact next experiment plan.
+- No model training yet.
+- No server dispatch yet.
+
+Guardrails:
+- Do not change `docs/paper_sensys2027/` in the first Track D step unless
+  explicitly asked.
+- Do not run training before PM approval.
+- Do not claim a baseline is comparable until its dataset split, preprocessing,
+  label mapping, and noise setup are checked.
+- Do not use unverifiable citations or placeholder references.
+- If server training is later needed, manager must approve and provide commit
+  SHA, tmux session name, `WEEKLY_TAG`, output directory under `weeklyresult/`,
+  startup receipt, and completion receipt.
+
+## Track D Receipt: Baseline Literature And Shortlist
+Receipt time: 2026-05-06 15:49 CDT.
+
+Scope:
+- Read-only audit and literature search.
+- No file changes by Track D agent.
+- No training.
+- No server task.
+
+Audit:
+- branch: `main`.
+- HEAD: `20f4942a09dec7126be4b7cf504c624d7abf1fda`.
+- The worktree already had paper/weekly todo dirty files; Track D added no
+  changes.
+- `docs/paper_sensys2027/sections/6evaluation.tex` layer 1 is offline baseline
+  comparison on the same noisy held-out set.
+- `w14 preprocess_ext` remains the model-quality anchor.
+- `B_small_teacher_student` remains the embedded student / deployment
+  candidate, not a main-model victory claim.
+
+Shortlist decision:
+- First-batch candidates: BC-ResNet-1/2, TC-ResNet8-1.0, DS-CNN-S/M.
+- Optional fourth row: MatchboxNet small or Google `ds_tc_resnet`.
+- Direct SLU / FSC CRDNN-RNN is excluded from the fair main table unless the
+  advisor explicitly wants a pretrained offline upper-bound row.
+
+Candidate summary:
+- BC-ResNet: modern compact log-mel/spectrogram KWS baseline; official
+  Qualcomm repo; fair if trained from scratch on the same split/noise protocol.
+- TC-ResNet: mobile temporal CNN; official Hyperconnect repo; MFCC path means
+  it must either be disclosed as an MFCC baseline or adapted to the current
+  log-mel frontend.
+- DS-CNN: classic MCU KWS baseline; good embedded-deployment comparison; MFCC
+  path may overlap the frontend ablation layer.
+- MatchboxNet / `ds_tc_resnet`: compact higher-capacity KWS-style baseline;
+  keep as offline-quality evidence unless export/TFLM compatibility is
+  explicitly validated.
+- Direct SLU / FSC: task/pretraining mismatch; related work or upper-bound
+  only, not a fair main comparison.
+
+First experiment design candidate:
+- Do not train until approved.
+- Proposed first batch names: `bcresnet1_logmel`, `tcresnet8_mfcc`,
+  `dscnn_mfcc`.
+- Proposed output root if approved:
+  `weeklyresult/weekly_drone_2026w19/offline_baselines/<name>/`.
+- Required outputs per run: `run_config.json`, `classification_report_noisy.txt`,
+  confusion matrix, macro F1, and per-class precision/recall/F1.
+- Fixed inputs: `dataset/processed/data_paths.npz`,
+  `saved_models/label_encoder.joblib`, `dataset/raw/tellonoise`,
+  `eval_snr_db=-10.0`, labels `emergency/movement/unknown`, support `9984`.
+
+Manager/advisor decisions:
+- Are MFCC baselines allowed in the offline baseline table, or should they move
+  to the frontend ablation layer?
+- Should Direct SLU be included as an explicitly labeled upper-bound row?
+- Should the first-round draft use a 3-row or 5-row baseline table?
+- Should small-baseline training run locally or follow the usual server/tmux
+  handoff policy?
+- When should verified citations be added to `references.bib`?
+
+## Track D Execution Boundary: Conda Isolation And Baseline Management
+Update time: 2026-05-13 CDT.
+
+Manager decision:
+- Track D can move from read-only shortlist into implementation planning, but
+  not into dependency installation, external repo download, baseline training,
+  or paper-result claims until an exact run plan is approved.
+
+Environment isolation:
+- Do not contaminate the current `drone` conda environment.
+- Use a dedicated Track D environment, proposed names:
+  `drone-baselines` or `drone-trackd-baselines`.
+- First output must include an `environment.yml` or `requirements.txt` draft
+  plus dependency risk notes, especially for old TensorFlow/PyTorch repos.
+- Record Python version, framework version, CPU/GPU assumption, and any CUDA
+  dependency per baseline.
+
+Baseline code management:
+- Baseline code should live inside the Drone project so Codex can audit,
+  modify, and commit it coherently.
+- Proposed root: `baselines/` or `third_party_baselines/`.
+- Proposed subdirectories: `bc_resnet/`, `tc_resnet/`, `ds_cnn/`.
+- Official upstream repositories may be used as references, but copied code
+  must preserve license, attribution, source URL, source commit, and local
+  modification notes.
+- Do not commit large checkpoints, downloaded datasets, or training caches.
+
+Project adapter requirements:
+- Each baseline must expose a local adapter that uses the same project data
+  split, label mapping, noisy evaluation protocol, and metrics as the anchor
+  recognizer.
+- Required inputs remain:
+  `dataset/processed/data_paths.npz`, `saved_models/label_encoder.joblib`,
+  `dataset/raw/tellonoise`, `eval_snr_db=-10.0`, labels
+  `emergency/movement/unknown`.
+- Required output root if approved:
+  `weeklyresult/weekly_drone_2026w19/offline_baselines/<baseline_name>/`.
+- Required files per completed run:
+  `run_config.json`, `classification_report_noisy.txt`, confusion matrix,
+  macro F1, and per-class precision/recall/F1.
+
+Exact run plan must answer before implementation:
+- Official repo vs project-local reimplementation vs wrapper with minimal local
+  copy.
+- Frontend policy: log-mel, MFCC, or both; if frontend differs, decide whether
+  the row belongs in offline baseline comparison or frontend ablation.
+- Final config per baseline: parameter scale, epochs, batch size, optimizer,
+  learning rate, augmentation/noise mix, early stopping, and seed policy.
+- Whether the first pass is offline-quality only or also includes deployment
+  feasibility precheck.
+- Execution location: local smoke test, local full run, or server/tmux run.
+  Default full training remains server-side unless PM approves a local
+  exception.
+- How results will be summarized back into
+  `docs/paper_sensys2027/sections/6evaluation.tex`.
+
+Server handoff risk:
+- The main Track D risk is not whether one baseline can run locally; it is
+  whether baseline code, environment definition, project adapters, run scripts,
+  and output schema are integrated into the repo before server training.
+- Server training must run from a committed and pushed SHA, not from local
+  uncommitted files, ad hoc downloads, or an undocumented conda state.
+- Before server deployment, Track D must provide:
+  `baselines/` scaffold, environment file, unified data loader, label mapping,
+  noisy evaluation protocol, output schema, and local smoke-test receipt.
+- Any full baseline training follows the server/local protocol:
+  commit SHA, tmux session name, `WEEKLY_TAG=drone_2026w19`, output directory
+  under `weeklyresult/weekly_drone_2026w19/offline_baselines/<name>/`,
+  startup receipt with first 30 lines, and completion receipt with last 50
+  lines, checkpoints, and result tree.
+- If an official baseline repo requires old or incompatible dependencies,
+  prefer a minimal project-local reimplementation of the architecture over
+  making the server environment depend on the full old upstream repo.
+
+Recommended execution order:
+1. Create a Track D branch for repo integration.
+2. Add baseline scaffold, environment file, adapters, and run scripts.
+3. Run local import/shape/tiny-subset smoke tests only.
+4. Commit and push the branch to create a reproducible SHA.
+5. Deploy the dedicated conda environment on the server from the committed
+   environment file.
+6. Launch full baseline training in tmux and write all outputs to
+   `weeklyresult/`.
+7. After result handoff, update `6evaluation.tex` and paper tables.
+
+## Track C Receipt: Framing And Contribution Rewrite Validation
+Receipt time: 2026-05-13 20:08 CDT.
+
+Scope:
+- Paper-writing task only.
+- No model changes.
+- No experiments.
+- No ESP32 firmware changes.
+- No server dispatch.
+- `docs/weekly_todo/2026/2026w18/todo.md` and
+  `docs/weekly_todo/handoff_log.md` were already dirty before this PM sync and
+  were not touched by the writing agent.
+
+Writing-agent changed files:
+- `docs/paper_sensys2027/main.tex`
+- `docs/paper_sensys2027/WRITING_OUTLINE.md`
+- `docs/paper_sensys2027/sections/1introduction.tex`
+- `docs/paper_sensys2027/sections/2motivation.tex`
+- `docs/paper_sensys2027/sections/3architecture.tex`
+- `docs/paper_sensys2027/sections/4recognizer.tex`
+- `docs/paper_sensys2027/sections/5prototype.tex`
+- `docs/paper_sensys2027/sections/8conclusion.tex`
+
+Manager validation:
+- [x] Framing is now further centered on voice-driven UAV safety mechanism /
+  UAV safety interaction layer.
+- [x] Introduction contains the four intended named contributions:
+  Safety Interaction Layer, Intent-State Modeling, ESP32 On-Device Deployment,
+  and Baseline and Deployment Comparison.
+- [ ] Full contribution rewrite is not accepted yet, but the three extra items
+  should not be treated as simple deletion items. They came from advisor
+  discussion and should be rewritten as pending contribution candidates if the
+  required validation can be completed:
+  `open source artifacts / future extension`,
+  `different users / different language intent`, and `overcome the noise`.
+- [ ] `git diff --check -- docs/paper_sensys2027` currently fails due to
+  trailing whitespace at
+  `docs/paper_sensys2027/sections/1introduction.tex:26`.
+
+Revised Track C writing direction:
+- Do not simply delete the three extra items.
+- Rewrite them into formal paper language and decide where they belong in the
+  contribution structure:
+  1. `overcome the noise` -> rotor-noise robust intent recognition / noise
+     robustness evidence.
+  2. `different users / different language intent` -> speaker and language
+     generalization, conditional on validated evaluation.
+  3. `open source artifacts / future extension` -> reproducible artifacts,
+     scripts, protocols, and extension path, conditional on a real artifact
+     package.
+- Update related sections, not only the contribution list:
+  `1introduction.tex`, `2motivation.tex`, `4recognizer.tex`,
+  `6evaluation.tex`, `7relatedwork.tex`, and `8conclusion.tex` as needed.
+- Remove the trailing whitespace and rerun
+  `git diff --check -- docs/paper_sensys2027`.
+- Keep the same no-overclaim boundaries: ESP32 runtime is runtime feasibility
+  only; Track B dry-run is plumbing evidence only; Track A gate/buffer remains
+  preliminary; baseline comparisons, user/language generalization, and
+  open-source artifact claims need actual evidence before final wording.
+
+## Track D Receipt: Baseline Repo-Integrated Training Lane Plan
+Receipt time: 2026-05-13 20:17 CDT.
+
+Scope:
+- Read-only planning only.
+- No file changes by Track D agent.
+- No dependency installation.
+- No external repo download.
+- No training.
+- No commit or push.
+
+Manager interpretation:
+- Track D baseline comparison must become a reproducible repo-integrated
+  training lane before any server run.
+- Server training cannot be launched from the current dirty workspace or from
+  local ad hoc downloads.
+
+Proposed repo layout:
+- `baselines/README.md`
+- `baselines/environment.yml`
+- `baselines/configs/{common_offline.yaml,bcresnet1_logmel.yaml,tcresnet8_logmel.yaml,tcresnet8_mfcc40.yaml,dscnn_s_logmel.yaml,dscnn_s_mfcc40.yaml}`
+- `baselines/common/{data_loader.py,audio_io.py,frontends.py,noise.py,augmentation.py,metrics.py,runner.py,receipts.py}`
+- `baselines/{bc_resnet,tc_resnet,ds_cnn}/{model.py,adapter.py,UPSTREAM.md}`
+- `scripts/run_trackd_offline_baseline.py`
+
+Implementation policy:
+- Do not vendor full external repositories by default.
+- Prefer minimal project-local reimplementation of BC-ResNet, TC-ResNet8, and
+  DS-CNN-S in the project stack.
+- If any upstream code is copied later, preserve upstream license, source URL,
+  source commit, and local modification note.
+
+Environment plan:
+- Proposed isolated conda env: `drone-trackd-baselines`.
+- Do not contaminate current `drone` env.
+- Draft dependency stack: Python 3.10, TensorFlow/Keras 2.14, `numpy<2.0`,
+  `scipy`, `scikit-learn`, `matplotlib`, `pandas`, `pyyaml`, `joblib`,
+  `librosa`, `soundfile`, `tqdm`.
+- Dependency risk:
+  - BC-ResNet official repo uses PyTorch; avoid pulling PyTorch into the first
+    Track D env unless explicitly approved.
+  - TC-ResNet official repo uses TensorFlow 1.13.1; reimplement in TF2/Keras.
+  - Arm DS-CNN code is old TF/CMSIS-oriented; reimplement DS-CNN-S locally.
+
+Fairness and frontend rules:
+- Same split: `dataset/processed/data_paths.npz`.
+- Same labels and encoder:
+  `emergency / movement / unknown`, `saved_models/label_encoder.joblib`.
+- Same noise source and protocol:
+  `dataset/raw/tellonoise`, train SNR uniform `[-15, -5]`,
+  `noise_mix_prob=1.0`, eval SNR `-10.0`.
+- Same audio contract: `1 s`, `16 kHz`.
+- Same output schema:
+  `run_config.json`, `classification_report_noisy.txt`, `metrics.json`,
+  confusion matrix, macro F1, per-class precision/recall/F1.
+- Primary offline baseline table should use `*_logmel` rows.
+- MFCC rows are `model+frontend` rows; move them to frontend ablation if the
+  paper needs strict architecture-only comparison.
+
+First-pass configs proposed:
+- `bcresnet1_logmel`: BC-ResNet tau=1, project log-mel `(256,32,1)`.
+- `tcresnet8_logmel`: TCResNet8 width multiplier 1.0, project log-mel.
+- `tcresnet8_mfcc40`: TCResNet8 with project MFCC40; optional MFCC row.
+- `dscnn_s_logmel`: DS-CNN-S with project log-mel.
+- `dscnn_s_mfcc40`: DS-CNN-S with project MFCC40; optional MFCC row.
+- Common training budget: batch 32, max 50 epochs, early stop 10, seed 42,
+  cross entropy only, Adam learning rate `1e-4`.
+- If no learning is observed in smoke or first run, a separate
+  official-recipe tuning lane requires manager approval.
+
+Server handoff plan:
+- Before server run:
+  1. Manager approves implementation.
+  2. Create Track D integration branch.
+  3. Add `baselines/`, env file, configs, adapters, shared loader/eval utils.
+  4. Run local smoke tests only: import, frontend shape, synthetic forward,
+     tiny loader, optional one-batch train smoke only if approved.
+  5. Commit and push branch.
+- Server settings:
+  - `WEEKLY_TAG=drone_2026w19`
+  - tmux session: `weekly_drone_2026w19_baseline_<baseline_name>`
+  - output root:
+    `weeklyresult/weekly_drone_2026w19/offline_baselines/<baseline_name>/`
+- Startup receipt must include first 30 log lines with commit SHA, branch,
+  conda env, Python/TensorFlow versions, GPU visibility, baseline config, input
+  paths, output path, and first model summary line.
+- Completion receipt must include last 50 log lines, checkpoint path, and result
+  tree.
+
+Recommended first training batch after implementation approval:
+- `bcresnet1_logmel`
+- `tcresnet8_logmel`
+- `dscnn_s_logmel`
+
+Manager decision:
+- [x] Exact run plan received.
+- [x] Server handoff gate accepted.
+- [ ] Implementation branch/scaffold not yet approved.
+- [ ] Dependency installation not yet approved.
+- [ ] External repo download or vendoring not approved.
+- [ ] Full baseline training not approved.
+
 ## 2026-05-04 Remaining Checklist
 - [x] Track C: finish paper outline audit and rewrite plan.
 - [x] Track C: core writing objective / claim / draft review memo accepted.
 - [x] Track C: first structural rewrite received and validated with
   `git diff --check`.
-- [ ] Track C: revise paper voice from staged-evidence framing to design-first
+- [x] Track C: revise paper voice from staged-evidence framing to design-first
   target-system framing.
+- [x] Track C: accept talk-to-the-drone framing revision and 7-layer evaluation
+  stack.
+- [x] Track C: accept current framing convergence toward voice-driven UAV safety
+  mechanism.
+- [ ] Track C: rewrite advisor-suggested contribution candidates into formal
+  paper contributions or conditional evaluation-backed claims.
+- [ ] Track C: fix `git diff --check` for paper sources.
+- [x] Track D: initialize evaluation track plan bound to
+  `sections/6evaluation.tex`.
+- [x] Track D: baseline literature/model shortlist.
+- [ ] Track D: decide MFCC fairness rule for baseline table vs frontend
+  ablation.
+- [ ] Track D: decide 3-row vs 5-row baseline table for the first-round draft.
+- [ ] Track D: decide local vs server/tmux execution for offline baselines.
+- [ ] Track D: approve isolated conda environment plan before installing
+  dependencies.
+- [ ] Track D: approve project-local baseline code layout before importing or
+  copying external baseline code.
+- [x] Track D: receive exact run plan before baseline implementation/training.
+- [ ] Track D: integrate baseline code/env/adapters/run scripts into repo before
+  any server training dispatch.
+- [ ] Track D: commit and push Track D integration branch before server env
+  deployment.
+- [ ] Track D: add verified citations to `references.bib` after approval.
 - [x] Track B: dry command dispatch receipt accepted and synced.
 - [x] Track A: design/prep receipt accepted with board validation blocker.
 - [x] Track C: writing audit receipt accepted; paper files intentionally unchanged.
@@ -464,6 +946,14 @@ Required follow-up writing pass:
 - [x] Append Track C receipt to `docs/weekly_todo/handoff_log.md`.
 - [x] Append Track C writing review memo to `docs/weekly_todo/handoff_log.md`.
 - [x] Append Track C first structural rewrite receipt and PM correction to
+  `docs/weekly_todo/handoff_log.md`.
+- [x] Append Track C talk-to-the-drone framing revision receipt to
+  `docs/weekly_todo/handoff_log.md`.
+- [x] Append Track C framing/contribution validation receipt to
+  `docs/weekly_todo/handoff_log.md`.
+- [x] Append Track D evaluation initialization plan to
+  `docs/weekly_todo/handoff_log.md`.
+- [x] Append Track D baseline literature/model shortlist receipt to
   `docs/weekly_todo/handoff_log.md`.
 
 ## Risks
@@ -489,3 +979,18 @@ Required follow-up writing pass:
 - Paper voice risk: if the draft keeps saying "staged evidence" as the central
   frame, it will read like a progress report. The next pass should write the
   target system/design first, then mark missing evaluations explicitly.
+- Paper compile risk: local LaTeX toolchain is unavailable, so structural
+  validation is limited to `git diff --check`, grep checks, and source review
+  until a PDF can be compiled elsewhere.
+- Evaluation scope risk: the new 7-layer evaluation plan is stronger and more
+  paper-like, but several layers still require new experiments before the
+  submission draft can make final claims.
+- Baseline-selection risk: a model that is strong in keyword spotting or general
+  speech intent may be unfair or unhelpful if it cannot be adapted cleanly to
+  movement / emergency / unknown under the same rotor-noise protocol.
+- Baseline-comparison risk: MFCC baselines may confound the offline model
+  comparison with the planned frontend ablation unless the table explicitly
+  separates model family from frontend.
+- Upper-bound risk: Direct SLU / FSC-style systems use pretraining and a
+  different task formulation, so they should not be mixed into the fair main
+  comparison table without a clear upper-bound label.

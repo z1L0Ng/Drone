@@ -9,16 +9,16 @@
         & $\rightarrow$ &
         \fbox{\parbox[c][0.48cm][c]{1.65cm}{\centering\scriptsize Log-mel\\frontend}}
         & $\rightarrow$ &
-        \fbox{\parbox[c][0.48cm][c]{1.85cm}{\centering\scriptsize Emergency intent\\recognizer}} \\
+        \fbox{\parbox[c][0.48cm][c]{1.85cm}{\centering\scriptsize On-device intent\\recognizer}} \\
         \multicolumn{5}{c}{$\downarrow$} \\
         \fbox{\parbox[c][0.48cm][c]{1.65cm}{\centering\scriptsize Event\\guardrail}}
         & $\rightarrow$ &
         \fbox{\parbox[c][0.48cm][c]{1.65cm}{\centering\scriptsize Control\\bridge}}
         & $\rightarrow$ &
-        \fbox{\parbox[c][0.48cm][c]{1.85cm}{\centering\scriptsize Safety event\\log}}
+        \fbox{\parbox[c][0.48cm][c]{1.85cm}{\centering\scriptsize Interaction\\event log}}
     \end{tabular}%
     }
     \endgroup
-    \caption{Drone-side emergency voice safety component. Speech is treated as a noisy event source, not as a direct command channel. The recognizer emits an emergency-oriented event and confidence; the control bridge records how the event is ignored, held, escalated, or forwarded.}
+    \caption{Drone-side voice interaction layer. Speech is treated as a noisy event source, not as a direct command channel. The recognizer emits an intent and confidence; the control bridge records how the event is ignored, held, escalated, or forwarded.}
     \label{fig:system_architecture}
 \end{figure}

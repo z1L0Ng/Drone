@@ -3,9 +3,9 @@
 
 \input{figures/prototype_pipeline}
 
-\subsection{Embedded Voice-Event Source}
+\subsection{Embedded Voice-Interaction Event Source}
 
-The prototype turns the recognizer into an embedded emergency voice-event source. The hardware baseline is the XIAO ESP32-S3 Sense running local microphone capture, log-mel feature extraction, int8 TFLM inference, and USB CDC result reporting. The board does not issue flight commands; it emits the event fields needed by the control bridge. Figure~\ref{fig:prototype_pipeline} summarizes the data path.
+The prototype turns the recognizer into an embedded voice-driven safety event source. The hardware baseline is the XIAO ESP32-S3 Sense running local microphone capture, log-mel feature extraction, int8 TFLM inference, and USB CDC result reporting. The board does not issue flight commands; it emits the event fields needed by the control bridge. Figure~\ref{fig:prototype_pipeline} summarizes the data path.
 
 \subsection{Onboard Inference Path}
 
@@ -20,11 +20,11 @@ The embedded path emits a voice event rather than a direct control command. The 
 
 \subsection{Control-Bridge Interface}
 
-The bridge consumes voice events and produces logged state transitions. At minimum, each bridge record should include predicted label, confidence, safety state, selected command, command send event, and acknowledgement or timeout. Emergency events are eligible for hold or operator escalation, while movement events require an additional policy source before any directional action. The dry-run dispatcher exercises this interface without sending drone UDP packets, which makes it useful for validating state transitions before no-propeller or live experiments.
+The bridge consumes voice events and produces logged state transitions. At minimum, each bridge record should include predicted label, confidence, safety state, selected command, command send event, and acknowledgement or timeout. Movement events require an additional policy source before any directional action, while emergency events are eligible for hold or operator escalation. The dry-run dispatcher exercises this interface without sending drone UDP packets, which makes it useful for validating state transitions before no-propeller or live experiments.
 % Evidence: dry-run dispatcher evidence is weeklyresult/weekly_drone_2026w18/realworld/tello_dryrun/20260504_local_cdc_replay_report.md.
 % TODO(validation): Add no-propeller bridge logs before claiming live control behavior.
 
-The prototype keeps the bridge host-mediated for this draft. That choice is conservative: it lets the board remain a voice-event source while the host records bridge decisions, command eligibility, and acknowledgement behavior. A later design can move more of the bridge onto the vehicle, but the paper does not need that migration to argue for the emergency voice component. What matters is that the interface between recognition and control is explicit and logged.
+The prototype keeps the bridge host-mediated for this draft. That choice is conservative: it lets the board remain a voice-event source while the host records bridge decisions, command eligibility, and acknowledgement behavior. A later design can move more of the bridge onto the vehicle, but the paper does not need that migration to argue for a voice-driven UAV safety mechanism. What matters is that the interface between recognition and control is explicit and logged.
 
 \subsection{Trigger Gate and Buffer}
 
