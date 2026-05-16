@@ -47,12 +47,18 @@
 
 ## Week-Specific Contract (Current)
 - Weekly cadence: Thursday noon planning/meeting cycle.
-- Weekly tag in use: `drone_2026w17`
-- Meeting checkpoint: `2026-04-30 noon CDT` (pre-meeting summary must exist)
+- Weekly tag in use: `drone_2026w19`
+- Meeting checkpoint: `2026-05-21 noon CDT` (pre-meeting summary must exist)
 - Paper target: SenSys 2027 first-round submission.
 - W17 exception: `B_small_teacher_student` training was completed locally because
   server resources were occupied. Evidence log:
   `logs/weekly_drone_2026w17_B_small_teacher_student_resume_20260429_030603.log`.
+- W19 exception: RT1S tiny-student training may run locally on the Mac because
+  the user explicitly approved managing this week's training inside Codex app.
+  This exception applies only to `xiao_rt1s_c32_b256_tflm` and
+  `xiao_rt1s_c24_b192_tflm`. It still requires a committed SHA before launch,
+  logs under `logs/`, and outputs under
+  `weeklyresult/weekly_drone_2026w19/<candidate>/`.
 
 ## Recommended Log Naming
 - `logs/weekly_${WEEKLY_TAG}_${task}_${timestamp}.log`

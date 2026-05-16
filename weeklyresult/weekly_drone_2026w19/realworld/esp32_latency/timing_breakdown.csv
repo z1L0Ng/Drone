@@ -1,0 +1,17 @@
+component,category,source,n,min_ms,p50_ms,p95_ms,max_ms,mean_ms,share_of_host_p50,note
+capture_pcm_1s,firmware_timing,local_cdc_fast_v4_stability30_events.csv,30,906.0,926.0,930.0,930.0,921.7333333333333,0.30064935064935067,Firmware readPcmWindow() duration for 16000 int16 samples.
+frontend_logmel,firmware_timing,local_cdc_fast_v4_stability30_events.csv,30,55.0,55.0,55.0,55.0,55.0,0.017857142857142856,Firmware extractLogmelToInput() duration.
+tflm_invoke,firmware_timing,local_cdc_fast_v4_stability30_events.csv,30,2093.0,2094.0,2094.0,2094.0,2093.9666666666667,0.6798701298701298,Pure g_interpreter->Invoke() duration measured in firmware.
+device_total,firmware_timing,local_cdc_fast_v4_stability30_events.csv,30,3055.0,3075.0,3079.0,3079.0,3070.7,0.9983766233766234,Firmware total from runOne() start through sendStatus() argument evaluation.
+host_elapsed,host_timing,local_cdc_fast_v4_stability30_events.csv,30,3059.0,3080.0,3084.0,3085.0,3076.266666666667,1.0,Host trigger write through status receive.
+usb_serial_status_and_host_receive,derived,host_elapsed_ms - total_ms,30,4.0,5.5,7.0,7.0,5.566666666666666,0.0017857142857142857,"Derived transport/host overhead for trigger/status JSON path, not audio serialization."
+device_residual,derived,total_ms - capture - frontend - infer,30,0.0,0.0,0.0,0.0,0.0,0.0,Unattributed device-side residual; zero at millis() resolution.
+profiled_conv2d_total,op_profile_sample,realworld/esp32/PHASE2_OPTIMIZATION_ATTEMPTS.md,1,1572.668,1572.668,1572.668,1572.668,1572.668,0.5106064935064935,Conv2D total from profile_ops sample.
+profiled_conv2d_first_three,op_profile_sample,realworld/esp32/PHASE2_OPTIMIZATION_ATTEMPTS.md,1,1535.079,1535.079,1535.079,1535.079,1535.079,0.4984022727272727,First three CNN stem Conv2D calls.
+profiled_fc_total,op_profile_sample,realworld/esp32/PHASE2_OPTIMIZATION_ATTEMPTS.md,1,273.764,273.764,273.764,273.764,273.764,0.0888844155844156,FullyConnected total from profile_ops sample.
+profiled_unprofiled_est,op_profile_sample,realworld/esp32/PHASE2_OPTIMIZATION_ATTEMPTS.md,1,230.054,230.054,230.054,230.054,230.054,0.07469285714285714,Unprofiled estimate including BatchMatMul and small ops.
+profiled_depthwise_total,op_profile_sample,realworld/esp32/PHASE2_OPTIMIZATION_ATTEMPTS.md,1,11.828,11.828,11.828,11.828,11.828,0.00384025974025974,DepthwiseConv2D total from profile_ops sample.
+profiled_softmax_total,op_profile_sample,realworld/esp32/PHASE2_OPTIMIZATION_ATTEMPTS.md,1,6.686,6.686,6.686,6.686,6.686,0.0021707792207792207,Softmax total from profile_ops sample.
+profiled_conv_idx0,op_profile_sample,realworld/esp32/PHASE2_OPTIMIZATION_ATTEMPTS.md,1,324.408,324.408,324.408,324.408,324.408,0.10532727272727273,"Conv2D idx0, output [1,256,32,64]."
+profiled_conv_idx1,op_profile_sample,realworld/esp32/PHASE2_OPTIMIZATION_ATTEMPTS.md,1,969.348,969.348,969.348,969.348,969.348,0.3147233766233766,"Conv2D idx1, output [1,64,32,64]."
+profiled_conv_idx2,op_profile_sample,realworld/esp32/PHASE2_OPTIMIZATION_ATTEMPTS.md,1,241.323,241.323,241.323,241.323,241.323,0.07835162337662338,"Conv2D idx2, output [1,16,32,64]."

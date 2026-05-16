@@ -91,6 +91,28 @@ MODEL_KWARGS_PRESETS = {
         branchformer_bottleneck_dim=256,
         branchformer_conv_impl="depthwise_conv1d",
     ),
+    "xiao_rt1s_c32_b256_tflm": dict(
+        conv_filters=32,
+        num_layers=1,
+        head_size=32,
+        num_heads=4,
+        ff_dim=128,
+        dropout_rate=0.15,
+        fnn_units=[128],
+        branchformer_bottleneck_dim=256,
+        branchformer_conv_impl="depthwise_conv1d",
+    ),
+    "xiao_rt1s_c24_b192_tflm": dict(
+        conv_filters=24,
+        num_layers=1,
+        head_size=24,
+        num_heads=3,
+        ff_dim=96,
+        dropout_rate=0.15,
+        fnn_units=[96],
+        branchformer_bottleneck_dim=192,
+        branchformer_conv_impl="depthwise_conv1d",
+    ),
     "xiao_time16_bottleneck256": dict(
         conv_filters=64,
         num_layers=1,
@@ -119,6 +141,8 @@ def get_model_kwargs(profile: str = "base"):
         "bottleneck256": "xiao_bottleneck256",
         "bottleneck256_tflm": "xiao_bottleneck256_tflm",
         "xiao_b256_tflm": "xiao_bottleneck256_tflm",
+        "rt1s_c32_b256_tflm": "xiao_rt1s_c32_b256_tflm",
+        "rt1s_c24_b192_tflm": "xiao_rt1s_c24_b192_tflm",
         "time16_bottleneck256": "xiao_time16_bottleneck256",
     }
     name = alias.get(name, name)
