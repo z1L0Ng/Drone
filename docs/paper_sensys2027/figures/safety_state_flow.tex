@@ -1,0 +1,34 @@
+\begin{figure}[t]
+    \centering
+    \begingroup
+    \setlength{\fboxsep}{3pt}
+    \setlength{\tabcolsep}{2pt}
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{c c c c c}
+        \fbox{\parbox[c][0.56cm][c]{1.55cm}{\centering\scriptsize Recognizer\\output}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.56cm][c]{1.85cm}{\centering\scriptsize Safety-state\\mapping}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.56cm][c]{2.2cm}{\centering\scriptsize Boundary\\decision}} \\
+        \midrule
+        \fbox{\parbox[c][0.52cm][c]{1.55cm}{\centering\scriptsize emergency}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.85cm}{\centering\scriptsize safety-critical\\event}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{2.2cm}{\centering\scriptsize hold / escalate\\when allowed}} \\
+        \fbox{\parbox[c][0.52cm][c]{1.55cm}{\centering\scriptsize movement}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.85cm}{\centering\scriptsize pending\\interaction}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{2.2cm}{\centering\scriptsize require policy /\\manual override}} \\
+        \fbox{\parbox[c][0.52cm][c]{1.55cm}{\centering\scriptsize unknown}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.85cm}{\centering\scriptsize fallback\\state}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{2.2cm}{\centering\scriptsize no action /\\safe hold}}
+    \end{tabular}%
+    }
+    \endgroup
+    \caption{Intent-to-state contract. The recognizer output is not a command; it is mapped into a safety-state event that the conservative boundary can hold, reject, escalate, or log.}
+    \label{fig:safety_state_flow}
+\end{figure}

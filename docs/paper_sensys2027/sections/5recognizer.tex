@@ -1,0 +1,37 @@
+\section{On-Device Intent Recognizer}
+\label{sec:recognizer}
+
+\input{figures/recognizer_architecture}
+
+\subsection{Recognition Contract}
+
+The recognizer is the acoustic component of the safety layer. It does not generate transcripts and it does not select drone commands. Given the feature sequence $\phi(x_t)$ from an onboard audio window, it estimates
+\[
+p_{\theta}(y \mid \phi(x_t)), \qquad
+y \in \{\texttt{emergency}, \texttt{movement}, \texttt{unknown}\}.
+\]
+The predicted label and confidence are passed to the safety-state mapping in Section~\ref{sec:system}. This contract is intentionally narrower than general speech understanding: \texttt{emergency} provides evidence for safety-critical handling, \texttt{movement} provides evidence for a pending ordinary interaction, and \texttt{unknown} captures unsupported or uncertain audio. The recognizer therefore produces intent evidence for a conservative boundary, not a flight command.
+
+\subsection{Model Design}
+
+Figure~\ref{fig:recognizer_architecture} summarizes the recognizer family. The anchor recognizer uses log-mel features, a convolutional frontend for local time-frequency structure, a temporal block for evidence across the short audio window, pooling, and an intent-state head. This design keeps the model close to the system contract: it extracts enough temporal acoustic evidence to distinguish safety-relevant intent states under rotor noise, while avoiding a transcript-level objective.
+
+The deployment recognizer keeps the same input and output contract but changes the temporal path for embedded execution. It uses a compact bottlenecked representation and depthwise temporal convolution so that the exported integer model can be checked against the ESP32/TFLM operator set. The deployment recognizer is not presented as the model-quality winner. Its role is to make the same intent-state contract executable on the local runtime path.
+% Evidence: anchor model summary = weeklyresult/weekly_drone_2026w16/realworld/esp32_bench/keras_model_summary_preprocess_ext_w14_wide.txt.
+% Evidence: deployment candidate checks live under weeklyresult/weekly_drone_2026w19/xiao_rt1s_c32_b256_samearch_ts and weeklyresult/weekly_drone_2026w19/realworld/esp32_rt1s_c32_validation.
+
+\subsection{Noise-Aware Training and Model Roles}
+
+The training recipe matches the acoustic setting: the recognizer is optimized for speech mixed with drone self-noise rather than quiet indoor commands. The anchor path uses clean-to-noisy teacher-student transfer so that the noisy recognizer can inherit structure from a cleaner teacher while learning the rotor-contaminated condition. The objective combines supervised cross-entropy with an embedding-alignment term:
+\[
+\mathcal{L}
+=
+\mathcal{L}_{\mathrm{CE}}(y, p_{\theta})
+ + \lambda(t)\,
+\lVert h_s(\phi(x)) - P h_t(\phi(x_{\mathrm{clean}})) \rVert_2^2,
+\]
+where $h_s$ and $h_t$ are student and teacher embeddings, $P$ aligns embedding dimensions, and $\lambda(t)$ schedules the transfer weight during training.
+% Evidence: embed_only distillation and warmup/ramp settings are in weeklyresult/weekly_drone_2026w14/preprocess_ext/run_config.json.
+
+The paper uses the resulting models in two distinct roles. The \emph{anchor recognizer} is the model-quality reference used to characterize noisy intent-state recognition. The \emph{deployment recognizer} is the runtime candidate used to exercise the embedded event path. Keeping these roles separate prevents a common overclaim: a model can be better for deployment without being the strongest offline recognizer, and a strong offline recognizer does not automatically satisfy operator, memory, or response-time constraints on the board.
+% Internal mapping: anchor recognizer = w14/preprocess_ext; current runtime deployment candidate = xiao_rt1s_c32_b256_samearch_ts; previous slower deployment baseline = B_small_teacher_student.

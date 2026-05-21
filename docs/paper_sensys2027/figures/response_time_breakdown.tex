@@ -1,0 +1,28 @@
+\begin{figure}[t]
+    \centering
+    \begingroup
+    \setlength{\fboxsep}{3pt}
+    \setlength{\tabcolsep}{2pt}
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{c c c c c c c}
+        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Audio\\capture}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Feature\\frontend}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize TFLM\\invoke}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Event\\report}} \\
+        \multicolumn{7}{c}{$\downarrow$} \\
+        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Bridge\\decision}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Command\\boundary}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Ack /\\timeout}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize State\\log}}
+    \end{tabular}%
+    }
+    \endgroup
+    \caption{Response-time evaluation schematic. The paper should report timing by stage and separate board-side inference, first-window end-to-end latency, and steady-state event period.}
+    \label{fig:response_time_breakdown}
+\end{figure}

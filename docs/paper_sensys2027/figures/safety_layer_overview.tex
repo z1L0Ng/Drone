@@ -1,0 +1,29 @@
+\begin{figure*}[t]
+    \centering
+    \begingroup
+    \setlength{\fboxsep}{4pt}
+    \setlength{\tabcolsep}{3pt}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{c c c c c c c}
+        \fbox{\parbox[c][0.72cm][c]{2.35cm}{\centering\small Nearby person\\voice command}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.72cm][c]{2.55cm}{\centering\small Rotor-noisy\\onboard audio}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.72cm][c]{2.85cm}{\centering\small On-device\\intent evidence}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.72cm][c]{3.05cm}{\centering\small Safety-state\\interaction layer}}
+        \\
+        &&&&&& $\downarrow$ \\
+        \fbox{\parbox[c][0.72cm][c]{2.35cm}{\centering\small Existing UAV\\safety mechanisms}}
+        & $\parallel$ &
+        \fbox{\parbox[c][0.72cm][c]{2.55cm}{\centering\small Operator /\\manual override}}
+        & $\parallel$ &
+        \fbox{\parbox[c][0.72cm][c]{2.85cm}{\centering\small Conservative\\control boundary}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.72cm][c]{3.05cm}{\centering\small State/action log\\and drone response}}
+    \end{tabular}%
+    }
+    \endgroup
+    \caption{Paper-level schematic. The proposed voice-command layer is an additional UAV safety layer: natural speech is converted into onboard intent evidence and mediated by a conservative boundary instead of being treated as a direct flight-command channel.}
+    \label{fig:safety_layer_overview}
+\end{figure*}

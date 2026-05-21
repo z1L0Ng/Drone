@@ -22,23 +22,27 @@
 
 \begin{document}
 
-\title{\sys: Safety-State Mediated Voice Interaction for Small UAVs Under Rotor Noise}
+\title{\sys: On-Device Intent Recognition for Voice-Driven UAV Safety Interaction Under Rotor Noise}
 
 \begin{abstract}
-Speaking to a nearby drone is a natural and lightweight interaction mode, but rotor self-noise and flight-control risk make direct speech-to-flight mapping unsafe. This paper presents a safety-state mediated voice interaction architecture for small UAVs. The system converts short onboard audio windows into constrained intent/state events under rotor self-noise and passes those events to a conservative control boundary rather than treating them as flight commands. The recognizer is deliberately narrow: emergency denotes safety-critical handling, movement denotes pending ordinary interaction that still needs downstream policy, and unknown/fallback keeps unsupported audio out of the control stack. We instantiate this architecture with a rotor-noise-centered anchor recognizer and an ESP32/TFLM deployment candidate that emits local safety events through microphone capture, log-mel extraction, int8 inference, and USB CDC reporting on a XIAO ESP32-S3. Existing evidence supports the noisy-set recognizer anchor and the embedded runtime event path. Labeled real-world acoustic behavior, bridge validation, and live-flight safety claims remain outside the completed evidence for this draft.
+% TODO: Finalize the abstract after the story and evaluation structure settle.
+Speaking to a nearby drone is a natural and lightweight interaction mode, but rotor self-noise and flight-control risk make naive speech-to-command execution unsafe. This paper presents a drone-side voice-driven UAV safety interaction layer that turns short onboard audio windows into auditable intent/state events for a conservative control bridge. The recognizer is deliberately narrow: movement captures ordinary control-oriented speech, emergency captures safety-critical speech, and unknown keeps unsupported audio out of the control stack. In this design, intent recognition is the safety mechanism that makes talk-to-the-drone interaction more accountable: it constrains the command vocabulary, maps voice intent into safety-relevant states, and logs confidence before any action policy runs. We implement the recognizer with a noise-aware anchor model and an embedded student for ESP32/TFLM deployment. The prototype runs microphone capture, log-mel extraction, int8 inference, and USB CDC event reporting on a XIAO ESP32-S3. Offline noisy-set results establish the recognizer anchor, while board-side runtime measurements establish the embedded event path. The evaluation plan covers baseline comparison, rotor-noise robustness, deployment feasibility, speaker and language robustness protocols, and reproducible artifact packaging, with system-level validation required before any live-flight safety claim.
+
 % TODO(evidence): Before submission, add labeled real-world acoustic validation, false-trigger accounting, and no-propeller control-bridge validation. Current repo evidence supports noisy-set recognizer results and ESP32 runtime stability only.
 % Evidence map: anchor recognizer = weeklyresult/weekly_drone_2026w14/preprocess_ext; embedded student = weeklyresult/weekly_drone_2026w17/B_small_teacher_student; ESP32 runtime = weeklyresult/weekly_drone_2026w17/realworld/esp32_bench/local_cdc_fast_v4_stability30_report.md.
 \end{abstract}
 
 \maketitle
 
+\input{figures/safety_layer_overview}
+
 \input{sections/1introduction}
-\input{sections/2motivation}
-\input{sections/3architecture}
-\input{sections/4recognizer}
-\input{sections/5prototype}
-\input{sections/6evaluation}
-\input{sections/7relatedwork}
+\input{sections/2relatedwork}
+\input{sections/3motivation}
+\input{sections/4architecture}
+\input{sections/5recognizer}
+\input{sections/6prototype}
+\input{sections/7evaluation}
 \input{sections/8conclusion}
 
 \bibliographystyle{ACM-Reference-Format}

@@ -1,0 +1,27 @@
+\section{Background and Motivation}
+\label{sec:motivation}
+
+\begin{figure}[b]
+    \centering
+    \includegraphics[width=\linewidth]{cleanvsnoisy.png}
+    \caption{Clean versus rotor-noisy log-mel example used for motivation. Quantitative results are reported separately.}
+    \label{fig:clean_vs_noisy}
+\end{figure}
+
+\subsection{Voice as an Additional UAV Safety Layer}
+
+Voice is a natural way for people to interact with a nearby drone because it does not require opening an application, finding a controller, or relying on a network path. This matters most when the interaction is time-sensitive: a person may need to ask the drone to stop, hold position, or respond to a safety-critical situation while the vehicle is already close to people or objects. The design goal is therefore not to replace existing UAV safety mechanisms. It is to add a voice-facing layer that can expose nearby human intent to the drone-side control stack.
+
+This layer must remain conservative. Speech is ambiguous, background audio is uncontrolled, and a drone can create unsafe behavior if a noisy utterance is treated as a direct command. Work on always-on and embedded speech systems already shows that false accepts, misses, latency, and runtime constraints matter in addition to top-line accuracy \cite{rybakov2020streamingkws,banbury2021mlperftiny}. For a UAV, these errors have a physical interpretation. The voice layer should therefore produce evidence for a downstream safety decision rather than directly controlling the vehicle. In this paper, the output of speech recognition is an intent-state event that can be logged, ignored, held, escalated, or forwarded by a conservative control boundary.
+
+\subsection{Intent States Instead of Flight Commands}
+
+Transcript-first processing is not the natural first target for this setting. Small-footprint keyword spotting shows that limited-vocabulary speech interfaces can be compact enough for always-on and embedded use \cite{sainath2015cnn_kws,warden2018speechcommands,zhang2017helloedge}, while spoken language understanding work has shown that intent decisions can be learned directly from speech without full transcripts \cite{lugosch19_interspeech,kuo20_interspeech,mhiri20_interspeech}. For a nearby drone, the question is not whether every word can be recovered. The question is whether a short audio window provides enough evidence for a small set of safety-relevant interaction states.
+
+The paper uses a deliberately narrow intent contract: \emph{emergency}, \emph{movement}, and \emph{unknown}. Emergency represents a safety-critical event that can be handled differently by the bridge. Movement represents ordinary control-oriented speech, but it remains pending until a downstream policy supplies direction, authorization, and vehicle-state checks. Unknown represents unsupported, uncertain, or out-of-contract audio. This contract is the reason the recognizer can participate in a safety layer: it prevents every utterance from being forced into an actionable command class.
+
+\subsection{Rotor Noise and Local Deployment Constraints}
+
+Small drones create their own acoustic interference. The microphone is close to the rotors, the noise changes with operating state, and the resulting speech condition differs from quiet indoor command recognition. Prior UAV speech-interface and UAV-noise studies motivate this setting \cite{oneata19_interspeech,oneata2021multimodal,miesikowska2021uavnoise,park2023uavvehicle}, and broader drone-audition work treats platform ego-noise as a core obstacle for aerial audio sensing \cite{chevtchenko2025drone_ssl}. The clean-versus-noisy example in Figure~\ref{fig:clean_vs_noisy} illustrates the kind of acoustic shift that the system must handle; the quantitative evidence is reported in Section~\ref{sec:evaluation}.
+
+The same safety motivation also argues for local inference. A voice safety layer should remain available when a phone application is not open, a network path is unreliable, or a cloud service would add avoidable dependency. Local deployment turns recognition into a systems problem: the model must fit the embedded operator set and memory budget, report timing and confidence, and expose enough state for the bridge to audit the decision. Microcontroller speech runtimes and benchmarks make this constraint explicit by treating kernels, memory, latency, energy, and target hardware as part of the result \cite{david2021tflm,lai2018cmsisnn,banbury2021mlperftiny}. A runtime log can show that the board produced labels and timings, but it cannot by itself show labeled real-world semantic accuracy or validated drone safety. The evaluation therefore separates recognition quality, runtime feasibility, response time, and bridge behavior.

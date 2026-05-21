@@ -1,0 +1,44 @@
+\section{System Architecture}
+\label{sec:system}
+
+\input{figures/system_architecture}
+\input{figures/safety_state_flow}
+
+\subsection{Voice-to-State Pipeline}
+
+The system is an additional voice-facing safety layer for a nearby drone. It does not replace the drone's existing safety mechanisms, and it does not expose speech as a direct flight-command channel. Instead, the layer converts rotor-noisy audio into an auditable event stream that a conservative boundary can inspect before any action policy is allowed to respond. Figure~\ref{fig:system_architecture} shows this pipeline.
+
+Let $x_t$ be an onboard audio window at time $t$ and let $\phi(\cdot)$ denote the acoustic frontend. The recognizer estimates
+\[
+(\hat{y}_t, c_t) = f_{\theta}(\phi(x_t)),
+\qquad
+\hat{y}_t \in \{\texttt{emergency}, \texttt{movement}, \texttt{unknown}\},
+\]
+where $c_t$ is the confidence attached to the predicted intent. The raw prediction is not yet a command. A safety-state mapping converts it into a bridge-visible event:
+\[
+e_t =
+\begin{cases}
+\texttt{fallback}, & c_t < \tau,\\
+g(\hat{y}_t), & c_t \geq \tau,
+\end{cases}
+\]
+where $g(\cdot)$ maps recognized intent into one of the states in Figure~\ref{fig:safety_state_flow}. The threshold $\tau$ is a guardrail for uncertain audio; it must be tuned and reported only after labeled real-world acoustic validation.
+% TODO(validation): Tune and report tau only after labeled real-world acoustic validation.
+
+\subsection{Intent-State Contract and Control Boundary}
+
+The intent-state contract has three roles. \texttt{Emergency} represents a safety-critical event that can request hold, stop, or operator escalation. \texttt{Movement} represents ordinary control-oriented speech, but remains pending because it does not specify a safe direction, distance, velocity, or authorization by itself. \texttt{Unknown} represents unsupported, uncertain, or out-of-contract audio and maps to fallback/no-action behavior.
+
+This contract is the point where speech recognition becomes part of the safety layer rather than a standalone classifier. A movement-like utterance without a policy source remains a logged non-command. A low-confidence event becomes fallback. A repeated emergency event can be escalated or held by the bridge without claiming that the recognizer alone has verified danger. The conservative boundary therefore sees recognizer output as evidence, not actuation. Its job is to decide whether the event is ignored, held, escalated, or forwarded under the current vehicle and operator state.
+% TODO(validation): Replace these design semantics with a measured bridge-state transition table after no-propeller validation.
+
+\subsection{Runtime Record and Audit Log}
+
+The runtime path must report enough information for the bridge to audit each decision. The embedded recognizer captures an audio window, computes the frontend, runs an integer TFLM-compatible model, and emits the predicted label, confidence, timing fields, and raw-output diagnostics. The paper separates this runtime contract from the model-quality claim: offline recognizer results evaluate whether the intent states are learned under rotor noise, while board-side runtime measurements evaluate whether the event source can execute on the embedded path.
+
+The bridge record has the form
+\[
+\ell_t = (e_t, c_t, \Delta_t, s_t, a_t, r_t),
+\]
+where $\Delta_t$ is event timing, $s_t$ is the bridge or safety state before the event, $a_t$ is the selected boundary action, and $r_t$ records acknowledgement, timeout, or rejection. This log is the evidence object for later system evaluation. It can show whether the boundary rejected a movement event, held on emergency, preserved manual override, or timed out; it cannot by itself establish flight safety. Gate and buffer logic may reduce continuous inference cost, but those mechanisms must be evaluated for false triggers before they are used as part of the safety argument.
+% TODO(validation): Add no-propeller bridge logs and gate false-trigger accounting before claiming closed-loop safety behavior.
