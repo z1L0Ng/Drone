@@ -1,42 +1,100 @@
 \section{Evaluation}
 \label{sec:evaluation}
 
-The evaluation asks whether a voice-driven UAV safety layer can convert speech into useful, auditable intent-state events under the constraints of a nearby drone. We separate recognition quality from runtime feasibility and from control-boundary behavior. This separation is important: a high offline score does not by itself establish a safe drone interaction, and a stable embedded runtime does not by itself establish semantic accuracy in real use.
+The evaluation is organized around five questions. The first two questions evaluate the recognizer as a source of intent events. The third question evaluates whether the event source can run on the embedded path with usable timing. The last two questions evaluate whether those events can support the safety-interaction story through a control-chain protocol and a user-facing study. This organization keeps recognition quality, runtime feasibility, and safety behavior as separate claims.
+
+\subsection{RQ1: How does the recognizer compare with baselines?}
+
+RQ1 compares the model-quality anchor, the ESP32 runtime candidate, and baseline recognizers under matched noisy-set conditions. The main metrics are accuracy, macro F1, and emergency precision/recall/F1. Emergency is reported explicitly because it is the safety-critical class, while macro F1 keeps movement and unknown from being hidden by a single aggregate score.
+
+\begin{table}[t]
+    \centering
+    \scriptsize
+    \caption{Offline noisy-set recognition evidence. These results support recognizer quality only; they do not validate board-side semantic accuracy or UAV safety behavior.}
+    \label{tab:offline_recognition_results}
+    \begin{tabular}{@{}p{0.28\linewidth}cccp{0.25\linewidth}@{}}
+        \toprule
+        Model role & Acc. & Macro F1 & Emerg. P/R/F1 & Claim boundary \\
+        \midrule
+        Model-quality anchor & 0.88 & 0.88 & 0.96 / 0.79 / 0.87 & Offline noisy-set anchor \\
+        ESP32 runtime candidate & 0.85 & 0.85 & 0.95 / 0.70 / 0.81 & Deployment candidate, not safety validation \\
+        Baseline recognizers & -- & -- & -- & Add after matched split audit \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+% Evidence: model-quality anchor row = weeklyresult/weekly_drone_2026w14/preprocess_ext/classification_report_noisy.txt.
+% Evidence: ESP32 runtime candidate row = weeklyresult/weekly_drone_2026w19/xiao_rt1s_c32_b256_samearch_ts/classification_report_noisy.txt.
+% TODO(results): Add baseline rows only after verifying common split, support count, frontend, and label mapping.
+
+This table should not become a leaderboard by itself. The final baseline comparison should include compact speech baselines and any alternate frontend variants only after their run configurations are comparable to the anchor. The text should report whether the runtime candidate preserves enough emergency behavior to justify deployment experiments, not whether it replaces the model-quality anchor.
+
+\subsection{RQ2: How robust is the recognizer to rotor noise?}
+
+RQ2 measures how recognition changes as the acoustic condition moves from easier speech to stronger rotor-noisy speech. The expected result is a robustness curve, not a single accuracy number. The curve should report accuracy, macro F1, emergency recall, and unknown false accepts across noise conditions. If the noise is mixed offline, the x-axis can be SNR. If the noise comes from recorded rotor playback or operating conditions, the x-axis should name the condition rather than imply a calibrated acoustic level.
+
+Table~\ref{tab:noise_robustness_plan} is the placeholder for the robustness evidence. The paper should avoid claiming general noise robustness unless each point on the curve has a source result file and a clearly described acoustic condition.
+
+\begin{table}[t]
+    \centering
+    \scriptsize
+    \caption{Rotor-noise robustness evidence plan. Rows become results only after matched source files are attached.}
+    \label{tab:noise_robustness_plan}
+    \begin{tabular}{@{}p{0.24\linewidth}p{0.30\linewidth}p{0.25\linewidth}p{0.12\linewidth}@{}}
+        \toprule
+        Condition & What changes & Metrics & Status \\
+        \midrule
+        Anchor noisy set & Current paper anchor condition & Acc., macro F1, emergency P/R/F1 & Existing \\
+        SNR sweep & Offline rotor-noise level & Acc., macro F1, emergency recall, unknown false accepts & TODO \\
+        Rotor playback & Recorded or bench-played rotor noise & Same metrics plus condition label & TODO \\
+        Live collection & Speaker and drone geometry & Per-condition event accuracy and misses & TODO \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+% Evidence: Anchor noisy-set result = weeklyresult/weekly_drone_2026w14/preprocess_ext/classification_report_noisy.txt.
+% TODO(results): Add source paths for each SNR, rotor-playback, or live-collection row before reporting the row as a result.
+
+This question is also where frontend comparisons belong. Log-mel, MFCC, and any compact embedded representation should be compared under the same split and reporting format. Table~\ref{tab:frontend_ablation_plan} lists the frontend comparison planned for the draft.
+
+\begin{table}[t]
+    \centering
+    \scriptsize
+    \caption{Frontend-ablation plan for comparing acoustic representations under matched noisy-set conditions.}
+    \label{tab:frontend_ablation_plan}
+    \begin{tabular}{@{}p{0.25\linewidth}p{0.31\linewidth}p{0.34\linewidth}@{}}
+        \toprule
+        Frontend & Purpose & Required evidence \\
+        \midrule
+        Log-mel & Current anchor representation & Matched noisy report and run config \\
+        MFCC & Compact speech baseline frontend & Same split, model family, and metrics \\
+        Compact embedded frontend & Deployment-oriented representation & Runtime-compatible export and noisy report \\
+        Normalized/robust frontend & Noise-robustness comparison & Matched condition labels and report paths \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+% TODO(results): Add rotor-noise robustness curve with source paths for each condition.
+% TODO(results): Add frontend-ablation table with matched run_config.json and classification_report_noisy.txt paths.
+% TODO(boundary): Do not describe untested SNRs, new microphones, or live rotor conditions as validated.
+
+\subsection{RQ3: Can the ESP32 path generate events in real time?}
+
+RQ3 evaluates the embedded event path: audio capture, frontend computation, integer recognizer invocation, and event reporting. Figure~\ref{fig:response_time_breakdown} shows the timing decomposition. The key point is that ``real time'' is not one number. The paper reports board-side invoke time, first-window end-to-end latency, steady-state event period, and BLE inter-arrival time separately because they support different claims.
 
 \input{figures/response_time_breakdown}
 
-\subsection{Recognition Quality and Robustness}
-
-The first evaluation axis measures the recognizer as an intent-state source. The comparison should include the noise-aware anchor recognizer, the embedded deployment candidate, and baseline recognizers trained and tested under matched conditions. The primary table should report overall accuracy, macro F1, and per-state precision, recall, and F1 for movement, emergency, and unknown. Emergency recall and precision show whether safety-critical speech is preserved; movement performance shows whether ordinary interaction remains usable; unknown false accepts show whether unsupported speech is kept out of the control path.
-
-This axis should also include the frontend and robustness studies. The frontend study compares log-mel, MFCC, and any compact embedded representation under the same split and model family. The noise robustness curve then evaluates how recognition changes as rotor-noise conditions vary. When noise is mixed offline, the curve may be indexed by SNR. When noise is collected from drone recordings, bench playback, or operating conditions, the x-axis should name the condition rather than imply a calibrated acoustic level. Speaker, distance, and language variation belong in this same recognition axis, but only as controlled robustness protocols unless labeled data are available.
-% TODO(results): Add the anchor recognizer row from weeklyresult/weekly_drone_2026w14/preprocess_ext/classification_report_noisy.txt after the final table format is fixed.
-% TODO(results): Add deployment-candidate recognition rows only from comparable classification_report_noisy.txt files after checking run_config comparability.
-% TODO(results): Add baseline rows after the baseline runs are approved for paper use; do not merge or cite unreviewed W19 baseline artifacts as final results.
-% TODO(results): Add frontend-ablation table with exact run_config.json and classification_report_noisy.txt paths for each representation.
-% TODO(results): Add rotor-noise robustness curve with one source result path per point and explicit condition labels.
-% TODO(protocol): Add speaker, distance, angle, and language/phrase-set collection protocol before reporting generalization claims.
-
-\subsection{Deployment Feasibility and Response Time}
-
-The second evaluation axis measures whether the intent-state source can run as an embedded event generator. Deployment comparison should report the constraints that matter for ESP32/TFLM: exported artifact size, quantization mode, operator compatibility, tensor-arena or memory budget, invocation success, and the model role in the system. This comparison is not only a model-quality leaderboard. It shows which recognizers can plausibly produce local safety events under the board's runtime constraints.
-
-Response time should be measured as a path, not as a single number. The breakdown should separate audio windowing, feature extraction, inference, event serialization, host or bridge handling, and any downstream command or state-log operation. The paper should distinguish first-window latency, steady-state event period, and board-side inference time, because each supports a different claim. Runtime stability on the board supports embedded feasibility; it does not establish labeled real-world semantic accuracy.
-% TODO(results): Add deployment comparison table for the anchor recognizer, current ESP32/TFLM candidate, and baselines with artifact paths and operator-precheck paths.
-% TODO(results): Add memory and tensor-arena budget values only after confirming the active artifact against realworld/esp32/phase2_artifacts and the current runtime model manifest.
-% TODO(results): Add response-time breakdown for capture, frontend, inference, reporting, bridge decision, and command/state logging.
-% TODO(boundary): Keep first-window latency, steady-state throughput, and board-side invoke time as separate rows; do not collapse them into one real-time claim.
-% TODO(results): Add quantization-fidelity probes comparing desktop float, desktop int8, and board int8 outputs on the same inputs.
-
-\subsection{Safety Interaction, User Testing, and Artifacts}
-
-The third evaluation axis connects intent-state events to the UAV interaction boundary. The bridge evaluation should replay or collect movement, emergency, unknown, silence/background, and repeated-speech cases while logging the predicted state, confidence, bridge state before the event, selected action, acknowledgement or timeout, and manual override status. The expected result is not that speech directly flies the drone; it is that voice events are converted into auditable decisions that can be held, rejected, or forwarded by a conservative policy.
-
-The user-facing study and demo should then test whether the interaction is understandable under realistic conditions. The protocol should vary speaker, phrase wording, distance, angle, rotor-noise condition, and background condition, while recording both recognition outcomes and state-log behavior. A short demo video can illustrate the full interaction path, but the paper should treat it as qualitative system evidence unless it is paired with labeled logs and a repeatable protocol.
-
-The artifact plan should make the evaluation reproducible. The release package should include run configurations for reported recognizers, result manifests for all tables and figures, export metadata for embedded artifacts, ESP32 runtime logs, bridge-log schemas, and scripts or notebooks that regenerate paper figures from tracked files.
-% TODO(results): Add no-propeller or grounded bridge logs before describing bridge behavior as validated.
-% TODO(results): Add false-trigger accounting for silence/background and repeated-speech cases before including gate behavior as a result.
-% TODO(protocol): Add user-study protocol with participant metadata, utterance script, test conditions, logging fields, and consent/IRB status if needed.
-% TODO(results): Add demo-video path and the exact logs that correspond to the recorded demonstration.
-% TODO(artifact): Add artifact manifest path once the reproducibility package is assembled and reviewed.
+\begin{table}[t]
+    \centering
+    \scriptsize
+    \caption{Runtime and transport evidence for the ESP32 path. These measurements support deployment feasibility and event throughput only.}
+    \label{tab:runtime_evidence}
+    \begin{tabular}{@{}p{0.26\linewidth}p{0.30\linewidth}p{0.25\linewidth}p{0.11\linewidth}@{}}
+        \toprule
+        Evidence source & Key measurement & Supported claim & Boundary \\
+        \midrule
+        Local CDC 30-run & 30/30 success; invoke p50 627 ms; total p50 1605 ms & Board-side event generation & Not semantic validation \\
+        Dual-core full path & 120/120 success; output p95 1005 ms; first window 1606 ms & Steady-state 1 s throughput & No first-window $<1$ s claim \\
+        BLE W30 run & 30/30 success; inter-arrival p50 990 ms; p95 1021 ms & BLE event transport & No flight validation \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+% Evidence: Local CDC 30-run = weeklyresult/weekly_drone_2026w19/realworld/esp32_rt1s_c32_validation/validation_summary.json and rt1s_c32_local_cdc_fast30_summary.csv.
+% Evidence: Dual-core full path = weeklyresult/weekly_drone_2026w19/realworld/esp32_dual_core_pipeline_validation/mode_c_full_rt1s_summary.json.

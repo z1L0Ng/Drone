@@ -16,7 +16,7 @@
         \fbox{\parbox[c][0.48cm][c]{1.35cm}{\centering\scriptsize Pooled\\embedding}}
         & $\rightarrow$
         &
-        \fbox{\parbox[c][0.48cm][c]{1.35cm}{\centering\scriptsize Intent-state\\head}}
+        \fbox{\parbox[c][0.48cm][c]{1.35cm}{\centering\scriptsize 3-way\\classifier}}
         \\
         \scriptsize Embedded
         &
@@ -29,10 +29,10 @@
         \fbox{\parbox[c][0.48cm][c]{1.35cm}{\centering\scriptsize Int8 TFLM\\artifact}}
         & $\rightarrow$
         &
-        \fbox{\parbox[c][0.48cm][c]{1.35cm}{\centering\scriptsize Intent-state\\head}}
+        \fbox{\parbox[c][0.48cm][c]{1.35cm}{\centering\scriptsize 3-way\\classifier}}
     \end{tabular}%
     }
     \endgroup
-    \caption{Recognizer design. The anchor recognizer maps log-mel inputs through a convolutional frontend and temporal block before the intent-state head. The deployment recognizer keeps the same event contract while using an int8 TFLM path for ESP32 deployment.}
+    \caption{Recognizer design. The anchor recognizer maps log-mel inputs through a convolutional frontend and temporal Branchformer block before three-way intent classification. The embedded student keeps the same intent contract while using an int8 TFLM path for ESP32 deployment.}
     \label{fig:recognizer_architecture}
 \end{figure}

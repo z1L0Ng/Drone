@@ -29,6 +29,23 @@ where $g(\cdot)$ maps recognized intent into one of the states in Figure~\ref{fi
 
 The intent-state contract has three roles. \texttt{Emergency} represents a safety-critical event that can request hold, stop, or operator escalation. \texttt{Movement} represents ordinary control-oriented speech, but remains pending because it does not specify a safe direction, distance, velocity, or authorization by itself. \texttt{Unknown} represents unsupported, uncertain, or out-of-contract audio and maps to fallback/no-action behavior.
 
+Table~\ref{tab:intent_state_contract} summarizes the contract exposed to the control boundary. The table is a design contract, not a completed validation result; the measured transition behavior must come from later bridge logs.
+
+\begin{table}[t]
+    \centering
+    \caption{Intent-state contract exposed to the control boundary.}
+    \label{tab:intent_state_contract}
+    \begin{tabular}{p{0.22\linewidth}p{0.31\linewidth}p{0.35\linewidth}}
+        \toprule
+        Event & Meaning \\
+        \midrule
+        \texttt{emergency} & Safety-critical speech \\
+        \texttt{movement} & Ordinary control-oriented request  \\
+        \texttt{unknown} & Unsupported or uncertain audio  \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
 This contract is the point where speech recognition becomes part of the safety layer rather than a standalone classifier. A movement-like utterance without a policy source remains a logged non-command. A low-confidence event becomes fallback. A repeated emergency event can be escalated or held by the bridge without claiming that the recognizer alone has verified danger. The conservative boundary therefore sees recognizer output as evidence, not actuation. Its job is to decide whether the event is ignored, held, escalated, or forwarded under the current vehicle and operator state.
 % TODO(validation): Replace these design semantics with a measured bridge-state transition table after no-propeller validation.
 

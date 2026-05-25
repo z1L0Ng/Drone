@@ -14,6 +14,8 @@
 \usepackage{enumitem}
 \usepackage{xcolor}
 \usepackage{hyperref}
+\setlength{\marginparwidth}{2cm}
+\usepackage{todonotes}
 
 \setlist[itemize]{leftmargin=*,topsep=2pt,itemsep=1pt}
 \graphicspath{{figures/}}
@@ -25,16 +27,12 @@
 \title{\sys: On-Device Intent Recognition for Voice-Driven UAV Safety Interaction Under Rotor Noise}
 
 \begin{abstract}
-% TODO: Finalize the abstract after the story and evaluation structure settle.
+\todo{Can be done at the end.}
 Speaking to a nearby drone is a natural and lightweight interaction mode, but rotor self-noise and flight-control risk make naive speech-to-command execution unsafe. This paper presents a drone-side voice-driven UAV safety interaction layer that turns short onboard audio windows into auditable intent/state events for a conservative control bridge. The recognizer is deliberately narrow: movement captures ordinary control-oriented speech, emergency captures safety-critical speech, and unknown keeps unsupported audio out of the control stack. In this design, intent recognition is the safety mechanism that makes talk-to-the-drone interaction more accountable: it constrains the command vocabulary, maps voice intent into safety-relevant states, and logs confidence before any action policy runs. We implement the recognizer with a noise-aware anchor model and an embedded student for ESP32/TFLM deployment. The prototype runs microphone capture, log-mel extraction, int8 inference, and USB CDC event reporting on a XIAO ESP32-S3. Offline noisy-set results establish the recognizer anchor, while board-side runtime measurements establish the embedded event path. The evaluation plan covers baseline comparison, rotor-noise robustness, deployment feasibility, speaker and language robustness protocols, and reproducible artifact packaging, with system-level validation required before any live-flight safety claim.
 
-% TODO(evidence): Before submission, add labeled real-world acoustic validation, false-trigger accounting, and no-propeller control-bridge validation. Current repo evidence supports noisy-set recognizer results and ESP32 runtime stability only.
-% Evidence map: anchor recognizer = weeklyresult/weekly_drone_2026w14/preprocess_ext; embedded student = weeklyresult/weekly_drone_2026w17/B_small_teacher_student; ESP32 runtime = weeklyresult/weekly_drone_2026w17/realworld/esp32_bench/local_cdc_fast_v4_stability30_report.md.
 \end{abstract}
 
 \maketitle
-
-\input{figures/safety_layer_overview}
 
 \input{sections/1introduction}
 \input{sections/2relatedwork}

@@ -1,0 +1,24 @@
+\begin{figure}[t]
+    \centering
+    \begingroup
+    \setlength{\fboxsep}{3pt}
+    \setlength{\tabcolsep}{2pt}
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{c c c c}
+        \fbox{\parbox[c][1.25cm][c]{1.7cm}{\centering\scriptsize 1. User speaks\\near UAV}}
+        &
+        \fbox{\parbox[c][1.25cm][c]{1.7cm}{\centering\scriptsize 2. ESP32 emits\\intent event}}
+        &
+        \fbox{\parbox[c][1.25cm][c]{1.7cm}{\centering\scriptsize 3. Bridge logs\\decision}}
+        &
+        \fbox{\parbox[c][1.25cm][c]{1.7cm}{\centering\scriptsize 4. UAV or proxy\\shows response}} \\
+        \scriptsize Speech input
+        & \scriptsize Label/confidence
+        & \scriptsize Hold/reject/forward
+        & \scriptsize Logged outcome
+    \end{tabular}%
+    }
+    \endgroup
+    \caption{Demo storyboard placeholder. The final figure should pair the visual demonstration with synchronized event and bridge logs; by itself, the storyboard is explanatory rather than validation evidence.}
+    \label{fig:demo_storyboard}
+\end{figure}

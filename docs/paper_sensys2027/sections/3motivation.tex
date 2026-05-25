@@ -12,7 +12,30 @@
 
 Voice is a natural way for people to interact with a nearby drone because it does not require opening an application, finding a controller, or relying on a network path. This matters most when the interaction is time-sensitive: a person may need to ask the drone to stop, hold position, or respond to a safety-critical situation while the vehicle is already close to people or objects. The design goal is therefore not to replace existing UAV safety mechanisms. It is to add a voice-facing layer that can expose nearby human intent to the drone-side control stack.
 
-This layer must remain conservative. Speech is ambiguous, background audio is uncontrolled, and a drone can create unsafe behavior if a noisy utterance is treated as a direct command. Work on always-on and embedded speech systems already shows that false accepts, misses, latency, and runtime constraints matter in addition to top-line accuracy \cite{rybakov2020streamingkws,banbury2021mlperftiny}. For a UAV, these errors have a physical interpretation. The voice layer should therefore produce evidence for a downstream safety decision rather than directly controlling the vehicle. In this paper, the output of speech recognition is an intent-state event that can be logged, ignored, held, escalated, or forwarded by a conservative control boundary.
+This layer must remain conservative. Speech is ambiguous, background audio is uncontrolled, and a drone can create unsafe behavior if a noisy utterance is treated as a direct command. Work on always-on and embedded speech systems already shows that false accepts, misses, latency, and runtime constraints matter in addition to top-line accuracy \cite{rybakov2020streamingkws,banbury2021mlperftiny}. For a UAV, these errors have a physical interpretation. The voice layer should therefore produce evidence for a downstream safety decision rather than directly controlling the vehicle. In this paper, the output of speech recognition is an intent-state event that can be logged, ignored, held, escalated, or forwarded by a conservative control boundary. The design goal is therefore not to replace existing UAV safety mechanisms. It is to add a voice-facing layer that can expose nearby human intent to the drone-side control stack.
+
+\begin{table}[t]
+    \centering
+    \caption{How Akouo complements existing UAV safety mechanisms.}
+    \label{tab:safety_components}
+    \begin{tabular}{p{0.30\linewidth}p{0.62\linewidth}}
+        \toprule
+        Existing mechanism & Complementary role of Akouo \\
+        \midrule
+        Obstacle avoidance &
+        Senses nearby objects, but not a person's spoken intent. Akouo adds a speech-based intent event. \\
+        \addlinespace
+        Geofencing &
+        Constrains where the UAV may operate, but does not capture local human requests. Akouo adds a nearby speech channel. \\
+        \addlinespace
+        Failsafe landing &
+        Responds to vehicle or link failures. Akouo can surface safety-critical speech before such a failure state is reached. \\
+        \addlinespace
+        Manual controller &
+        Provides explicit control, but requires device access. Akouo adds hands-free input near the UAV. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 \subsection{Intent States Instead of Flight Commands}
 
