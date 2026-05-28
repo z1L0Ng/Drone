@@ -2,28 +2,25 @@
     \centering
     \begingroup
     \setlength{\fboxsep}{3pt}
-    \setlength{\tabcolsep}{3pt}
+    \setlength{\tabcolsep}{2pt}
     \resizebox{\linewidth}{!}{%
-    \begin{tabular}{c c c c c c c}
-        \multicolumn{7}{c}{\scriptsize Voice-facing path} \\
-        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Nearby\\speech}}
+    \begin{tabular}{c c c c c c c c c}
+        \fbox{\parbox[c][0.54cm][c]{1.25cm}{\centering\scriptsize Nearby\\speech}}
         & $\rightarrow$ &
-        \fbox{\parbox[c][0.52cm][c]{1.55cm}{\centering\scriptsize Onboard\\recognizer}}
+        \fbox{\parbox[c][0.54cm][c]{1.55cm}{\centering\scriptsize ESP32 local\\recognition}}
         & $\rightarrow$ &
-        \fbox{\parbox[c][0.52cm][c]{1.45cm}{\centering\scriptsize Intent\\event}}
+        \fbox{\parbox[c][0.54cm][c]{1.35cm}{\centering\scriptsize Intent\\event}}
         & $\rightarrow$ &
-        \fbox{\parbox[c][0.52cm][c]{1.7cm}{\centering\scriptsize Control\\boundary}} \\
-        \multicolumn{5}{r}{$\uparrow$} & & $\downarrow$ \\
-        \multicolumn{5}{r}{\fbox{\parbox[c][0.52cm][c]{4.7cm}{\centering\scriptsize Existing safety inputs: obstacle avoidance, geofence, failsafe, manual control}}}
+        \fbox{\parbox[c][0.54cm][c]{1.55cm}{\centering\scriptsize Safety-state\\bridge}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.54cm][c]{1.55cm}{\centering\scriptsize Gated Tello\\SDK dispatch}} \\
+        \multicolumn{7}{r}{$\uparrow$} & & $\downarrow$ \\
+        \multicolumn{7}{r}{\fbox{\parbox[c][0.54cm][c]{5.6cm}{\centering\scriptsize Existing safety inputs: obstacle avoidance, geofence, failsafe, manual control}}}
         & &
-        \fbox{\parbox[c][0.52cm][c]{1.7cm}{\centering\scriptsize Logged\\decision}} \\
-        \multicolumn{5}{c}{} & & $\downarrow$ \\
-        \multicolumn{5}{c}{}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.52cm][c]{1.7cm}{\centering\scriptsize Downstream\\policy}}
+        \fbox{\parbox[c][0.54cm][c]{1.55cm}{\centering\scriptsize Command\\outcome log}}
     \end{tabular}%
     }
     \endgroup
-    \caption{Section~\ref{sec:system} placeholder architecture. The voice layer converts nearby speech into an intent event that enters a control boundary alongside existing UAV safety inputs. The event is logged before any downstream policy considers action.}
+    \caption{\sys{} architecture. The ESP32 performs local audio capture and intent recognition, then exposes an intent event to a safety-state bridge that gates Tello SDK command dispatch.}
     \label{fig:system_architecture}
 \end{figure}

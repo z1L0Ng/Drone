@@ -9,20 +9,20 @@
         & $\rightarrow$ &
         \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Feature\\frontend}}
         & $\rightarrow$ &
-        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize TFLM\\invoke}}
+        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Integer\\invoke}}
         & $\rightarrow$ &
-        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Event\\report}} \\
+        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Event\\reporting}} \\
         \multicolumn{7}{c}{$\downarrow$} \\
         \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Bridge\\decision}}
         & $\rightarrow$ &
-        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Command\\boundary}}
+        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Command\\gate}}
+        & $\rightarrow$ &
+        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Tello SDK\\dispatch}}
         & $\rightarrow$ &
         \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Ack /\\timeout}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize State\\log}}
     \end{tabular}%
     }
     \endgroup
-    \caption{Response-time evaluation schematic. The paper should report timing by stage and separate board-side inference, first-window end-to-end latency, and steady-state event period.}
+    \caption{Response-time decomposition for the local event-to-command path. Timing is separated into board-side inference, event reporting, bridge decision time, command gating, Tello SDK dispatch, and acknowledgement or timeout.}
     \label{fig:response_time_breakdown}
 \end{figure}

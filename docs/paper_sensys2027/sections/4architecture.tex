@@ -4,58 +4,59 @@
 \input{figures/system_architecture}
 \input{figures/safety_state_flow}
 
-\subsection{Voice-to-State Pipeline}
+\subsection{Voice as a Safety Interaction Layer}
 
-The system is an additional voice-facing safety layer for a nearby drone. It does not replace the drone's existing safety mechanisms, and it does not expose speech as a direct flight-command channel. Instead, the layer converts rotor-noisy audio into an auditable event stream that a conservative boundary can inspect before any action policy is allowed to respond. Figure~\ref{fig:system_architecture} shows this pipeline.
+\sys{} sits between nearby human speech and the UAV control stack. It is not a replacement for obstacle avoidance, geofencing, failsafe landing, manual override, or the flight controller. Those mechanisms continue to monitor the vehicle, the environment, and the operator channel. \sys{} adds a different input: a local voice channel for people near the drone, especially when using a phone or controller is slow, awkward, or unavailable.
 
-Let $x_t$ be an onboard audio window at time $t$ and let $\phi(\cdot)$ denote the acoustic frontend. The recognizer estimates
-\[
-(\hat{y}_t, c_t) = f_{\theta}(\phi(x_t)),
-\qquad
-\hat{y}_t \in \{\texttt{emergency}, \texttt{movement}, \texttt{unknown}\},
-\]
-where $c_t$ is the confidence attached to the predicted intent. The raw prediction is not yet a command. A safety-state mapping converts it into a bridge-visible event:
-\[
-e_t =
-\begin{cases}
-\texttt{fallback}, & c_t < \tau,\\
-g(\hat{y}_t), & c_t \geq \tau,
-\end{cases}
-\]
-where $g(\cdot)$ maps recognized intent into one of the states in Figure~\ref{fig:safety_state_flow}. The threshold $\tau$ is a guardrail for uncertain audio; it must be tuned and reported only after labeled real-world acoustic validation.
-% TODO(validation): Tune and report tau only after labeled real-world acoustic validation.
+The architectural decision is to keep this voice channel narrow. A spoken utterance is first converted into a structured intent event, not a flight command. The event records what the voice layer believes it heard, how confident it was, and when the event was produced. Only after that record exists does a control boundary decide whether the event should be ignored, held, escalated, or forwarded to a downstream policy. Figure~\ref{fig:system_architecture} shows this separation.
 
-\subsection{Intent-State Contract and Control Boundary}
+This separation is central to the safety story. A conventional command recognizer can be evaluated by whether it selects the right spoken term. A UAV voice interface also has to ask what happens after the term is recognized. For example, a movement-like utterance should not by itself authorize motion, and an emergency-like utterance should receive priority without pretending that the recognizer has diagnosed the physical cause of danger. By turning speech into an event first, the system gives the control side a point where it can check vehicle state, operator policy, recent history, and existing safety mechanisms before any action is considered.
 
-The intent-state contract has three roles. \texttt{Emergency} represents a safety-critical event that can request hold, stop, or operator escalation. \texttt{Movement} represents ordinary control-oriented speech, but remains pending because it does not specify a safe direction, distance, velocity, or authorization by itself. \texttt{Unknown} represents unsupported, uncertain, or out-of-contract audio and maps to fallback/no-action behavior.
+The pipeline has six stages. The ESP32 microphone captures a short audio window near the drone. The acoustic frontend converts that window into log-mel features. The recognizer estimates whether the window expresses emergency speech, ordinary movement-oriented speech, or unsupported/uncertain audio. The event builder attaches confidence and timing fields. The safety-state bridge checks the event against the current interaction state and policy. Only after that boundary can a gated Tello SDK command be dispatched. Each stage is observable, which lets the evaluation separate recognition quality, embedded runtime, event reporting, bridge behavior, and command-boundary behavior.
 
-Table~\ref{tab:intent_state_contract} summarizes the contract exposed to the control boundary. The table is a design contract, not a completed validation result; the measured transition behavior must come from later bridge logs.
+The event representation is the point where the speech system becomes a UAV systems component. A conventional speech interface often passes a word, phrase, or command string to the application. \sys{} instead passes a typed event record. The record contains the event label, confidence, sequence or timing information, and the status needed to interpret whether the embedded path was operating normally. This makes the voice layer inspectable: if the system behaves incorrectly, the log can show whether the error came from acoustic recognition, event reporting, bridge policy, or a downstream command interface.
+
+The control boundary is also where \sys{} remains compatible with existing safety mechanisms. Obstacle avoidance, geofencing, battery state, link status, manual override, and mission policy can all be checked after a voice event is produced. The bridge then decides whether a gated Tello SDK command may be dispatched. The voice layer does not need to know the full flight policy. It needs to provide a small, reliable observation that the bridge can combine with the rest of the vehicle state. This division keeps the speech model from becoming the authority for physical action.
+
+\subsection{Intent Events and Control Boundary}
+
+The voice layer exposes a small contract to the rest of the system. It does not expose a long command grammar or natural-language plan. The contract contains three visible intent events: emergency, movement, and unknown. This choice is deliberately conservative. It gives the system enough information to distinguish safety-critical speech from ordinary interaction, while keeping unsupported or low-confidence audio on a no-action path.
+
+Table~\ref{tab:intent_state_contract} summarizes how each event is interpreted before reaching the control boundary. The table describes system semantics: it says what the voice layer is allowed to communicate, not what the drone must immediately do.
 
 \begin{table}[t]
     \centering
-    \caption{Intent-state contract exposed to the control boundary.}
+    \caption{Voice events exposed by \sys{} and their control-boundary meaning.}
     \label{tab:intent_state_contract}
-    \begin{tabular}{p{0.22\linewidth}p{0.31\linewidth}p{0.35\linewidth}}
+    \small
+    \begin{tabular}{@{}p{0.22\linewidth}p{0.35\linewidth}p{0.33\linewidth}@{}}
         \toprule
-        Event & Meaning \\
+        Event & Meaning & Boundary handling \\
         \midrule
-        \texttt{emergency} & Safety-critical speech \\
-        \texttt{movement} & Ordinary control-oriented request  \\
-        \texttt{unknown} & Unsupported or uncertain audio  \\
+        Emergency & The speaker appears to express an urgent safety-related intent. & Prioritize a safe response path such as hold, stop, or escalation under policy. \\
+        Movement & The speaker appears to request ordinary interaction with the drone. & Keep pending until authorization, vehicle state, and policy checks allow action. \\
+        Unknown & The audio is unsupported, ambiguous, or too uncertain to trust. & Log and ignore, or map to fallback/no action. \\
+        Low confidence & Any predicted event below the operating threshold. & Treat as unknown before it can affect control. \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-This contract is the point where speech recognition becomes part of the safety layer rather than a standalone classifier. A movement-like utterance without a policy source remains a logged non-command. A low-confidence event becomes fallback. A repeated emergency event can be escalated or held by the bridge without claiming that the recognizer alone has verified danger. The conservative boundary therefore sees recognizer output as evidence, not actuation. Its job is to decide whether the event is ignored, held, escalated, or forwarded under the current vehicle and operator state.
-% TODO(validation): Replace these design semantics with a measured bridge-state transition table after no-propeller validation.
+Emergency is the safety-critical event. It is useful because it can make the voice channel responsive to nearby human concern, but it is still an event rather than proof of a hazard. The control boundary can decide whether to hold position, stop a task, escalate to an operator, or request confirmation, depending on the UAV state and the surrounding safety inputs.
 
-\subsection{Runtime Record and Audit Log}
+Movement represents ordinary voice interaction. A person may be asking the drone to move, follow, return, or adjust behavior, but the event does not contain a direction, distance, velocity, or permission. The boundary must still decide whether movement is allowed and what control policy should interpret the request. This prevents the recognizer from becoming a direct speech-to-motion interface.
 
-The runtime path must report enough information for the bridge to audit each decision. The embedded recognizer captures an audio window, computes the frontend, runs an integer TFLM-compatible model, and emits the predicted label, confidence, timing fields, and raw-output diagnostics. The paper separates this runtime contract from the model-quality claim: offline recognizer results evaluate whether the intent states are learned under rotor noise, while board-side runtime measurements evaluate whether the event source can execute on the embedded path.
+Unknown is an explicit safe outcome. It covers unsupported phrases, background sounds, ambiguous speech, and any recognized event whose confidence is too low. In a physical system, this no-action path matters as much as a positive class: the voice channel must be able to say that the audio should not influence the drone.
 
-The bridge record has the form
-\[
-\ell_t = (e_t, c_t, \Delta_t, s_t, a_t, r_t),
-\]
-where $\Delta_t$ is event timing, $s_t$ is the bridge or safety state before the event, $a_t$ is the selected boundary action, and $r_t$ records acknowledgement, timeout, or rejection. This log is the evidence object for later system evaluation. It can show whether the boundary rejected a movement event, held on emergency, preserved manual override, or timed out; it cannot by itself establish flight safety. Gate and buffer logic may reduce continuous inference cost, but those mechanisms must be evaluated for false triggers before they are used as part of the safety argument.
-% TODO(validation): Add no-propeller bridge logs and gate false-trigger accounting before claiming closed-loop safety behavior.
+The boundary applies the same logic over time. Each event is associated with a short validity window so that stale speech does not remain actionable. Repeated events can be suppressed, rate-limited, or used as confirmation depending on policy. The bridge can also require additional context before forwarding an event: for example, a movement event may require manual authority, a safe vehicle state, and an allowed operating region, while an emergency event may bypass ordinary interaction handling but still enter a controlled hold or escalation path. These temporal and policy checks are part of the safety interaction layer, not after-the-fact implementation details.
+
+This design also makes failures easier to interpret. A missed emergency is an acoustic failure. A movement event forwarded without authorization is a boundary failure. An unknown event that becomes a command is a contract failure. Separating these cases is important for evaluation because a single end-to-end success rate would hide which layer needs to be improved.
+
+\subsection{End-to-End Walkthrough}
+
+Consider a person standing near a small UAV during a low-altitude task. The person speaks a short utterance such as ``stop,'' ``move back,'' or an unrelated phrase. The microphone captures a one-second window that includes both speech and rotor self-noise. The recognizer does not try to recover a transcript. It produces one of the three intent events with a confidence score.
+
+If the event is emergency with sufficient confidence, the bridge records the event, checks the current UAV state, and routes it to the safety-critical handling path. The resulting behavior may be a hold, stop, escalation, or confirmation request, depending on policy. If the event is movement, the bridge records it as an ordinary interaction request and keeps it pending until the policy layer decides whether any movement is allowed. If the event is unknown or low-confidence, the bridge logs it and takes no control action. Only after these checks can the system dispatch a gated Tello SDK command.
+
+This walkthrough illustrates why the architecture is not just a recognizer attached to a drone. The recognizer supplies a constrained observation. The control boundary decides what that observation means for the current state of the vehicle. The log connects the two, so later analysis can tell whether a failure came from acoustic recognition, event delivery, policy handling, or a downstream command path.
+
+The same walkthrough also explains the role of latency. A slow recognizer reduces the usefulness of voice interaction, but a fast recognizer is not sufficient unless the event reaches the control boundary with the right state information. The response-time evaluation therefore separates capture, feature extraction, board-side model invocation, event reporting, bridge decision, gated SDK dispatch, and acknowledgement. This decomposition keeps the system claim precise: \sys{} is evaluated as a voice-event pipeline whose timing and control handling are visible at each stage.

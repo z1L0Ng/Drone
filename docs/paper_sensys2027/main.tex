@@ -20,16 +20,14 @@
 \setlist[itemize]{leftmargin=*,topsep=2pt,itemsep=1pt}
 \graphicspath{{figures/}}
 
-\newcommand{\sys}{Talk-to-Me Drone}
+\newcommand{\sys}{Akouo}
 
 \begin{document}
 
-\title{\sys: On-Device Intent Recognition for Voice-Driven UAV Safety Interaction Under Rotor Noise}
+\title{\sys: Voice-Driven UAV Safety Interaction Under Rotor Noise}
 
 \begin{abstract}
-\todo{Can be done at the end.}
-Speaking to a nearby drone is a natural and lightweight interaction mode, but rotor self-noise and flight-control risk make naive speech-to-command execution unsafe. This paper presents a drone-side voice-driven UAV safety interaction layer that turns short onboard audio windows into auditable intent/state events for a conservative control bridge. The recognizer is deliberately narrow: movement captures ordinary control-oriented speech, emergency captures safety-critical speech, and unknown keeps unsupported audio out of the control stack. In this design, intent recognition is the safety mechanism that makes talk-to-the-drone interaction more accountable: it constrains the command vocabulary, maps voice intent into safety-relevant states, and logs confidence before any action policy runs. We implement the recognizer with a noise-aware anchor model and an embedded student for ESP32/TFLM deployment. The prototype runs microphone capture, log-mel extraction, int8 inference, and USB CDC event reporting on a XIAO ESP32-S3. Offline noisy-set results establish the recognizer anchor, while board-side runtime measurements establish the embedded event path. The evaluation plan covers baseline comparison, rotor-noise robustness, deployment feasibility, speaker and language robustness protocols, and reproducible artifact packaging, with system-level validation required before any live-flight safety claim.
-
+Speaking to a nearby drone is a natural interaction mode, especially when a person cannot quickly reach a controller, phone application, or networked interface. However, rotor self-noise and flight-control risk make direct speech-to-command execution unsafe. This paper introduces \sys, an onboard voice safety layer for small UAVs. \sys converts short audio windows into logged intent events before any control policy considers action. The event space is deliberately narrow: movement represents ordinary control-oriented speech, emergency represents safety-critical speech, and unknown captures unsupported or uncertain audio. This design lets the system treat speech as evidence for a conservative control boundary rather than as a direct flight command. We implement \sys with a noise-aware recognizer and an ESP32 runtime path that performs local audio capture, feature extraction, integer inference, and event reporting.
 \end{abstract}
 
 \maketitle

@@ -1,100 +1,200 @@
 \section{Evaluation}
 \label{sec:evaluation}
 
-The evaluation is organized around five questions. The first two questions evaluate the recognizer as a source of intent events. The third question evaluates whether the event source can run on the embedded path with usable timing. The last two questions evaluate whether those events can support the safety-interaction story through a control-chain protocol and a user-facing study. This organization keeps recognition quality, runtime feasibility, and safety behavior as separate claims.
+The evaluation follows the same layered structure as the system. First, we evaluate whether the acoustic recognizer separates emergency, movement, and unknown speech under rotor-noisy conditions. Second, we measure how that behavior changes as the acoustic setting becomes harder. Third, we test whether the embedded prototype can produce and report one intent event per one-second audio window. Fourth, we compare the recognizer with compact speech baselines under matched conditions. Finally, we evaluate whether the control boundary handles events according to the safety-state contract and whether people can use the interaction naturally in controlled studies.
 
-\subsection{RQ1: How does the recognizer compare with baselines?}
+This organization keeps each measurement tied to the claim it can support. Offline acoustic tests establish whether the intent-event abstraction is learnable. Rotor-noise and speaker-geometry tests show how stable that abstraction is when the physical setting changes. Embedded runtime measurements show whether the event source can run near the drone. Control-boundary tests show whether events remain mediated. User studies and demonstrations connect the technical pipeline back to the interaction that motivates the system.
 
-RQ1 compares the model-quality anchor, the ESP32 runtime candidate, and baseline recognizers under matched noisy-set conditions. The main metrics are accuracy, macro F1, and emergency precision/recall/F1. Emergency is reported explicitly because it is the safety-critical class, while macro F1 keeps movement and unknown from being hidden by a single aggregate score.
+\subsection{Offline Recognition Quality}
+
+The first evaluation isolates the acoustic recognizer from the embedded runtime and the control bridge. The setup uses the paper's rotor-noisy test condition with three intent events: emergency, movement, and unknown. We report accuracy, macro F1, and per-class precision, recall, and F1. Emergency is reported separately because it is safety-critical. Macro F1 is reported because movement and unknown should not be hidden by a single aggregate score.
 
 \begin{table}[t]
     \centering
-    \scriptsize
-    \caption{Offline noisy-set recognition evidence. These results support recognizer quality only; they do not validate board-side semantic accuracy or UAV safety behavior.}
+    \caption{Recognition quality under the rotor-noisy test condition.}
     \label{tab:offline_recognition_results}
-    \begin{tabular}{@{}p{0.28\linewidth}cccp{0.25\linewidth}@{}}
+    \small
+    \begin{tabular}{@{}p{0.34\linewidth}cccc@{}}
         \toprule
-        Model role & Acc. & Macro F1 & Emerg. P/R/F1 & Claim boundary \\
+        Recognizer & Acc. & Macro F1 & Emerg. P & Emerg. R / F1 \\
         \midrule
-        Model-quality anchor & 0.88 & 0.88 & 0.96 / 0.79 / 0.87 & Offline noisy-set anchor \\
-        ESP32 runtime candidate & 0.85 & 0.85 & 0.95 / 0.70 / 0.81 & Deployment candidate, not safety validation \\
-        Baseline recognizers & -- & -- & -- & Add after matched split audit \\
+        Offline acoustic reference model & 0.88 & 0.88 & 0.96 & 0.79 / 0.87 \\
+        Embedded recognizer used in the ESP32 prototype & 0.848 & 0.85 & 0.95 & 0.70 / 0.81 \\
         \bottomrule
     \end{tabular}
 \end{table}
-% Evidence: model-quality anchor row = weeklyresult/weekly_drone_2026w14/preprocess_ext/classification_report_noisy.txt.
-% Evidence: ESP32 runtime candidate row = weeklyresult/weekly_drone_2026w19/xiao_rt1s_c32_b256_samearch_ts/classification_report_noisy.txt.
-% TODO(results): Add baseline rows only after verifying common split, support count, frontend, and label mapping.
 
-This table should not become a leaderboard by itself. The final baseline comparison should include compact speech baselines and any alternate frontend variants only after their run configurations are comparable to the anchor. The text should report whether the runtime candidate preserves enough emergency behavior to justify deployment experiments, not whether it replaces the model-quality anchor.
+The offline acoustic reference model reaches 88\% accuracy and 0.88 macro F1 under the noisy test condition, with emergency precision, recall, and F1 of 0.96, 0.79, and 0.87. The embedded recognizer used in the ESP32 prototype reaches 84.8\% accuracy and 0.85 macro F1, with emergency precision, recall, and F1 of 0.95, 0.70, and 0.81. This gap is expected: the embedded model is constrained by integer inference and microcontroller runtime, while the reference model is used to characterize the stronger acoustic design.
 
-\subsection{RQ2: How robust is the recognizer to rotor noise?}
+The interpretation is that \sys{} has a measurable acoustic separation point, but the embedded recognizer pays a recall cost for deployment. For a safety interaction layer, that cost matters more than a single accuracy number. Threshold sweeps complete this picture by showing the trade-off between emergency recall and unknown containment.
 
-RQ2 measures how recognition changes as the acoustic condition moves from easier speech to stronger rotor-noisy speech. The expected result is a robustness curve, not a single accuracy number. The curve should report accuracy, macro F1, emergency recall, and unknown false accepts across noise conditions. If the noise is mixed offline, the x-axis can be SNR. If the noise comes from recorded rotor playback or operating conditions, the x-axis should name the condition rather than imply a calibrated acoustic level.
+The offline analysis also needs a confusion matrix and per-class error discussion. Two errors are especially important. First, emergency speech classified as movement or unknown reduces the usefulness of the safety channel. Second, unknown speech classified as movement or emergency creates pressure on the control boundary. Reporting these errors separately connects model behavior to the event semantics in Section~\ref{sec:system}.
 
-Table~\ref{tab:noise_robustness_plan} is the placeholder for the robustness evidence. The paper should avoid claiming general noise robustness unless each point on the curve has a source result file and a clearly described acoustic condition.
+\subsection{Robustness Under Rotor Noise}
+
+The second evaluation measures how recognition changes as rotor noise and speaking geometry vary. The motivation is simple: a nearby UAV is not a static acoustic source. Rotor speed, drone orientation, microphone placement, and speaker distance can all change the mixture reaching the microphone. A single noisy-set score cannot show whether the recognizer degrades smoothly or fails under particular conditions.
+
+The setup compares the same recognizer across clean speech, mixed rotor-noise conditions, and recorded or live rotor-playback conditions. Each condition uses the same label mapping and reports the same metrics: accuracy, macro F1, emergency recall, movement recall, and the rate at which unknown audio is incorrectly turned into emergency or movement. The robustness curve also records the noise source, mixing rule or measured level, distance, and microphone placement.
 
 \begin{table}[t]
     \centering
-    \scriptsize
-    \caption{Rotor-noise robustness evidence plan. Rows become results only after matched source files are attached.}
-    \label{tab:noise_robustness_plan}
-    \begin{tabular}{@{}p{0.24\linewidth}p{0.30\linewidth}p{0.25\linewidth}p{0.12\linewidth}@{}}
+    \caption{Rotor-noise robustness matrix. XXX denotes measurements filled from matched acoustic runs.}
+    \label{tab:rotor_robustness}
+    \small
+    \begin{tabular}{@{}p{0.26\linewidth}cccc@{}}
         \toprule
-        Condition & What changes & Metrics & Status \\
+        Condition & Acc. & Macro F1 & Emerg. R & Unknown false event rate \\
         \midrule
-        Anchor noisy set & Current paper anchor condition & Acc., macro F1, emergency P/R/F1 & Existing \\
-        SNR sweep & Offline rotor-noise level & Acc., macro F1, emergency recall, unknown false accepts & TODO \\
-        Rotor playback & Recorded or bench-played rotor noise & Same metrics plus condition label & TODO \\
-        Live collection & Speaker and drone geometry & Per-condition event accuracy and misses & TODO \\
+        Clean or no-rotor condition & XXX & XXX & XXX & XXX \\
+        Moderate rotor-noise condition & XXX & XXX & XXX & XXX \\
+        Strong rotor-noise condition & XXX & XXX & XXX & XXX \\
+        Recorded or live rotor playback & XXX & XXX & XXX & XXX \\
         \bottomrule
     \end{tabular}
 \end{table}
-% Evidence: Anchor noisy-set result = weeklyresult/weekly_drone_2026w14/preprocess_ext/classification_report_noisy.txt.
-% TODO(results): Add source paths for each SNR, rotor-playback, or live-collection row before reporting the row as a result.
 
-This question is also where frontend comparisons belong. Log-mel, MFCC, and any compact embedded representation should be compared under the same split and reporting format. Table~\ref{tab:frontend_ablation_plan} lists the frontend comparison planned for the draft.
+This evaluation is a robustness curve rather than a leaderboard. A strong result shows that emergency recall remains usable as noise increases and that unsupported audio stays mostly in the unknown path. A weak result identifies the acoustic conditions where the safety interaction layer needs shielding, better placement, a stronger frontend, or more conservative thresholds.
 
-\begin{table}[t]
-    \centering
-    \scriptsize
-    \caption{Frontend-ablation plan for comparing acoustic representations under matched noisy-set conditions.}
-    \label{tab:frontend_ablation_plan}
-    \begin{tabular}{@{}p{0.25\linewidth}p{0.31\linewidth}p{0.34\linewidth}@{}}
-        \toprule
-        Frontend & Purpose & Required evidence \\
-        \midrule
-        Log-mel & Current anchor representation & Matched noisy report and run config \\
-        MFCC & Compact speech baseline frontend & Same split, model family, and metrics \\
-        Compact embedded frontend & Deployment-oriented representation & Runtime-compatible export and noisy report \\
-        Normalized/robust frontend & Noise-robustness comparison & Matched condition labels and report paths \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-% TODO(results): Add rotor-noise robustness curve with source paths for each condition.
-% TODO(results): Add frontend-ablation table with matched run_config.json and classification_report_noisy.txt paths.
-% TODO(boundary): Do not describe untested SNRs, new microphones, or live rotor conditions as validated.
+The same experiment can also compare frontend choices. Log-mel, MFCC, and normalized energy frontends may respond differently to rotor harmonics and loudness changes. The useful comparison is not only which frontend maximizes average accuracy, but which frontend preserves emergency recall while keeping unknown false events low. This is why the robustness table reports safety-facing metrics rather than only a single recognition score.
 
-\subsection{RQ3: Can the ESP32 path generate events in real time?}
+\subsection{Embedded Inference and Event Reporting}
 
-RQ3 evaluates the embedded event path: audio capture, frontend computation, integer recognizer invocation, and event reporting. Figure~\ref{fig:response_time_breakdown} shows the timing decomposition. The key point is that ``real time'' is not one number. The paper reports board-side invoke time, first-window end-to-end latency, steady-state event period, and BLE inter-arrival time separately because they support different claims.
+The third evaluation measures whether the event source can run on the ESP32 prototype and report intent events to the safety-state bridge. Figure~\ref{fig:response_time_breakdown} separates the full timing path into capture, feature extraction, integer model invocation, event reporting, bridge decision, command gating, Tello SDK dispatch, and acknowledgement or timeout. These stages answer different questions. Model invocation measures the board-side recognizer kernel. Event-reporting timing measures whether the bridge receives a stable event stream. Bridge and SDK timing measure how quickly a received event can be mediated before any command boundary is reached.
 
 \input{figures/response_time_breakdown}
 
 \begin{table}[t]
     \centering
-    \scriptsize
-    \caption{Runtime and transport evidence for the ESP32 path. These measurements support deployment feasibility and event throughput only.}
+    \caption{Embedded inference, event reporting, and command-boundary timing.}
     \label{tab:runtime_evidence}
-    \begin{tabular}{@{}p{0.26\linewidth}p{0.30\linewidth}p{0.25\linewidth}p{0.11\linewidth}@{}}
+    \small
+    \begin{tabular}{@{}p{0.38\linewidth}p{0.42\linewidth}@{}}
         \toprule
-        Evidence source & Key measurement & Supported claim & Boundary \\
+        Measurement & Result \\
         \midrule
-        Local CDC 30-run & 30/30 success; invoke p50 627 ms; total p50 1605 ms & Board-side event generation & Not semantic validation \\
-        Dual-core full path & 120/120 success; output p95 1005 ms; first window 1606 ms & Steady-state 1 s throughput & No first-window $<1$ s claim \\
-        BLE W30 run & 30/30 success; inter-arrival p50 990 ms; p95 1021 ms & BLE event transport & No flight validation \\
+        Board-side integer model invocation on the ESP32 prototype & 627 ms \\
+        First-window board event latency & 1606 ms \\
+        Steady-state event reporting period & p95 1005 ms \\
+        Continuous event reporting & 30/30 windows; p50/p95 inter-arrival 990/1021 ms \\
+        Safety-state bridge response time & XXX \\
+        Grounded SDK reachability probe & 0/1 acknowledgement; 3002 ms timeout \\
         \bottomrule
     \end{tabular}
 \end{table}
-% Evidence: Local CDC 30-run = weeklyresult/weekly_drone_2026w19/realworld/esp32_rt1s_c32_validation/validation_summary.json and rt1s_c32_local_cdc_fast30_summary.csv.
-% Evidence: Dual-core full path = weeklyresult/weekly_drone_2026w19/realworld/esp32_dual_core_pipeline_validation/mode_c_full_rt1s_summary.json.
+
+The integer model invocation takes 627 ms on the ESP32 prototype. The first board event appears after 1606 ms because the first one-second audio window must be captured before feature extraction and inference can complete. Once the pipeline is running, the prototype sustains a steady event period with 95th-percentile spacing of 1005 ms. In a continuous event-reporting test, all 30 one-second windows were delivered to the bridge, with median and 95th-percentile inter-arrival times of 990 ms and 1021 ms. A grounded SDK reachability probe produced no acknowledgement and timed out after 3002 ms, so command-boundary timing remains a separate constraint rather than a completed fast-response result.
+
+The key distinction is between board-side inference, event reporting, and control response. A fast model invocation does not guarantee that the bridge receives events at a stable cadence. Stable event reporting does not guarantee that the Tello SDK boundary has been reached or acknowledged. The evaluation therefore keeps these measurements separate instead of collapsing them into one response-time number.
+
+\subsection{Baseline Comparison}
+
+The fourth evaluation compares \sys{} against compact speech models under the same task definition. The comparison is not meant to show that a larger speech architecture is universally better. It asks whether the proposed recognizer provides a better balance of noisy recognition quality, emergency recall, unknown containment, and embedded feasibility for the UAV safety interaction layer.
+
+The intended setup includes compact keyword-spotting or command-recognition baselines under a common train/test split, frontend budget, label mapping, and noisy evaluation condition. Each baseline reports accuracy, macro F1, emergency recall, unknown false event rate, model size, and whether the converted model can run on the embedded path. The current preliminary offline baseline rows use the same three-event target and log-mel frontend, while exact split and support parity remain to be finalized before the final leaderboard.
+
+\begin{table}[t]
+    \centering
+    \caption{Offline baseline comparison for recognition quality and deployment feasibility.}
+    \label{tab:baseline_comparison}
+    \small
+    \begin{tabular}{@{}p{0.26\linewidth}cccp{0.20\linewidth}@{}}
+        \toprule
+        Model family & Acc. & Macro F1 & Emerg. R / F1 & Embedded result \\
+        \midrule
+        \sys{} reference recognizer & 0.880 & 0.880 & 0.79 / 0.87 & Offline reference \\
+        \sys{} embedded recognizer & 0.848 & 0.850 & 0.70 / 0.81 & Runs on ESP32 prototype \\
+        TC-ResNet8 baseline & 0.841 & 0.841 & 0.84 / 0.86 & Offline only \\
+        BC-ResNet1 baseline & 0.797 & 0.793 & 0.90 / 0.83 & Offline only \\
+        DS-CNN-S baseline & 0.607 & 0.601 & 0.78 / 0.67 & Offline only \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+The interpretation combines acoustic quality and deployability. A baseline that is accurate offline but cannot be converted to the embedded path does not satisfy the system goal. A baseline that runs quickly but collapses emergency recall or turns unknown speech into actionable events is also insufficient. This is why the table reports embedded result alongside recognition metrics.
+
+Baseline fairness is especially important here. A generic keyword model trained on a different label mapping could look strong while avoiding the hardest part of the task: separating emergency speech from ordinary movement speech and unknown audio under rotor noise. The baseline rows above use the same three-event target and log-mel frontend, but remain preliminary offline comparisons until exact split and support parity are finalized. They therefore show useful recognizer context, not complete system alternatives. If a baseline cannot be converted to the embedded runtime, the table should still report its offline result, but mark deployment as unsupported rather than treating it as a complete system alternative.
+
+\subsection{Control Bridge and Grounded SDK Behavior}
+
+The fifth evaluation tests whether voice events remain mediated before they can affect the drone. The setup sends emergency, movement, unknown, silence, and background-audio events into the safety-state bridge. Any action that reaches the vehicle must pass through the gated Tello SDK command boundary. The bridge logs the previous state, event, confidence, selected boundary action, SDK dispatch decision, acknowledgement or timeout, and final state. The metrics are emergency escalation rate, movement direct-command block rate, unknown no-action rate, repeated-event suppression, SDK acknowledgement rate, and timeout handling.
+
+\begin{table}[t]
+    \centering
+    \caption{Grounded/no-propeller control-boundary behavior.}
+    \label{tab:control_boundary_behavior}
+    \scriptsize
+    \begin{tabular}{@{}p{0.29\linewidth}p{0.44\linewidth}p{0.17\linewidth}@{}}
+        \toprule
+        Case & Expected handling & Measured result \\
+        \midrule
+        Emergency event & Enter safety-critical handling path & 1/1 exercised \\
+        Movement event without authorization & Block direct dispatch; keep pending or reject & 1/1 blocked \\
+        Movement event with explicit authorization & Record as pending interaction; no direct movement command & 1/1 observed; 0 direct movement commands \\
+        Unknown or low-confidence event & Log and take no action & 3/3 rejected to no-action/hold \\
+        SDK acknowledgement or timeout & Record command result without unsafe retry & 0/1 acknowledgement; 3002 ms timeout \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+This evaluation is the bridge between speech recognition and UAV safety behavior. It tests whether the voice layer can express safety-relevant events without becoming a direct flight-command channel. The current grounded/no-propeller evidence exercises one emergency event, one movement event with explicit authorization, one movement event without authorization, and three unknown events. These logs show that emergency reaches the safety-critical handling path, movement remains mediated rather than becoming a direct movement command, and unknown events are rejected to no-action or hold behavior.
+
+The most important failure cases are not model errors alone; they are unsafe event-to-action transitions. Unknown audio should not produce movement. Movement should not bypass authorization. Emergency should not disappear silently when the bridge is active. Repeated events should not remain actionable forever. The control-boundary study turns these into explicit checks, so the paper can explain safety behavior in terms of state transitions rather than recognition accuracy alone.
+
+\subsection{User and Geometry Study}
+
+The sixth evaluation studies whether the interaction remains usable across different people and microphone-facing directions. Each participant is assigned a study identifier, and the recordings, embedded predictions, and offline reference predictions are stored separately for that participant. This isolation lets the evaluation report aggregate behavior while still exposing per-participant variation, which is important for a voice interface that may fail unevenly across speakers.
+
+Each participant records three intent categories: emergency, movement, and unknown. Unknown trials include unsupported or irrelevant speech, and may also include silence or background audio, so the class represents audio that should not become a command rather than silence alone. For each intent category, the participant speaks from four directions relative to the microphone, such as front, left, right, and back. The first study keeps distance and microphone placement fixed; distance can be added as a separate robustness condition once the direction study is complete.
+
+\begin{table}[t]
+    \centering
+    \caption{User-and-geometry study protocol.}
+    \label{tab:user_geometry_protocol}
+    \small
+    \begin{tabular}{@{}p{0.24\linewidth}p{0.34\linewidth}p{0.32\linewidth}@{}}
+        \toprule
+        Factor & Protocol & Measurement purpose \\
+        \midrule
+        Participant & XXX participants, each with an isolated study identifier and held-out records. & Per-participant accuracy and failure modes. \\
+        Geometry & Four microphone-facing directions at a fixed distance. & Direction-wise degradation under realistic speaking positions. \\
+        Intent set & Emergency, movement, and unknown prompts. & Safety-critical recall and unsupported-speech containment. \\
+        Dual inference path & Embedded prediction during capture and offline reference prediction from the saved waveform. & Embedded/reference disagreement and deployment cost. \\
+        Optional adaptation & Small participant-specific adaptation split, with held-out test trials. & User-aware fine-tuning benefit without train/test leakage. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+For each trial, the study records the participant identifier, direction, intended category, saved audio, embedded prediction, embedded confidence, offline reference prediction, reference confidence, and timing fields. The intended category is the ground truth. The offline reference model is not treated as ground truth; it is used to show how much recognition quality is lost when moving from the stronger offline recognizer to the embedded recognizer that runs in the prototype.
+
+The primary metrics are participant-level accuracy, direction-level accuracy, emergency recall, unknown false event rate, embedded/reference disagreement rate, and speech-onset-to-event latency. Participant-level reporting is important because an average window score can hide whether the system fails for particular voices. Direction-level reporting is important because the microphone may receive very different speech and rotor-noise mixtures depending on where the person stands.
+
+\input{figures/demo_storyboard}
+
+The demo figure pairs the visible interaction with synchronized logs rather than standing alone. A useful demonstration shows the person speaking, the ESP32 event stream, the bridge decision, and the final visible outcome. The study then provides the controlled evidence needed to say how often that story holds across speakers and interaction geometry.
+
+The user-study protocol separates naturalness from correctness. Participants can produce their own phrasing for each intent, and the system can also test a fixed prompt list so that acoustic and linguistic variation are not conflated. If time permits, the isolated participant records also support a user-aware adaptation experiment. In that experiment, a small number of recordings from each participant are used for fine-tuning, and held-out recordings from the same participant test whether personalization improves emergency recall, macro F1, or unknown containment. This adaptation result is reported separately from the base system so that the main evaluation does not depend on user-specific training.
+
+\subsection{Propeller Noise Shielding Study}
+
+The final evaluation studies whether simple physical or placement changes improve the acoustic channel. The setup compares the current microphone placement with XXX shielding or mounting configurations under the same speech prompts and rotor-noise conditions. The metrics are measured noise level or SNR change, accuracy, emergency recall, unknown false event rate, and event latency.
+
+\begin{table}[t]
+    \centering
+    \caption{Propeller-noise shielding and microphone-placement study.}
+    \label{tab:shielding_study}
+    \small
+    \begin{tabular}{@{}p{0.30\linewidth}cccc@{}}
+        \toprule
+        Configuration & Noise reduction & Acc. & Emerg. R & Latency \\
+        \midrule
+        Current open placement & XXX & XXX & XXX & XXX \\
+        Shielding configuration A & XXX & XXX & XXX & XXX \\
+        Shielding configuration B & XXX & XXX & XXX & XXX \\
+        Alternative microphone placement & XXX & XXX & XXX & XXX \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+This study connects the acoustic model back to the UAV platform. If shielding or placement substantially improves emergency recall without increasing false events or latency, it becomes part of the system design rather than a post-hoc fix. If the improvement is small, the paper can still use the result to justify focusing on model robustness and conservative control handling.
+
+The shielding study is also a bridge between system design and deployment. A better enclosure or microphone placement can reduce the burden on the model, while a poor placement can make even a strong recognizer unstable. Reporting the physical configuration alongside the acoustic metrics prevents the paper from treating rotor noise as an abstract dataset property. It keeps the evaluation tied to the UAV form factor that motivates \sys{}.

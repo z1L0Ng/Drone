@@ -3,33 +3,36 @@
 
 \input{figures/recognizer_architecture}
 
-\subsection{Recognition Contract}
+\subsection{Acoustic Task}
 
-The recognizer is the acoustic component of the safety layer. It does not generate transcripts and it does not select drone commands. Given the feature sequence $\phi(x_t)$ from an onboard audio window, it estimates
-\[
-p_{\theta}(y \mid \phi(x_t)), \qquad
-y \in \{\texttt{emergency}, \texttt{movement}, \texttt{unknown}\}.
-\]
-The predicted label and confidence are passed to the safety-state mapping in Section~\ref{sec:system}. This contract is intentionally narrower than general speech understanding: \texttt{emergency} provides evidence for safety-critical handling, \texttt{movement} provides evidence for a pending ordinary interaction, and \texttt{unknown} captures unsupported or uncertain audio. The recognizer therefore produces intent evidence for a conservative boundary, not a flight command.
+The recognizer is the acoustic part of the voice safety layer. Its input is a one-second audio window captured near the drone. Its output is an intent event for the architecture in Section~\ref{sec:system}: emergency, movement, or unknown. The recognizer does not produce a transcript, does not parse open-ended language, and does not select flight commands.
 
-\subsection{Model Design}
+This contract matches the physical setting. Small UAVs create their own acoustic interference, and the microphone can be close to the propellers. The recognizer therefore sees speech mixed with structured rotor self-noise, motor-speed changes, and environmental background audio. A transcript-first pipeline would spend capacity recovering words that the control boundary is not allowed to execute directly. \sys{} instead asks a narrower question: does the window contain speech that should be treated as safety-critical, ordinary interaction, or unsupported?
 
-Figure~\ref{fig:recognizer_architecture} summarizes the recognizer family. The anchor recognizer uses log-mel features, a convolutional frontend for local time-frequency structure, a temporal block for evidence across the short audio window, pooling, and an intent-state head. This design keeps the model close to the system contract: it extracts enough temporal acoustic evidence to distinguish safety-relevant intent states under rotor noise, while avoiding a transcript-level objective.
+The frontend converts each audio window into log-mel features. This representation is compact, standard for embedded speech systems, and well suited to the short-window event stream used by the prototype. It also preserves the time-frequency structure that makes rotor noise difficult: speech energy, harmonics, and motor noise can overlap inside the same window, so the model must learn cues that remain stable when the useful signal is partially masked.
 
-The deployment recognizer keeps the same input and output contract but changes the temporal path for embedded execution. It uses a compact bottlenecked representation and depthwise temporal convolution so that the exported integer model can be checked against the ESP32/TFLM operator set. The deployment recognizer is not presented as the model-quality winner. Its role is to make the same intent-state contract executable on the local runtime path.
+The one-second window length is a compromise between interaction and acoustic evidence. A shorter window can reduce delay, but may not contain enough of a spoken phrase to separate emergency from ordinary movement speech. A longer window can improve context, but it delays the first event and makes the voice layer less responsive. The prototype therefore treats one second as the basic event interval and evaluates both first-window latency and steady-state event cadence.
 
-\subsection{Noise-Aware Training and Model Roles}
+The recognizer also avoids a large spoken-command grammar. A grammar with many motion verbs, directions, distances, and modifiers would be attractive for a general voice assistant, but it would blur the boundary between recognizing intent and authorizing motion. \sys{} keeps that boundary explicit. The model distinguishes whether speech is safety-critical, ordinary interaction, or out of contract; direction, authority, and vehicle-state decisions remain outside the recognizer.
 
-The training recipe matches the acoustic setting: the recognizer is optimized for speech mixed with drone self-noise rather than quiet indoor commands. The anchor path uses clean-to-noisy teacher-student transfer so that the noisy recognizer can inherit structure from a cleaner teacher while learning the rotor-contaminated condition. The objective combines supervised cross-entropy with an embedding-alignment term:
-\[
-\mathcal{L}
-=
-\mathcal{L}_{\mathrm{CE}}(y, p_{\theta})
- + \lambda(t)\,
-\lVert h_s(\phi(x)) - P h_t(\phi(x_{\mathrm{clean}})) \rVert_2^2,
-\]
-where $h_s$ and $h_t$ are student and teacher embeddings, $P$ aligns embedding dimensions, and $\lambda(t)$ schedules the transfer weight during training.
+\subsection{Reference and Embedded Recognizers}
 
+The offline acoustic reference model is designed to learn the intent contract with enough capacity to handle rotor-noisy audio. Its role is to establish the best current acoustic behavior for the paper's recognition task. It uses the log-mel frontend, a convolutional frontend for local time-frequency patterns, and a temporal encoder that summarizes evidence across the one-second window. A Branchformer-style temporal block is a natural fit for this setting because it combines local and longer-range sequence modeling for speech \cite{peng2022branchformer}.
 
-The paper uses the resulting models in two distinct roles. The \emph{anchor recognizer} is the model-quality reference used to characterize noisy intent-state recognition. The \emph{deployment recognizer} is the runtime candidate used to exercise the embedded event path. Keeping these roles separate prevents a common overclaim: a model can be better for deployment without being the strongest offline recognizer, and a strong offline recognizer does not automatically satisfy operator, memory, or response-time constraints on the board.
-% Internal mapping: anchor recognizer = w14/preprocess_ext; current runtime deployment candidate = xiao_rt1s_c32_b256_samearch_ts; previous slower deployment baseline = B_small_teacher_student.
+The embedded recognizer used in the ESP32 prototype keeps the same input and output contract but changes the internal representation to fit the microcontroller path. The model has to use operators supported by TensorFlow Lite Micro, fit the available memory arena, and run with integer weights and activations. To satisfy those constraints, the embedded version narrows the temporal representation and uses compact temporal operations that are easier to execute on the board.
+
+This split between reference and embedded recognizers is important for the paper. The reference recognizer represents the acoustic design space: it asks how well the event abstraction can be learned when the model has enough capacity. The embedded recognizer represents the deployable system path: it asks whether the same abstraction can be produced locally with the operators and memory available on the board. Treating these as separate roles avoids a misleading winner-takes-all comparison. The right model for analysis is not automatically the right model for the UAV-side prototype.
+
+The model diagram in Figure~\ref{fig:recognizer_architecture} therefore shows a shared contract rather than a single fixed network. Both recognizers start from the same log-mel representation and end with the same three event states. Between those endpoints, the offline path can use a wider temporal encoder, while the embedded path compresses the temporal representation into a smaller integer model. This lets the evaluation ask two linked questions: how much acoustic quality is available, and how much of that quality survives deployment constraints.
+
+These two recognizers play different roles. The reference model asks how well the architecture can separate the three voice events under the offline noisy condition. The embedded model asks how much of that behavior can be preserved when the event source must run locally on the XIAO ESP32-S3. We compare them along two axes: acoustic quality and deployment feasibility. A larger model can be a stronger acoustic reference without being the right embedded event source, while a smaller model can be deployable without being the highest-quality recognizer.
+
+\subsection{Learning Under Rotor Noise}
+
+The training design follows the system contract. Emergency speech needs to remain detectable when the drone is loud, movement speech needs to stay separate from emergency, and unknown audio needs to remain on the no-action path. The loss and class reporting therefore treat all three events as first-class outputs. Aggregate accuracy alone is insufficient because an attractive average can hide emergency misses or unknown false positives.
+
+The model family also uses a clean-teacher/noisy-student intuition. A stronger model trained with cleaner acoustic structure can guide a smaller recognizer that must operate under noisy and embedded constraints. In \sys{}, this is a way to preserve the intent-event boundary under compression rather than a generic model-compression exercise. The purpose of the smaller recognizer is not simply to be tiny; it is to keep emergency, movement, and unknown separable while producing events on the UAV-side hardware.
+
+The recognizer output is passed forward as an event label, confidence score, and timing record. Confidence is important because the safety layer needs a way to route uncertain audio to unknown before it can affect control. The operating threshold changes the balance between emergency recall and unknown containment, so the evaluation treats threshold selection as part of the system behavior rather than a hidden model setting.
+
+This threshold is especially important for emergency speech. A low threshold may improve recall but can also make ordinary or unknown audio more likely to enter a safety-critical path. A high threshold can reduce false events but may miss urgent speech. The system does not resolve this trade-off inside the model alone. It exposes confidence to the bridge so that the policy layer can decide how cautious to be under the current vehicle state. For example, a low-confidence emergency-like event might be logged and escalated to an operator rather than ignored or translated into a physical action.
