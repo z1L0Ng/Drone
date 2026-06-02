@@ -5,7 +5,7 @@
 
 \subsection{Embedded Event Source}
 
-The prototype turns the architecture into a local event source near the UAV. A XIAO ESP32-S3 Sense captures microphone audio, forms one-second analysis windows, computes log-mel features, invokes the embedded integer recognizer, and reports the resulting event. The board is not the flight controller. Its responsibility is to make the voice layer local: speech can be heard and summarized near the drone before control-side policy considers action.
+The prototype turns the architecture into a local event source near the UAV. Figure~\ref{fig:prototype_pipeline} shows the prototype path from local audio capture through event generation and the safety-state bridge. An ESP32-S3 microphone board captures audio, forms one-second analysis windows, computes log-mel features, invokes the embedded integer recognizer, and reports the resulting event. The board is not the flight controller. Its responsibility is to make the voice layer local: speech can be heard and summarized near the drone before control-side policy considers action.
 
 This placement is intentionally close to the acoustic source. If the microphone and recognizer depend on a phone, laptop, or remote service, the voice channel inherits the availability and latency of that external path. By putting capture and inference on the microcontroller, the prototype tests the harder system question: whether the UAV-side device can produce an intent event under the same resource limits that would constrain an onboard safety accessory.
 
@@ -32,7 +32,7 @@ Table~\ref{tab:prototype_interfaces} summarizes the prototype interfaces. The ta
         \toprule
         Interface & Role in the prototype & Evidence supported \\
         \midrule
-        XIAO ESP32-S3 microphone path & Captures nearby speech and rotor-noisy audio windows. & Local input capture and repeated windowing. \\
+        ESP32-S3 microphone path & Captures nearby speech and rotor-noisy audio windows. & Local input capture and repeated windowing. \\
         Embedded recognizer & Converts log-mel features into an intent event. & On-device inference and event generation. \\
         Event reporting & Delivers label, confidence, and timing fields to the safety-state bridge. & Event throughput and reporting stability. \\
         Safety-state bridge & Logs state, policy decision, acknowledgement, or rejection. & Control-boundary behavior before flight use. \\

@@ -1,26 +1,6 @@
-\begin{figure}[t]
+\begin{figure*}[t]
     \centering
-    \begingroup
-    \setlength{\fboxsep}{3pt}
-    \setlength{\tabcolsep}{2pt}
-    \resizebox{\linewidth}{!}{%
-    \begin{tabular}{c c c c c c c c c}
-        \fbox{\parbox[c][0.54cm][c]{1.25cm}{\centering\scriptsize Nearby\\speech}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.54cm][c]{1.55cm}{\centering\scriptsize ESP32 local\\recognition}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.54cm][c]{1.35cm}{\centering\scriptsize Intent\\event}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.54cm][c]{1.55cm}{\centering\scriptsize Safety-state\\bridge}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.54cm][c]{1.55cm}{\centering\scriptsize Gated Tello\\SDK dispatch}} \\
-        \multicolumn{7}{r}{$\uparrow$} & & $\downarrow$ \\
-        \multicolumn{7}{r}{\fbox{\parbox[c][0.54cm][c]{5.6cm}{\centering\scriptsize Existing safety inputs: obstacle avoidance, geofence, failsafe, manual control}}}
-        & &
-        \fbox{\parbox[c][0.54cm][c]{1.55cm}{\centering\scriptsize Command\\outcome log}}
-    \end{tabular}%
-    }
-    \endgroup
-    \caption{\sys{} architecture. The ESP32 performs local audio capture and intent recognition, then exposes an intent event to a safety-state bridge that gates Tello SDK command dispatch.}
+    \includegraphics[width=\textwidth]{system_architecture.pdf}
+    \caption{\sys{} architecture. Nearby speech is processed as an onboard intent event, then mediated by a safety-state boundary before any gated UAV command is considered.}
     \label{fig:system_architecture}
-\end{figure}
+\end{figure*}

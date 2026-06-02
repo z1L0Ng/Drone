@@ -3,11 +3,13 @@
 
 The evaluation follows the same layered structure as the system. First, we evaluate whether the acoustic recognizer separates emergency, movement, and unknown speech under rotor-noisy conditions. Second, we measure how that behavior changes as the acoustic setting becomes harder. Third, we test whether the embedded prototype can produce and report one intent event per one-second audio window. Fourth, we compare the recognizer with compact speech baselines under matched conditions. Finally, we evaluate whether the control boundary handles events according to the safety-state contract and whether people can use the interaction naturally in controlled studies.
 
-This organization keeps each measurement tied to the claim it can support. Offline acoustic tests establish whether the intent-event abstraction is learnable. Rotor-noise and speaker-geometry tests show how stable that abstraction is when the physical setting changes. Embedded runtime measurements show whether the event source can run near the drone. Control-boundary tests show whether events remain mediated. User studies and demonstrations connect the technical pipeline back to the interaction that motivates the system.
+This organization keeps each measurement tied to the claim it can support. Offline acoustic tests establish whether the intent-event abstraction is learnable. Rotor-noise and recording-condition tests show how stable that abstraction is when the acoustic setting changes. Embedded runtime measurements show whether the event source can run near the drone. Control-boundary tests show whether events remain mediated. User studies and demonstrations connect the technical pipeline back to the interaction that motivates the system.
 
 \subsection{Offline Recognition Quality}
 
 The first evaluation isolates the acoustic recognizer from the embedded runtime and the control bridge. The setup uses the paper's rotor-noisy test condition with three intent events: emergency, movement, and unknown. We report accuracy, macro F1, and per-class precision, recall, and F1. Emergency is reported separately because it is safety-critical. Macro F1 is reported because movement and unknown should not be hidden by a single aggregate score.
+
+Table~\ref{tab:offline_recognition_results} reports the current recognition-quality evidence for the reference and embedded recognizers.
 
 \begin{table}[t]
     \centering
@@ -32,9 +34,11 @@ The offline analysis also needs a confusion matrix and per-class error discussio
 
 \subsection{Robustness Under Rotor Noise}
 
-The second evaluation measures how recognition changes as rotor noise and speaking geometry vary. The motivation is simple: a nearby UAV is not a static acoustic source. Rotor speed, drone orientation, microphone placement, and speaker distance can all change the mixture reaching the microphone. A single noisy-set score cannot show whether the recognizer degrades smoothly or fails under particular conditions.
+The second evaluation measures how recognition changes as rotor noise and recording conditions vary. The motivation is simple: a nearby UAV is not a static acoustic source. Rotor speed, drone state, microphone placement, and background sound can all change the mixture reaching the microphone. A single noisy-set score cannot show whether the recognizer degrades smoothly or fails under particular conditions.
 
-The setup compares the same recognizer across clean speech, mixed rotor-noise conditions, and recorded or live rotor-playback conditions. Each condition uses the same label mapping and reports the same metrics: accuracy, macro F1, emergency recall, movement recall, and the rate at which unknown audio is incorrectly turned into emergency or movement. The robustness curve also records the noise source, mixing rule or measured level, distance, and microphone placement.
+The setup compares the same recognizer across clean speech, mixed rotor-noise conditions, and recorded or live rotor-playback conditions. Each condition uses the same label mapping and reports the same metrics: accuracy, macro F1, emergency recall, movement recall, and the rate at which unknown audio is incorrectly turned into emergency or movement. The robustness curve also records the noise source, mixing rule or measured level, and microphone placement.
+
+Table~\ref{tab:rotor_robustness} defines the robustness matrix that will be filled from matched acoustic runs.
 
 \begin{table}[t]
     \centering
@@ -62,6 +66,8 @@ The same experiment can also compare frontend choices. Log-mel, MFCC, and normal
 The third evaluation measures whether the event source can run on the ESP32 prototype and report intent events to the safety-state bridge. Figure~\ref{fig:response_time_breakdown} separates the full timing path into capture, feature extraction, integer model invocation, event reporting, bridge decision, command gating, Tello SDK dispatch, and acknowledgement or timeout. These stages answer different questions. Model invocation measures the board-side recognizer kernel. Event-reporting timing measures whether the bridge receives a stable event stream. Bridge and SDK timing measure how quickly a received event can be mediated before any command boundary is reached.
 
 \input{figures/response_time_breakdown}
+
+Table~\ref{tab:runtime_evidence} reports the measured runtime and event-throughput evidence available for the current prototype.
 
 \begin{table}[t]
     \centering
@@ -92,6 +98,8 @@ The fourth evaluation compares \sys{} against compact speech models under the sa
 
 The intended setup includes compact keyword-spotting or command-recognition baselines under a common train/test split, frontend budget, label mapping, and noisy evaluation condition. Each baseline reports accuracy, macro F1, emergency recall, unknown false event rate, model size, and whether the converted model can run on the embedded path. The current preliminary offline baseline rows use the same three-event target and log-mel frontend, while exact split and support parity remain to be finalized before the final leaderboard.
 
+Table~\ref{tab:baseline_comparison} compares the current recognizer rows with compact offline baselines under this shared task framing.
+
 \begin{table}[t]
     \centering
     \caption{Offline baseline comparison for recognition quality and deployment feasibility.}
@@ -118,6 +126,8 @@ Baseline fairness is especially important here. A generic keyword model trained 
 
 The fifth evaluation tests whether voice events remain mediated before they can affect the drone. The setup sends emergency, movement, unknown, silence, and background-audio events into the safety-state bridge. Any action that reaches the vehicle must pass through the gated Tello SDK command boundary. The bridge logs the previous state, event, confidence, selected boundary action, SDK dispatch decision, acknowledgement or timeout, and final state. The metrics are emergency escalation rate, movement direct-command block rate, unknown no-action rate, repeated-event suppression, SDK acknowledgement rate, and timeout handling.
 
+Table~\ref{tab:control_boundary_behavior} lists the grounded and no-propeller control-boundary cases currently exercised.
+
 \begin{table}[t]
     \centering
     \caption{Grounded/no-propeller control-boundary behavior.}
@@ -140,43 +150,27 @@ This evaluation is the bridge between speech recognition and UAV safety behavior
 
 The most important failure cases are not model errors alone; they are unsafe event-to-action transitions. Unknown audio should not produce movement. Movement should not bypass authorization. Emergency should not disappear silently when the bridge is active. Repeated events should not remain actionable forever. The control-boundary study turns these into explicit checks, so the paper can explain safety behavior in terms of state transitions rather than recognition accuracy alone.
 
-\subsection{User and Geometry Study}
+\subsection{User Study}
 
-The sixth evaluation studies whether the interaction remains usable across different people and microphone-facing directions. Each participant is assigned a study identifier, and the recordings, embedded predictions, and offline reference predictions are stored separately for that participant. This isolation lets the evaluation report aggregate behavior while still exposing per-participant variation, which is important for a voice interface that may fail unevenly across speakers.
+The sixth evaluation studies whether the interaction remains usable across different participants, intent categories, keywords, and repeated trials. Each participant is assigned a study identifier, and the recordings, embedded predictions, and offline reference predictions are stored separately for that participant. This isolation lets the evaluation report aggregate behavior while still exposing per-participant variation, which is important for a voice interface that may fail unevenly across speakers.
 
-Each participant records three intent categories: emergency, movement, and unknown. Unknown trials include unsupported or irrelevant speech, and may also include silence or background audio, so the class represents audio that should not become a command rather than silence alone. For each intent category, the participant speaks from four directions relative to the microphone, such as front, left, right, and back. The first study keeps distance and microphone placement fixed; distance can be added as a separate robustness condition once the direction study is complete.
+Each participant records three intent categories: emergency, movement, and unknown. Each category is represented by five controlled keywords or short phrases, with ten repeated trials for each keyword. Unknown trials include unsupported or irrelevant speech, and may also include silence or background audio, so the class represents audio that should not become a command rather than silence alone.
 
-\begin{table}[t]
-    \centering
-    \caption{User-and-geometry study protocol.}
-    \label{tab:user_geometry_protocol}
-    \small
-    \begin{tabular}{@{}p{0.24\linewidth}p{0.34\linewidth}p{0.32\linewidth}@{}}
-        \toprule
-        Factor & Protocol & Measurement purpose \\
-        \midrule
-        Participant & XXX participants, each with an isolated study identifier and held-out records. & Per-participant accuracy and failure modes. \\
-        Geometry & Four microphone-facing directions at a fixed distance. & Direction-wise degradation under realistic speaking positions. \\
-        Intent set & Emergency, movement, and unknown prompts. & Safety-critical recall and unsupported-speech containment. \\
-        Dual inference path & Embedded prediction during capture and offline reference prediction from the saved waveform. & Embedded/reference disagreement and deployment cost. \\
-        Optional adaptation & Small participant-specific adaptation split, with held-out test trials. & User-aware fine-tuning benefit without train/test leakage. \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+\input{figures/user_study_evidence}
 
-For each trial, the study records the participant identifier, direction, intended category, saved audio, embedded prediction, embedded confidence, offline reference prediction, reference confidence, and timing fields. The intended category is the ground truth. The offline reference model is not treated as ground truth; it is used to show how much recognition quality is lost when moving from the stronger offline recognizer to the embedded recognizer that runs in the prototype.
+Figure~\ref{fig:user_study_evidence} summarizes the evidence captured for each trial. The study records the participant identifier, intended category, keyword or phrase, repeat index, saved audio, embedded prediction, embedded confidence, offline reference prediction, reference confidence, and timing fields. The intended category is the ground truth. The offline reference model is not treated as ground truth; it is used to show how much recognition quality is lost when moving from the stronger offline recognizer to the embedded recognizer that runs in the prototype.
 
-The primary metrics are participant-level accuracy, direction-level accuracy, emergency recall, unknown false event rate, embedded/reference disagreement rate, and speech-onset-to-event latency. Participant-level reporting is important because an average window score can hide whether the system fails for particular voices. Direction-level reporting is important because the microphone may receive very different speech and rotor-noise mixtures depending on where the person stands.
+The primary metrics are participant-level accuracy, keyword-level accuracy, emergency recall, unknown false event rate, embedded/reference disagreement rate, and speech-onset-to-event latency. Participant-level reporting is important because an average window score can hide whether the system fails for particular voices. Keyword-level reporting is important because multiple spoken forms may map to the same intent state.
 
-\input{figures/demo_storyboard}
+The demonstration panel in Figure~\ref{fig:user_study_evidence} pairs the visible interaction with synchronized logs rather than standing alone. A useful demonstration shows the person speaking, the ESP32 event stream, the bridge decision, and the final visible outcome. The study then provides the controlled evidence needed to say how often that story holds across participants, intents, keywords, and repeated trials.
 
-The demo figure pairs the visible interaction with synchronized logs rather than standing alone. A useful demonstration shows the person speaking, the ESP32 event stream, the bridge decision, and the final visible outcome. The study then provides the controlled evidence needed to say how often that story holds across speakers and interaction geometry.
-
-The user-study protocol separates naturalness from correctness. Participants can produce their own phrasing for each intent, and the system can also test a fixed prompt list so that acoustic and linguistic variation are not conflated. If time permits, the isolated participant records also support a user-aware adaptation experiment. In that experiment, a small number of recordings from each participant are used for fine-tuning, and held-out recordings from the same participant test whether personalization improves emergency recall, macro F1, or unknown containment. This adaptation result is reported separately from the base system so that the main evaluation does not depend on user-specific training.
+The user-study protocol separates participant variation from keyword variation by using a fixed prompt list for the main study. If time permits, the isolated participant records also support a user-aware adaptation experiment. In that experiment, a small number of recordings from each participant are used for fine-tuning, and held-out recordings from the same participant test whether personalization improves emergency recall, macro F1, or unknown containment. This adaptation result is reported separately from the base system so that the main evaluation does not depend on user-specific training.
 
 \subsection{Propeller Noise Shielding Study}
 
 The final evaluation studies whether simple physical or placement changes improve the acoustic channel. The setup compares the current microphone placement with XXX shielding or mounting configurations under the same speech prompts and rotor-noise conditions. The metrics are measured noise level or SNR change, accuracy, emergency recall, unknown false event rate, and event latency.
+
+Table~\ref{tab:shielding_study} records the shielding and placement measurements that remain to be filled.
 
 \begin{table}[t]
     \centering

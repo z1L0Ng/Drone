@@ -1,28 +1,6 @@
-\begin{figure}[t]
+\begin{figure*}[t]
     \centering
-    \begingroup
-    \setlength{\fboxsep}{3pt}
-    \setlength{\tabcolsep}{2pt}
-    \resizebox{\linewidth}{!}{%
-    \begin{tabular}{c c c c c c c}
-        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Audio\\capture}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Feature\\frontend}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Integer\\invoke}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Event\\reporting}} \\
-        \multicolumn{7}{c}{$\downarrow$} \\
-        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Bridge\\decision}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Command\\gate}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Tello SDK\\dispatch}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.52cm][c]{1.35cm}{\centering\scriptsize Ack /\\timeout}}
-    \end{tabular}%
-    }
-    \endgroup
-    \caption{Response-time decomposition for the local event-to-command path. Timing is separated into board-side inference, event reporting, bridge decision time, command gating, Tello SDK dispatch, and acknowledgement or timeout.}
+    \includegraphics[width=\textwidth]{response_time_breakdown.pdf}
+    \caption{Response-time decomposition for the local event-to-command path. Timing is separated across audio capture, feature extraction, board-side inference, event reporting, bridge decision, command gating, dispatch, and acknowledgement or timeout.}
     \label{fig:response_time_breakdown}
-\end{figure}
+\end{figure*}

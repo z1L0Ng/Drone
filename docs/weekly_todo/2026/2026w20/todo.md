@@ -29,8 +29,8 @@ into a full-paper shaped systems draft:
    figures, tables, and `XXX` placeholders for not-yet-finalized metrics.
 3. Replace project-management/run-name language with paper-facing language.
 4. Complete the minimum evaluation evidence needed before the June 1 result
-   freeze: user/geometry study, rotor robustness, bridge response time, and
-   repeated control-boundary trials.
+   freeze: participant-level user study, rotor robustness, bridge response time,
+   and repeated control-boundary trials.
 
 ## SenSys 2027 Timing
 
@@ -88,7 +88,7 @@ Evaluation structure:
   - Embedded Inference and Event Reporting
   - Baseline Comparison
   - Control Bridge and Grounded SDK Behavior
-  - User and Geometry Study
+  - User Study
   - Propeller Noise Shielding Study
 
 Current filled evidence:
@@ -113,7 +113,6 @@ Baseline evidence integrated as preliminary offline comparison:
 
 User-study protocol added:
 - Use isolated participant identifiers.
-- Four microphone-facing directions per participant.
 - Three intent categories: emergency, movement, unknown.
 - Each trial saves both ESP32 embedded prediction and saved-audio offline
   reference prediction.
@@ -121,6 +120,8 @@ User-study protocol added:
   comparison point.
 - User-aware fine-tuning is optional personalization and separate from the base
   system claim.
+- Current decision: no geometry, direction, angle, distance, speaker-position,
+  or direction-level accuracy variables in this submission-cycle user study.
 
 Validation / hygiene checks reported:
 - `git diff --check -- docs/paper_sensys2027` passed.
@@ -132,7 +133,7 @@ Validation / hygiene checks reported:
 ## Missing Evidence
 
 - [ ] Rotor-noise robustness curve.
-- [ ] Real user and geometry study data.
+- [ ] Real participant-level user-study data.
 - [ ] Safety-state bridge response-time numbers.
 - [ ] Repeated control-boundary trials beyond the current small fixture.
 - [ ] Propeller shielding / microphone placement result; downgrade to
@@ -146,13 +147,13 @@ Validation / hygiene checks reported:
 - 2026-05-28 Thu:
   - Freeze paper story and contribution framing.
   - Prepare HotCRP abstract registration.
-  - Confirm user/geometry, rotor robustness, and bridge timing protocols.
+  - Confirm user-study, rotor robustness, and bridge timing protocols.
 - 2026-05-29 Fri:
   - Submit abstract registration.
   - Freeze figure/table list.
   - Start minimum user-study data collection.
 - 2026-05-30 to 2026-05-31:
-  - Complete initial user + geometry study.
+  - Complete initial user study.
   - Complete rotor-noise robustness curve.
   - Expand control-boundary trials.
   - Prepare demo storyboard / synchronized logs.
@@ -181,10 +182,81 @@ Validation / hygiene checks reported:
 
 - The paper story is now mostly aligned, but evaluation density is still the
   largest submission risk.
-- If June 1 data freeze lacks user/geometry and rotor robustness evidence, the
+- If June 1 data freeze lacks user-study and rotor robustness evidence, the
   first-round submission may still be possible but will be vulnerable to
   evidence-sufficiency criticism.
 - Baseline support parity must be audited before strong comparison claims.
 - Internal implementation language must stay out of the compiled paper body.
 - Full compile, page count, references, and anonymity still need a final gate.
 
+## 2026-06-01 Figure Integration Receipt
+
+Status:
+- Writing agent completed the figure-integration text pass; no figure drawing,
+  no experiments, and no model/firmware changes.
+- Modified paper files are limited to the draft tree:
+  `sections/1introduction.tex`, `sections/4architecture.tex`,
+  `sections/5recognizer.tex`, `sections/6prototype.tex`,
+  `sections/7evaluation.tex`, `sections/8conclusion.tex`, and
+  `figures/prototype_pipeline.tex`.
+- Checks reported by the writing agent:
+  - `git diff --check -- docs/paper_sensys2027` passed.
+  - Internal implementation terms were not found in the paper-facing text.
+  - User-study geometry residue was not found.
+
+Decisions:
+- Complex figures will be produced as external editable assets plus PDF/PNG
+  exports. LaTeX should only provide lightweight `includegraphics` wrappers.
+- `fig:user_study_evidence` replaces `tab:user_geometry_protocol`.
+- `fig:demo_storyboard` should be merged into the user-study evidence figure or
+  dropped.
+- `fig:safety_layer_overview` is currently orphaned; either delete it or
+  formally connect it as an intro/architecture overview.
+
+Next:
+- Figure/table agent should create final external visual assets for system
+  architecture, recognizer architecture, response-time breakdown, and
+  user-study evidence.
+- Writing agent should only coordinate captions, labels, references, and
+  placement once final assets exist.
+
+## 2026-06-01 Figure Asset Delivery Receipt
+
+Status:
+- Figure/table agent delivered external editable visual assets and PDF exports.
+- No LaTeX/TikZ complex figure drawing was used.
+- No paper prose, experiment, model, or firmware changes were made in this
+  delivery.
+
+Delivered assets:
+- `docs/paper_sensys2027/figures/source/system_architecture.drawio` ->
+  `docs/paper_sensys2027/figures/system_architecture.pdf`
+- `docs/paper_sensys2027/figures/source/recognizer_architecture.drawio` ->
+  `docs/paper_sensys2027/figures/recognizer_architecture.pdf`
+- `docs/paper_sensys2027/figures/source/user_study_evidence.pptx` ->
+  `docs/paper_sensys2027/figures/user_study_evidence.pdf`
+- `scripts/paper_figures/plot_response_time_breakdown.py` ->
+  `docs/paper_sensys2027/figures/response_time_breakdown.pdf`
+- Helper scripts:
+  `scripts/paper_figures/render_diagram_exports.py` and
+  `scripts/paper_figures/build_user_study_evidence_pptx.mjs`
+
+Figure placement decisions:
+- `fig:system_architecture`: `figure*` preferred.
+- `fig:recognizer_architecture`: one-column.
+- `fig:response_time_breakdown`: `figure*` preferred.
+- `fig:user_study_evidence`: `figure*`.
+
+Writing integration required:
+- Replace old LaTeX placeholders with lightweight `includegraphics` wrappers.
+- Use `fig:user_study_evidence` instead of `tab:user_geometry_protocol`.
+- Merge/drop old `fig:demo_storyboard`; user-study Panel D can absorb it.
+- Keep no-geometry rule: no geometry, direction, angle, distance,
+  speaker-position, or direction-level accuracy content.
+
+Reported checks:
+- `git diff --check -- docs/paper_sensys2027 scripts/paper_figures` passed.
+- PDF visible text and editable source text scans did not hit forbidden
+  study/internal terms.
+- Four PDFs are one-page vector PDFs and were visually checked through PNG
+  conversion.

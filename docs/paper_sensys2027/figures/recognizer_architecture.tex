@@ -1,38 +1,6 @@
 \begin{figure}[t]
     \centering
-    \begingroup
-    \setlength{\fboxsep}{3pt}
-    \setlength{\tabcolsep}{2pt}
-    \resizebox{\linewidth}{!}{%
-    \begin{tabular}{r c c c c c c c c c}
-        \scriptsize Offline
-        &
-        \fbox{\parbox[c][0.48cm][c]{1.25cm}{\centering\scriptsize Log-mel}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.48cm][c]{1.25cm}{\centering\scriptsize CNN\\frontend}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.48cm][c]{1.75cm}{\centering\scriptsize Temporal\\Branchformer}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.48cm][c]{1.35cm}{\centering\scriptsize Pooled\\embedding}}
-        & $\rightarrow$
-        &
-        \fbox{\parbox[c][0.48cm][c]{1.35cm}{\centering\scriptsize 3-way\\classifier}}
-        \\
-        \scriptsize On-device
-        &
-        \fbox{\parbox[c][0.48cm][c]{1.25cm}{\centering\scriptsize Log-mel}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.48cm][c]{1.25cm}{\centering\scriptsize CNN\\frontend}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.48cm][c]{1.75cm}{\centering\scriptsize Bottleneck +\\depthwise}}
-        & $\rightarrow$ &
-        \fbox{\parbox[c][0.48cm][c]{1.35cm}{\centering\scriptsize Integer\\model}}
-        & $\rightarrow$
-        &
-        \fbox{\parbox[c][0.48cm][c]{1.35cm}{\centering\scriptsize 3-way\\classifier}}
-    \end{tabular}%
-    }
-    \endgroup
-    \caption{Recognizer design. The offline acoustic reference model maps log-mel inputs through a convolutional frontend and temporal encoder before intent classification. The embedded recognizer keeps the same intent contract while using a compact integer path for the ESP32 prototype.}
+    \includegraphics[width=\linewidth]{recognizer_architecture.pdf}
+    \caption{Recognizer design. The offline reference recognizer and embedded recognizer share the same log-mel input and three-event output contract, while using different internal capacity to trade acoustic quality against deployment constraints.}
     \label{fig:recognizer_architecture}
 \end{figure}

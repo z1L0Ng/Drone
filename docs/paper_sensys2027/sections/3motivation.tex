@@ -15,6 +15,8 @@ Voice is a natural way for people to interact with a nearby drone because it doe
 
 This layer must remain conservative. Speech is ambiguous, background audio is uncontrolled, and a drone can create unsafe behavior if a noisy utterance is treated as a direct command. Work on always-on and embedded speech systems already shows that false accepts, misses, latency, and runtime constraints matter in addition to top-line accuracy \cite{rybakov2020streamingkws,banbury2021mlperftiny}. For a UAV, these errors have a physical interpretation. The voice layer therefore produces evidence for a downstream safety decision rather than directly controlling the vehicle. In this paper, the output of speech recognition is an intent-state event that can be logged, ignored, held, escalated, or forwarded by a conservative control boundary.
 
+Table~\ref{tab:safety_components} summarizes the gap this layer addresses relative to existing UAV safety mechanisms.
+
 \begin{table}[t]
     \centering
     \caption{How Akouo complements existing UAV safety mechanisms.}

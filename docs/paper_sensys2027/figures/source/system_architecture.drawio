@@ -1,0 +1,70 @@
+<mxfile host="app.diagrams.net" modified="2026-06-01T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="akouo-system-architecture" name="Akouo system architecture">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="520" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Akouo voice safety-interaction architecture" style="text;html=1;strokeColor=none;fillColor=none;fontSize=22;fontStyle=1;fontColor=#1B2A34;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="24" width="560" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="Speech is reported as an intent event, then mediated by a conservative boundary." style="text;html=1;strokeColor=none;fillColor=none;fontSize=14;fontColor=#5F6F7A;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="58" width="720" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="person" value="nearby&lt;br&gt;speech" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;fontColor=#1B2A34;strokeColor=#1B2A34;" vertex="1" parent="1">
+          <mxGeometry x="58" y="176" width="70" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="uav" value="embedded board&lt;br&gt;near UAV" style="rounded=1;whiteSpace=wrap;html=1;arcSize=16;fillColor=#F7FAFC;strokeColor=#1B2A34;fontSize=14;fontColor=#1B2A34;" vertex="1" parent="1">
+          <mxGeometry x="196" y="188" width="130" height="88" as="geometry"/>
+        </mxCell>
+        <mxCell id="speech-wave" value="" style="shape=flexArrow;html=1;endArrow=classic;startArrow=none;fillColor=#4477AA;strokeColor=#4477AA;width=14;endSize=5;" vertex="1" parent="1">
+          <mxGeometry x="135" y="216" width="54" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="capture" value="onboard&lt;br&gt;capture" style="rounded=1;whiteSpace=wrap;html=1;arcSize=16;fillColor=#EAF2F8;strokeColor=#4477AA;fontSize=14;fontColor=#1B2A34;" vertex="1" parent="1">
+          <mxGeometry x="380" y="190" width="130" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="inference" value="log-mel&lt;br&gt;integer inference" style="rounded=1;whiteSpace=wrap;html=1;arcSize=16;fillColor=#EAF5F3;strokeColor=#228A8D;fontSize=14;fontColor=#1B2A34;" vertex="1" parent="1">
+          <mxGeometry x="560" y="190" width="150" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="event" value="intent event&lt;br&gt;label / conf. / time" style="rounded=1;whiteSpace=wrap;html=1;arcSize=16;fillColor=#F6F2E8;strokeColor=#E8B25B;fontSize=14;fontColor=#1B2A34;" vertex="1" parent="1">
+          <mxGeometry x="760" y="190" width="162" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="bridge" value="host-side&lt;br&gt;safety-state bridge" style="rounded=1;whiteSpace=wrap;html=1;arcSize=16;fillColor=#EEF6E8;strokeColor=#66A61E;fontSize=14;fontColor=#1B2A34;" vertex="1" parent="1">
+          <mxGeometry x="972" y="190" width="154" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="boundary" value="Tello SDK&lt;br&gt;boundary" style="rounded=1;whiteSpace=wrap;html=1;arcSize=16;fillColor=#FDECE6;strokeColor=#D55E00;fontSize=14;fontColor=#1B2A34;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="190" width="130" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="safety-inputs" value="existing safety inputs&lt;br&gt;obstacle / geofence /&lt;br&gt;failsafe / manual authority" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#F3F5F7;strokeColor=#5F6F7A;fontSize=13;fontColor=#1B2A34;" vertex="1" parent="1">
+          <mxGeometry x="742" y="348" width="380" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="outcome-log" value="outcome&lt;br&gt;record" style="rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#F3F5F7;strokeColor=#5F6F7A;fontSize=13;fontColor=#1B2A34;" vertex="1" parent="1">
+          <mxGeometry x="1178" y="348" width="110" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;strokeColor=#4477AA;endArrow=block;endFill=1;" edge="1" parent="1" source="uav" target="capture">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;strokeColor=#228A8D;endArrow=block;endFill=1;" edge="1" parent="1" source="capture" target="inference">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;strokeColor=#E8B25B;endArrow=block;endFill=1;" edge="1" parent="1" source="inference" target="event">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="wireless event reporting" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;strokeColor=#66A61E;endArrow=block;endFill=1;fontSize=12;fontColor=#5F6F7A;" edge="1" parent="1" source="event" target="bridge">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;strokeColor=#D55E00;endArrow=block;endFill=1;" edge="1" parent="1" source="bridge" target="boundary">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#5F6F7A;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1" source="safety-inputs" target="bridge">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#5F6F7A;endArrow=block;endFill=1;" edge="1" parent="1" source="boundary" target="outcome-log">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="takeaway" value="Takeaway: the recognizer is an event source; physical action remains behind a logged safety-state boundary." style="text;html=1;strokeColor=none;fillColor=none;fontSize=15;fontColor=#1B2A34;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="452" width="970" height="32" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

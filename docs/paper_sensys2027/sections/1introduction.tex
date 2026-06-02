@@ -5,8 +5,11 @@ Unmanned Aerial Vehicles (UAVs/drones) are expected to become more prevalent in 
     \centering
     \includegraphics[width=\linewidth]{figures/figure1.png}
     \caption{Example talk-to-the-drone scenario in which nearby speech provides a hands-free interaction channel.}
+    \label{fig:talk_to_drone_scenario}
     \Description{A nearby person speaks to a drone as a hands-free interaction example.}
 \end{figure}
+
+Figure~\ref{fig:talk_to_drone_scenario} illustrates the interaction style this paper targets: nearby speech becomes an input to a UAV-side safety layer rather than a direct replacement for the existing control stack.
 
 Given the potential extent of applications of Unmanned Aerial Vehicles (UAVs), policymakers have been contemplating ensuring the deployment of these systems is bound by safety standards and regulations to potentially reduce unwarranted consequences. For example, the \textit{European Aviation Safety Agency} in Regulation 2019/947 has provided guidelines for the widespread deployment of UAVs, particularly in urban areas. The guidelines instruct UAV operators to perform a risk assessment and mitigation before UAVs are considered airworthy, and may require UAVs to implement fail-safe systems. Most available UAVs on the market lack fault-detection systems, which can pose a safety risk. Soon, we expect regulators worldwide to establish safe operating conditions. 
 
@@ -32,7 +35,7 @@ This paper makes four contributions:
 \begin{itemize}
 \item \textbf{Safety Interaction Layer.} We define Akouo, a drone-side UAV safety interaction layer that treats human voice as a safety-relevant signal under rotor self-noise, runs locally, and exposes events only through a conservative control boundary rather than a general speech assistant or direct speech-to-flight controller.
 \item \textbf{Intent-State Modeling.} Akouo models voice input as safety-relevant states and events rather than merely three labels: emergency maps to safety-critical handling, movement maps to pending ordinary interaction that requires additional policy before motion, and unknown maps to fallback/no-action behavior.
-\item \textbf{Rotor-Noise Robust On-Device Recognition.} We instantiate the recognizer path on XIAO ESP32-S3 with microphone capture, feature extraction, inference, and event reporting, positioning the board as the edge deployment path for rotor-noisy safety interaction without claiming live flight or fully onboard drone control.
+\item \textbf{Rotor-Noise Robust On-Device Recognition.} We instantiate the recognizer path on an ESP32-S3 microcontroller with microphone capture, feature extraction, inference, and event reporting, positioning the board as the edge deployment path for rotor-noisy safety interaction without claiming live flight or fully onboard drone control.
 \item \textbf{Evaluation and Reproducibility Plan.} We structure the evaluation around recognition quality, rotor-noise robustness, deployment feasibility, speaker and language robustness.
 \end{itemize}
 
