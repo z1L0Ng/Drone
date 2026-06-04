@@ -1,0 +1,4 @@
+intent,keyword,support,accuracy,most_common_wrong_prediction
+emergency,unavailable_in_sd_path,2,0.0,movement
+movement,unavailable_in_sd_path,2,1.0,
+unknown,unavailable_in_sd_path,2,1.0,

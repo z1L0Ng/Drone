@@ -1,0 +1,4 @@
+intent,support,precision,recall,f1
+emergency,2,1.0,0.5,0.6666666666666666
+movement,2,0.6666666666666666,1.0,0.8
+unknown,2,1.0,1.0,1.0

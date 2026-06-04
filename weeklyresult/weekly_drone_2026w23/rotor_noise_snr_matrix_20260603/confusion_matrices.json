@@ -1,0 +1,349 @@
+{
+  "labels": [
+    "emergency",
+    "movement",
+    "unknown"
+  ],
+  "conditions": {
+    "clean": {
+      "condition": "No added rotor noise",
+      "slug": "clean",
+      "snr_db": null,
+      "confusion_matrix": [
+        [
+          2688,
+          344,
+          304
+        ],
+        [
+          80,
+          3085,
+          171
+        ],
+        [
+          44,
+          187,
+          3105
+        ]
+      ],
+      "classification_report": {
+        "emergency": {
+          "precision": 0.9559032716927454,
+          "recall": 0.8057553956834532,
+          "f1-score": 0.874430709173715,
+          "support": 3336.0
+        },
+        "movement": {
+          "precision": 0.8531526548672567,
+          "recall": 0.9247601918465228,
+          "f1-score": 0.8875143843498274,
+          "support": 3336.0
+        },
+        "unknown": {
+          "precision": 0.86731843575419,
+          "recall": 0.9307553956834532,
+          "f1-score": 0.8979178716020821,
+          "support": 3336.0
+        },
+        "accuracy": 0.8870903277378097,
+        "macro avg": {
+          "precision": 0.892124787438064,
+          "recall": 0.8870903277378098,
+          "f1-score": 0.8866209883752082,
+          "support": 10008.0
+        },
+        "weighted avg": {
+          "precision": 0.892124787438064,
+          "recall": 0.8870903277378097,
+          "f1-score": 0.8866209883752082,
+          "support": 10008.0
+        }
+      },
+      "unknown_false_events": 231,
+      "mixing_stats": {
+        "n_mixed": 0,
+        "n_peak_normalized": 0,
+        "peak_normalized_fraction": 0.0,
+        "max_peak_before_normalization": 0.0
+      },
+      "confidence_summary": {
+        "mean": 0.915404200553894,
+        "median": 0.989813506603241,
+        "p05": 0.5598564147949219,
+        "p95": 0.9999780654907227
+      }
+    },
+    "snr_0db": {
+      "condition": "Rotor noise, 0 dB SNR",
+      "slug": "snr_0db",
+      "snr_db": 0.0,
+      "confusion_matrix": [
+        [
+          2882,
+          251,
+          203
+        ],
+        [
+          199,
+          2985,
+          152
+        ],
+        [
+          82,
+          226,
+          3028
+        ]
+      ],
+      "classification_report": {
+        "emergency": {
+          "precision": 0.9111602908631047,
+          "recall": 0.8639088729016786,
+          "f1-score": 0.8869056777965841,
+          "support": 3336.0
+        },
+        "movement": {
+          "precision": 0.8622183708838822,
+          "recall": 0.8947841726618705,
+          "f1-score": 0.8781994704324801,
+          "support": 3336.0
+        },
+        "unknown": {
+          "precision": 0.8950635530594148,
+          "recall": 0.907673860911271,
+          "f1-score": 0.9013246018752791,
+          "support": 3336.0
+        },
+        "accuracy": 0.8887889688249401,
+        "macro avg": {
+          "precision": 0.8894807382688006,
+          "recall": 0.8887889688249401,
+          "f1-score": 0.8888099167014478,
+          "support": 10008.0
+        },
+        "weighted avg": {
+          "precision": 0.8894807382688006,
+          "recall": 0.8887889688249401,
+          "f1-score": 0.8888099167014477,
+          "support": 10008.0
+        }
+      },
+      "unknown_false_events": 308,
+      "mixing_stats": {
+        "n_mixed": 10008,
+        "n_peak_normalized": 1609,
+        "peak_normalized_fraction": 0.16077138289368506,
+        "max_peak_before_normalization": 3.510324478149414
+      },
+      "confidence_summary": {
+        "mean": 0.9218587279319763,
+        "median": 0.9925310611724854,
+        "p05": 0.5718638300895691,
+        "p95": 0.9999871253967285
+      }
+    },
+    "snr_m5db": {
+      "condition": "Rotor noise, -5 dB SNR",
+      "slug": "snr_m5db",
+      "snr_db": -5.0,
+      "confusion_matrix": [
+        [
+          2865,
+          232,
+          239
+        ],
+        [
+          342,
+          2820,
+          174
+        ],
+        [
+          140,
+          253,
+          2943
+        ]
+      ],
+      "classification_report": {
+        "emergency": {
+          "precision": 0.855990439199283,
+          "recall": 0.8588129496402878,
+          "f1-score": 0.8573993715397277,
+          "support": 3336.0
+        },
+        "movement": {
+          "precision": 0.8532526475037822,
+          "recall": 0.8453237410071942,
+          "f1-score": 0.8492696882999549,
+          "support": 3336.0
+        },
+        "unknown": {
+          "precision": 0.8769368295589988,
+          "recall": 0.8821942446043165,
+          "f1-score": 0.879557680812911,
+          "support": 3336.0
+        },
+        "accuracy": 0.8621103117505995,
+        "macro avg": {
+          "precision": 0.8620599720873546,
+          "recall": 0.8621103117505995,
+          "f1-score": 0.8620755802175312,
+          "support": 10008.0
+        },
+        "weighted avg": {
+          "precision": 0.8620599720873547,
+          "recall": 0.8621103117505995,
+          "f1-score": 0.8620755802175311,
+          "support": 10008.0
+        }
+      },
+      "unknown_false_events": 393,
+      "mixing_stats": {
+        "n_mixed": 10008,
+        "n_peak_normalized": 2932,
+        "peak_normalized_fraction": 0.2929656274980016,
+        "max_peak_before_normalization": 5.6155171394348145
+      },
+      "confidence_summary": {
+        "mean": 0.9124830961227417,
+        "median": 0.9894379377365112,
+        "p05": 0.5575217604637146,
+        "p95": 0.9999834895133972
+      }
+    },
+    "snr_m10db": {
+      "condition": "Rotor noise, -10 dB SNR",
+      "slug": "snr_m10db",
+      "snr_db": -10.0,
+      "confusion_matrix": [
+        [
+          2846,
+          240,
+          250
+        ],
+        [
+          496,
+          2635,
+          205
+        ],
+        [
+          217,
+          328,
+          2791
+        ]
+      ],
+      "classification_report": {
+        "emergency": {
+          "precision": 0.7996628266366957,
+          "recall": 0.8531175059952039,
+          "f1-score": 0.8255257432922407,
+          "support": 3336.0
+        },
+        "movement": {
+          "precision": 0.8226662503902591,
+          "recall": 0.7898681055155875,
+          "f1-score": 0.8059336289952592,
+          "support": 3336.0
+        },
+        "unknown": {
+          "precision": 0.8598274799753542,
+          "recall": 0.8366306954436451,
+          "f1-score": 0.8480704952901853,
+          "support": 3336.0
+        },
+        "accuracy": 0.8265387689848122,
+        "macro avg": {
+          "precision": 0.8273855190007696,
+          "recall": 0.826538768984812,
+          "f1-score": 0.8265099558592284,
+          "support": 10008.0
+        },
+        "weighted avg": {
+          "precision": 0.8273855190007697,
+          "recall": 0.8265387689848122,
+          "f1-score": 0.8265099558592284,
+          "support": 10008.0
+        }
+      },
+      "unknown_false_events": 545,
+      "mixing_stats": {
+        "n_mixed": 10008,
+        "n_peak_normalized": 4936,
+        "peak_normalized_fraction": 0.49320543565147884,
+        "max_peak_before_normalization": 7.911365032196045
+      },
+      "confidence_summary": {
+        "mean": 0.8968044519424438,
+        "median": 0.9828128814697266,
+        "p05": 0.5286082029342651,
+        "p95": 0.9999741911888123
+      }
+    },
+    "snr_m15db": {
+      "condition": "Rotor noise, -15 dB SNR",
+      "slug": "snr_m15db",
+      "snr_db": -15.0,
+      "confusion_matrix": [
+        [
+          2712,
+          251,
+          373
+        ],
+        [
+          741,
+          2292,
+          303
+        ],
+        [
+          347,
+          432,
+          2557
+        ]
+      ],
+      "classification_report": {
+        "emergency": {
+          "precision": 0.7136842105263158,
+          "recall": 0.8129496402877698,
+          "f1-score": 0.7600896860986547,
+          "support": 3336.0
+        },
+        "movement": {
+          "precision": 0.7704201680672269,
+          "recall": 0.6870503597122302,
+          "f1-score": 0.7263508160354936,
+          "support": 3336.0
+        },
+        "unknown": {
+          "precision": 0.7909062789978348,
+          "recall": 0.7664868105515588,
+          "f1-score": 0.7785050997107626,
+          "support": 3336.0
+        },
+        "accuracy": 0.7554956035171863,
+        "macro avg": {
+          "precision": 0.7583368858637924,
+          "recall": 0.7554956035171863,
+          "f1-score": 0.754981867281637,
+          "support": 10008.0
+        },
+        "weighted avg": {
+          "precision": 0.7583368858637926,
+          "recall": 0.7554956035171863,
+          "f1-score": 0.754981867281637,
+          "support": 10008.0
+        }
+      },
+      "unknown_false_events": 779,
+      "mixing_stats": {
+        "n_mixed": 10008,
+        "n_peak_normalized": 6986,
+        "peak_normalized_fraction": 0.6980415667466027,
+        "max_peak_before_normalization": 14.527604103088379
+      },
+      "confidence_summary": {
+        "mean": 0.8680078387260437,
+        "median": 0.9604796171188354,
+        "p05": 0.5035766959190369,
+        "p95": 0.9999374151229858
+      }
+    }
+  }
+}

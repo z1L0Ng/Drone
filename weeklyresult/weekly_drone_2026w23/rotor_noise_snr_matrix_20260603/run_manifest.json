@@ -1,0 +1,2034 @@
+{
+  "timestamp": "2026-06-03T01:52:40",
+  "git": {
+    "branch": "main",
+    "head": "b98af4af0b30f46d1aef5e8dc1e2b2309ba0ad8a",
+    "status_short_branch": [
+      "## main...origin/main",
+      " M .DS_Store",
+      " M docs/paper_sensys2027/figures/figure1.png",
+      " M docs/paper_sensys2027/figures/recognizer_architecture.pdf",
+      " D docs/paper_sensys2027/figures/recognizer_architecture.tex",
+      " D docs/paper_sensys2027/figures/response_time_breakdown.tex",
+      " M docs/paper_sensys2027/figures/safety_state_flow.tex",
+      " D docs/paper_sensys2027/figures/source/system_architecture.drawio",
+      " M docs/paper_sensys2027/figures/system_architecture.pdf",
+      " D docs/paper_sensys2027/figures/system_architecture.tex",
+      " D docs/paper_sensys2027/figures/user_study_evidence.tex",
+      " M docs/paper_sensys2027/sections/1introduction.tex",
+      " M docs/paper_sensys2027/sections/4architecture.tex",
+      " M docs/paper_sensys2027/sections/5recognizer.tex",
+      " M docs/paper_sensys2027/sections/7evaluation.tex",
+      " M docs/paper_sensys2027/sections/8conclusion.tex",
+      "?? docs/paper_sensys2027/figures/figure1.pdf",
+      "?? docs/paper_sensys2027/figures/recognizer_architecture.png",
+      "?? docs/paper_sensys2027/figures/source/figure1_opening_scenario.drawio",
+      "?? docs/paper_sensys2027/figures/source/recognizer_architecture.puml",
+      "?? docs/paper_sensys2027/figures/source/system_architecture.puml",
+      "?? docs/paper_sensys2027/figures/system_architecture.png",
+      "?? scripts/eval_rotor_noise_snr_matrix.py",
+      "?? scripts/paper_figures/render_figure1_opening_scenario.py",
+      "?? scripts/paper_figures/render_recognizer_architecture_plantuml.sh",
+      "?? scripts/paper_figures/render_system_architecture_plantuml.sh",
+      "?? weeklyresult/weekly_drone_2026w23/"
+    ]
+  },
+  "model": {
+    "model_role": "offline_acoustic_reference_w14_preprocess_ext",
+    "checkpoint_path": "saved_models/weekly_drone_2026w14/preprocess_ext/student_kd_best.weights.h5",
+    "checkpoint_abs_path": "/Users/zilongzeng/Research/Drone/saved_models/weekly_drone_2026w14/preprocess_ext/student_kd_best.weights.h5",
+    "checkpoint_size_bytes": 7084552,
+    "run_config_path": "weeklyresult/weekly_drone_2026w14/preprocess_ext/run_config.json",
+    "model_profile": "base",
+    "model_kwargs": {
+      "conv_filters": 64,
+      "num_layers": 1,
+      "head_size": 32,
+      "num_heads": 4,
+      "ff_dim": 256,
+      "dropout_rate": 0.15,
+      "fnn_units": [
+        128
+      ]
+    },
+    "frontend": "log-mel",
+    "input_shape": [
+      256,
+      32,
+      1
+    ],
+    "use_stats_branch": false
+  },
+  "dataset": {
+    "processed_data_path": "dataset/processed/data_paths.npz",
+    "processed_data_abs_path": "/Users/zilongzeng/Research/Drone/dataset/processed/data_paths.npz",
+    "test_split_keys": [
+      "X_test",
+      "y_test"
+    ],
+    "label_encoder_path": "saved_models/label_encoder.joblib",
+    "label_encoder_abs_path": "/Users/zilongzeng/Research/Drone/saved_models/label_encoder.joblib",
+    "labels": [
+      "emergency",
+      "movement",
+      "unknown"
+    ],
+    "n_total": 10008,
+    "full_x_test_n": 10008,
+    "used_full_test_split": true,
+    "class_counts": {
+      "emergency": 3336,
+      "movement": 3336,
+      "unknown": 3336
+    },
+    "missing_test_files": 0
+  },
+  "noise": {
+    "source_dir": "dataset/raw/tellonoise",
+    "source_abs_dir": "/Users/zilongzeng/Research/Drone/dataset/raw/tellonoise",
+    "source_description": "local dataset/raw/tellonoise noise clips referenced by the w14 run_config",
+    "file_count": 231,
+    "files": [
+      {
+        "path": "dataset/raw/tellonoise/19700101_000007.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.023409739509632346
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000008.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02780433804896893
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000010.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028586226746207102
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000011.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02783077733608661
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000012.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.029045429585152306
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000013.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026896386387525128
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000018.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.024001068297948222
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000020.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02928238088474609
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000021.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.022802859413262922
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000022.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02720422031544149
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000023.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02927311105839908
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000024.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02447350995137822
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000025.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028223497683997265
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000026.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.030194162775529547
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000027.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.029519302651809996
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000028.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02451987045921851
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000029.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027136702961986885
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000030.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.0272042653922108
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000032.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.023236151962308212
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000033.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.024304335592431017
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000034.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.024450072342937345
+      },
+      {
+        "path": "dataset/raw/tellonoise/19700101_000035.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.022601638647844084
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_185954.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.0017735851915203966
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_185955.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.040073457100777886
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_185956.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.01923501776275225
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_185957.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.024561045566515533
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_185958.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026914579901727846
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_185959.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.024406853675842284
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190000.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.021896607955859508
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190001.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028942864625889343
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190002.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027676837303617502
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190003.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026384135224856435
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190005.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026084283909294754
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190006.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.0251043794885627
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190007.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02412216769170482
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190008.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026171961568703408
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190009.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025654747285880148
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190010.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027964178759895732
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190011.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02785934004408773
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190012.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02610541081649717
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190013.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.018605980245047248
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190014.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.000573182326683309
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190210.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.020324820631416513
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190211.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028763077760871964
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190212.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.0261171894838335
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190213.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.024932909946946892
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190214.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02513068329280941
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190215.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.024674668472202028
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190217.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02651453185430728
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190218.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02626464384782594
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190219.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026171691297902727
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190220.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026192512132343835
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190221.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026300888196681627
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190222.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02515467021270888
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190223.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026663814912899396
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190224.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02617959281237563
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190225.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026728256528207567
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190226.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02489871909201611
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190227.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.024972874227911234
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190228.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.031420318865450096
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_190229.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.0013027531609404832
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191847.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026360362547449768
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191848.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02757911167299608
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191849.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027798927684198133
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191850.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027173839282884728
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191852.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.029163947111286687
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191853.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026914810518734157
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191854.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.0251808859546436
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191855.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02403863023262238
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191856.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02659070927061839
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191857.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028187506946211215
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191858.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02924956320464844
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191859.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.030225800964224617
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191900.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028068571215961128
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191901.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027822716584720183
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191902.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027307996341085525
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191903.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026150444529252127
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191904.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.024698002900113352
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191905.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026657965160848108
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191906.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02672241538169328
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191907.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028937719189038036
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191908.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025651717062632088
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191909.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025890163490374107
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191910.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027059249633632133
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191911.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02558896112430375
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191912.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027437020031618884
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191913.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02603076295502251
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191914.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027000009505834897
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191915.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02914569213532377
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191916.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02773283875751076
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191917.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02846336700889515
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191918.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027381113621871917
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191919.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028428964691993314
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191920.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027096261865692212
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191921.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027014850899984594
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191922.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02351632715546293
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_191923.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.03628685447946191
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192237.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.023854038064775523
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192238.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028005639471579344
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192239.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026500668847060295
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192240.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027140342825849074
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192241.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.024623418254079297
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192242.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027841929027985317
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192243.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027970820987538902
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192244.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027761370558291674
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192245.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02720425568940118
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192246.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02825688402709784
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192247.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02984840507840272
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192248.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02798281484551262
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192249.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.023365088660793846
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192250.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.022333503333153204
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192251.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.023811544426484033
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192252.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02943591069726972
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192253.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02930230187892448
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192254.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.031120939964835996
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192255.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02766803710797103
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192257.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026975543852720874
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192258.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.029446144171408378
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192259.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02943280992639484
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192300.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028676594226271845
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192301.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02543056206277106
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192302.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025745501199213323
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192303.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.029088495959469583
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192304.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.032216376917553136
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192305.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028267357693461236
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192306.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.03262367125990568
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192307.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.032567575593478976
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192308.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025790597908198834
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192309.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.029651962189935148
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192310.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02681632977782283
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192312.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026719062542251776
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192313.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.03006961745338049
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192314.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026213261702796444
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192315.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026060209813236725
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192316.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027693902358878406
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192317.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027970690909423866
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192318.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02693844054901274
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192319.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02517127391701797
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192320.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025140247949224433
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192321.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026065800259530078
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192322.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025491458597767632
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192323.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028294768309919165
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192324.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026841609764029273
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192325.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027083085882710294
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192326.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02608257839817088
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192327.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.0295141898211441
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192328.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02597820030368166
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192329.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028617581577564125
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192330.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.029113949035236147
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192331.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025154878499626648
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192332.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02511855640471913
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192334.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02539011722628493
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192336.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026157516834908166
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192337.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027033221747609786
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192417.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028865761863125953
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192418.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02905010621191468
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192419.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.031185782713233492
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192420.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.031031766690837684
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192421.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.03061907769885147
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192423.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.03246128958521877
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192425.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.03066552971996134
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192426.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027198486924753525
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192427.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02815513952629408
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192428.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.03138700531848008
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192429.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028408280932053456
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192430.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027185271032736637
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192431.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02590417162486119
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192432.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025228377272374928
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192433.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.030210781677567865
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192434.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.030415561420843003
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192435.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028500483231619002
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192436.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02801716007461073
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192437.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025537961799418554
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192438.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.029308633078879213
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192439.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028700667904282454
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192441.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.022500278122373856
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192442.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02942459431855241
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192443.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027435612662055065
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192444.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025821318333561067
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192445.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.024926800043380354
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192446.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02976539612491615
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192447.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02912724714126671
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192448.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026061301297857425
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192449.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025022780908737333
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192450.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.024050841652671805
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192451.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.022594091306906195
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192452.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.024314625128812623
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192453.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026174089772161097
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192454.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02570094871951733
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192455.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026585110174375585
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192456.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.028887904480390716
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192457.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02899195617507212
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192458.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.032548897895845585
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192459.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02519628580508288
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192500.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02616404053813312
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192501.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027202836890937762
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192502.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.0302561490671942
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192503.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.03386782511201454
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192504.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.03127362819248811
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192506.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025637945779657455
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192507.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02930686988454545
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192508.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.03116248103266116
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192509.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.03216183961625211
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192510.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.03399680265208008
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192512.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.03212898804876022
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192513.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.029392033283249474
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192514.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02915793084120378
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192515.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02539076903089881
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_192516.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02746827074646717
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194314.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02593298626394244
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194316.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02728042611340061
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194317.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027368077029415874
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194318.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02369338815222727
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194319.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02538421317131724
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194320.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02755383655108744
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194321.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026994795351231005
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194326.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02744880711386213
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194328.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.029173312364902813
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194329.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027529436627635732
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194330.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025939900411234704
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194331.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025736092602601277
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194332.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02264275402133353
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194333.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.027413862257439178
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194334.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02718623206927441
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194335.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025825904921453913
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194336.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.02368531716760481
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194337.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.023818914903327822
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194338.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026202980243309866
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194339.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.025724317657237407
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194346.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.021802249586442484
+      },
+      {
+        "path": "dataset/raw/tellonoise/20251029_194347.wav",
+        "sample_rate": 16000,
+        "frames": 16000,
+        "duration_sec": 1.0,
+        "loaded_len": 16000,
+        "power": 0.026481818935717456
+      }
+    ]
+  },
+  "mixing": {
+    "seed": 20260603,
+    "conditions": [
+      {
+        "name": "No added rotor noise",
+        "slug": "clean",
+        "snr_db": null
+      },
+      {
+        "name": "Rotor noise, 0 dB SNR",
+        "slug": "snr_0db",
+        "snr_db": 0.0
+      },
+      {
+        "name": "Rotor noise, -5 dB SNR",
+        "slug": "snr_m5db",
+        "snr_db": -5.0
+      },
+      {
+        "name": "Rotor noise, -10 dB SNR",
+        "slug": "snr_m10db",
+        "snr_db": -10.0
+      },
+      {
+        "name": "Rotor noise, -15 dB SNR",
+        "slug": "snr_m15db",
+        "snr_db": -15.0
+      }
+    ],
+    "snr_formula": "P_noise_target = P_speech / 10^(SNR_dB/10); scaled_noise = noise * sqrt(P_noise_target / P_noise); mixed = clean + scaled_noise",
+    "noise_match_rule": "resample to 16 kHz if needed, then crop or tile to 1.0 s",
+    "clipping_rule": "if mixed peak abs > 1.0, divide the whole mixed waveform by that peak",
+    "condition_mixing_stats": {
+      "clean": {
+        "n_mixed": 0,
+        "n_peak_normalized": 0,
+        "peak_normalized_fraction": 0.0,
+        "max_peak_before_normalization": 0.0
+      },
+      "snr_0db": {
+        "n_mixed": 10008,
+        "n_peak_normalized": 1609,
+        "peak_normalized_fraction": 0.16077138289368506,
+        "max_peak_before_normalization": 3.510324478149414
+      },
+      "snr_m5db": {
+        "n_mixed": 10008,
+        "n_peak_normalized": 2932,
+        "peak_normalized_fraction": 0.2929656274980016,
+        "max_peak_before_normalization": 5.6155171394348145
+      },
+      "snr_m10db": {
+        "n_mixed": 10008,
+        "n_peak_normalized": 4936,
+        "peak_normalized_fraction": 0.49320543565147884,
+        "max_peak_before_normalization": 7.911365032196045
+      },
+      "snr_m15db": {
+        "n_mixed": 10008,
+        "n_peak_normalized": 6986,
+        "peak_normalized_fraction": 0.6980415667466027,
+        "max_peak_before_normalization": 14.527604103088379
+      }
+    }
+  },
+  "prediction": {
+    "decision_rule": "argmax over softmax probabilities",
+    "confidence_threshold": null,
+    "threshold_tuned_on_test_set": false
+  },
+  "commands": {
+    "shell_command": "MPLCONFIGDIR=/tmp/matplotlib NUMBA_CACHE_DIR=/tmp/numba_cache NUMBA_DISABLE_JIT=1 conda run -n drone python scripts/eval_rotor_noise_snr_matrix.py --output-dir weeklyresult/weekly_drone_2026w23/rotor_noise_snr_matrix_20260603",
+    "python_argv": [
+      "scripts/eval_rotor_noise_snr_matrix.py",
+      "--output-dir",
+      "weeklyresult/weekly_drone_2026w23/rotor_noise_snr_matrix_20260603"
+    ],
+    "python_argv_shell": "scripts/eval_rotor_noise_snr_matrix.py --output-dir weeklyresult/weekly_drone_2026w23/rotor_noise_snr_matrix_20260603",
+    "environment": {
+      "MPLCONFIGDIR": "/tmp/matplotlib",
+      "NUMBA_CACHE_DIR": "/tmp/numba_cache",
+      "NUMBA_DISABLE_JIT": "1"
+    }
+  },
+  "outputs": {
+    "snr_matrix_csv": "weeklyresult/weekly_drone_2026w23/rotor_noise_snr_matrix_20260603/snr_matrix.csv",
+    "per_class_metrics_csv": "weeklyresult/weekly_drone_2026w23/rotor_noise_snr_matrix_20260603/per_class_metrics.csv",
+    "confusion_matrices_json": "weeklyresult/weekly_drone_2026w23/rotor_noise_snr_matrix_20260603/confusion_matrices.json",
+    "run_manifest_json": "weeklyresult/weekly_drone_2026w23/rotor_noise_snr_matrix_20260603/run_manifest.json",
+    "report_md": "weeklyresult/weekly_drone_2026w23/rotor_noise_snr_matrix_20260603/report.md"
+  },
+  "status": "preliminary for paper until manager approves full-split support policy"
+}

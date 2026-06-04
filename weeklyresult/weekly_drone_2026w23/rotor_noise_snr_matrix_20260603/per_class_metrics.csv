@@ -1,0 +1,16 @@
+condition,snr_db,model_role,class_label,precision,recall,f1,support,confidence_mean,confidence_median
+No added rotor noise,,offline_acoustic_reference_w14_preprocess_ext,emergency,0.955903,0.805755,0.874431,3336,0.877915,0.969707
+No added rotor noise,,offline_acoustic_reference_w14_preprocess_ext,movement,0.853153,0.924760,0.887514,3336,0.935973,0.996127
+No added rotor noise,,offline_acoustic_reference_w14_preprocess_ext,unknown,0.867318,0.930755,0.897918,3336,0.932325,0.991088
+"Rotor noise, 0 dB SNR",0.0,offline_acoustic_reference_w14_preprocess_ext,emergency,0.911160,0.863909,0.886906,3336,0.910577,0.991570
+"Rotor noise, 0 dB SNR",0.0,offline_acoustic_reference_w14_preprocess_ext,movement,0.862218,0.894784,0.878199,3336,0.927649,0.994613
+"Rotor noise, 0 dB SNR",0.0,offline_acoustic_reference_w14_preprocess_ext,unknown,0.895064,0.907674,0.901325,3336,0.927350,0.991227
+"Rotor noise, -5 dB SNR",-5.0,offline_acoustic_reference_w14_preprocess_ext,emergency,0.855990,0.858813,0.857399,3336,0.912730,0.991439
+"Rotor noise, -5 dB SNR",-5.0,offline_acoustic_reference_w14_preprocess_ext,movement,0.853253,0.845324,0.849270,3336,0.908023,0.988858
+"Rotor noise, -5 dB SNR",-5.0,offline_acoustic_reference_w14_preprocess_ext,unknown,0.876937,0.882194,0.879558,3336,0.916696,0.988448
+"Rotor noise, -10 dB SNR",-10.0,offline_acoustic_reference_w14_preprocess_ext,emergency,0.799663,0.853118,0.825526,3336,0.906020,0.989451
+"Rotor noise, -10 dB SNR",-10.0,offline_acoustic_reference_w14_preprocess_ext,movement,0.822666,0.789868,0.805934,3336,0.886645,0.975168
+"Rotor noise, -10 dB SNR",-10.0,offline_acoustic_reference_w14_preprocess_ext,unknown,0.859827,0.836631,0.848070,3336,0.897748,0.982996
+"Rotor noise, -15 dB SNR",-15.0,offline_acoustic_reference_w14_preprocess_ext,emergency,0.713684,0.812950,0.760090,3336,0.885475,0.978110
+"Rotor noise, -15 dB SNR",-15.0,offline_acoustic_reference_w14_preprocess_ext,movement,0.770420,0.687050,0.726351,3336,0.851314,0.935797
+"Rotor noise, -15 dB SNR",-15.0,offline_acoustic_reference_w14_preprocess_ext,unknown,0.790906,0.766487,0.778505,3336,0.867234,0.958184

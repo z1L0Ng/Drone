@@ -1,0 +1,16 @@
+condition,snr_db,model_role,class_label,precision,recall,f1,support,confidence_mean,confidence_median
+No added rotor noise,,offline_acoustic_reference_w14_preprocess_ext,emergency,0.931034,0.794118,0.857143,34,0.859990,0.959173
+No added rotor noise,,offline_acoustic_reference_w14_preprocess_ext,movement,0.837838,0.939394,0.885714,33,0.934169,0.996230
+No added rotor noise,,offline_acoustic_reference_w14_preprocess_ext,unknown,0.900000,0.931034,0.915254,29,0.949516,0.992728
+"Rotor noise, 0 dB SNR",0.0,offline_acoustic_reference_w14_preprocess_ext,emergency,0.870968,0.794118,0.830769,34,0.933961,0.992180
+"Rotor noise, 0 dB SNR",0.0,offline_acoustic_reference_w14_preprocess_ext,movement,0.805556,0.878788,0.840580,33,0.952291,0.996042
+"Rotor noise, 0 dB SNR",0.0,offline_acoustic_reference_w14_preprocess_ext,unknown,0.827586,0.827586,0.827586,29,0.921696,0.993784
+"Rotor noise, -5 dB SNR",-5.0,offline_acoustic_reference_w14_preprocess_ext,emergency,0.885714,0.911765,0.898551,34,0.940606,0.990139
+"Rotor noise, -5 dB SNR",-5.0,offline_acoustic_reference_w14_preprocess_ext,movement,0.900000,0.818182,0.857143,33,0.858055,0.971312
+"Rotor noise, -5 dB SNR",-5.0,offline_acoustic_reference_w14_preprocess_ext,unknown,0.838710,0.896552,0.866667,29,0.920034,0.991576
+"Rotor noise, -10 dB SNR",-10.0,offline_acoustic_reference_w14_preprocess_ext,emergency,0.756098,0.911765,0.826667,34,0.931055,0.986450
+"Rotor noise, -10 dB SNR",-10.0,offline_acoustic_reference_w14_preprocess_ext,movement,0.925926,0.757576,0.833333,33,0.877535,0.978099
+"Rotor noise, -10 dB SNR",-10.0,offline_acoustic_reference_w14_preprocess_ext,unknown,0.928571,0.896552,0.912281,29,0.883472,0.990063
+"Rotor noise, -15 dB SNR",-15.0,offline_acoustic_reference_w14_preprocess_ext,emergency,0.690476,0.852941,0.763158,34,0.909930,0.975809
+"Rotor noise, -15 dB SNR",-15.0,offline_acoustic_reference_w14_preprocess_ext,movement,0.760000,0.575758,0.655172,33,0.866591,0.911753
+"Rotor noise, -15 dB SNR",-15.0,offline_acoustic_reference_w14_preprocess_ext,unknown,0.827586,0.827586,0.827586,29,0.896233,0.986089

@@ -1,7 +1,12 @@
 \section{On-Device Intent Recognizer}
 \label{sec:recognizer}
 
-\input{figures/recognizer_architecture}
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.96\textwidth]{figures/recognizer_architecture.pdf}
+    \caption{Recognizer design. A teacher recognizer guides a student recognizer through distillation while both use the same log-mel input and Branchformer-style event recognizer; the deployed student path emits the intent output and is exported for ESP32 int8 inference.}
+    \label{fig:recognizer_architecture}
+\end{figure*}
 
 \subsection{Acoustic Task}
 
@@ -14,6 +19,19 @@ The frontend converts each audio window into log-mel features. This representati
 The one-second window length is a compromise between interaction and acoustic evidence. A shorter window can reduce delay, but may not contain enough of a spoken phrase to separate emergency from ordinary movement speech. A longer window can improve context, but it delays the first event and makes the voice layer less responsive. The prototype therefore treats one second as the basic event interval and evaluates both first-window latency and steady-state event cadence.
 
 The recognizer also avoids a large spoken-command grammar. A grammar with many motion verbs, directions, distances, and modifiers would be attractive for a general voice assistant, but it would blur the boundary between recognizing intent and authorizing motion. \sys{} keeps that boundary explicit. The model distinguishes whether speech is safety-critical, ordinary interaction, or out of contract; direction, authority, and vehicle-state decisions remain outside the recognizer.
+
+\subsection{Dataset Construction}
+
+The acoustic dataset follows the same three-event contract. Emergency utterances map words expressing urgent intent, such as stop, no, and related reaction words from the Speech Commands vocabulary. Movement utterances include ordinary UAV-oriented motion words and short control phrases. Unknown utterances use speech that is outside the contract, so the model learns that unsupported audio should stay on the no-action path rather than being forced into emergency or movement. The speech examples are organized from Google Speech Commands and mapped into the three event categories used by \sys{} \cite{warden2018speechcommands}. Emergency maps to words such as stop, no, and related reaction words; movement maps to directional and navigation words such as go, up, down, left, right, follow, and back; unknown maps to remaining in-vocabulary words and background audio segments.
+
+The processed speech set is balanced before training. After scanning the three target classes and downsampling to the smallest class, the dataset contains 50,040 one-second utterances, with 16,680 examples per class. The split is stratified into 30,024 training examples, 10,008 validation examples, and 10,008 test examples; each validation and test split contains 3,336 examples per event class.
+
+Rotor noise is added from a local bank of 231 one-second recordings sampled at 16 kHz from a Tello quadrotor. The recordings were captured with the same ESP32 microphone path used by the prototype and cover operating phases such as takeoff, hovering, and landing. For each clean speech window \(x\) and noise window \(n\), the mixer computes speech power \(P_x\) and noise power \(P_n\), chooses a target noise power
+\[
+P_n^\star = \frac{P_x}{10^{\mathrm{SNR}_{dB}/10}},
+\]
+and forms the mixture \(y = x + \alpha n\), where \(\alpha = \sqrt{P_n^\star/P_n}\). If the mixed waveform exceeds full scale, the whole waveform is peak-normalized. This SNR-controlled construction lets the evaluation vary rotor-noise severity while keeping the intent labels, split, and recognizer fixed.
+
 
 \subsection{Reference and Embedded Recognizers}
 

@@ -1,0 +1,4 @@
+intent,keyword,support,accuracy,most_common_wrong_prediction
+emergency,freeze,2,0.5,unknown
+movement,down,2,0.0,emergency
+unknown,no,2,0.0,emergency

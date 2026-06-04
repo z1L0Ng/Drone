@@ -1,14 +1,20 @@
 \section{System Architecture}
 \label{sec:system}
 
-\input{figures/system_architecture}
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{figures/system_architecture.pdf}
+    \caption{\sys{} architecture. Nearby speech is processed as an onboard intent event, then mediated by a safety-state boundary before any gated UAV command is considered.}
+    \label{fig:system_architecture}
+\end{figure*}
+
 \input{figures/safety_state_flow}
 
 \subsection{Voice as a Safety Interaction Layer}
 
 \sys{} sits between nearby human speech and the UAV control stack. It is not a replacement for obstacle avoidance, geofencing, failsafe landing, manual override, or the flight controller. Those mechanisms continue to monitor the vehicle, the environment, and the operator channel. \sys{} adds a different input: a local voice channel for people near the drone, especially when using a phone or controller is slow, awkward, or unavailable.
 
-The architectural decision is to keep this voice channel narrow. A spoken utterance is first converted into a structured intent event, not a flight command. The event records what the voice layer believes it heard, how confident it was, and when the event was produced. Only after that record exists does a control boundary decide whether the event should be ignored, held, escalated, or forwarded to a downstream policy. Figure~\ref{fig:system_architecture} shows this separation, and Figure~\ref{fig:safety_state_flow} expands the event-to-boundary flow.
+The architectural decision is to keep this voice channel narrow. A spoken utterance is first converted into a structured intent event, not a flight command. The event records what the voice layer believes it heard, how confident it was, and when the event was produced. Only after that record exists does a control boundary decide whether the event should be ignored, held, escalated, or forwarded to a downstream policy. Figure~\ref{fig:system_architecture} shows this separation, and Table~\ref{tab:intent_state_contract} expands the event-to-boundary contract.
 
 This separation is central to the safety story. A conventional command recognizer can be evaluated by whether it selects the right spoken term. A UAV voice interface also has to ask what happens after the term is recognized. For example, a movement-like utterance should not by itself authorize motion, and an emergency-like utterance should receive priority without pretending that the recognizer has diagnosed the physical cause of danger. By turning speech into an event first, the system gives the control side a point where it can check vehicle state, operator policy, recent history, and existing safety mechanisms before any action is considered.
 
@@ -22,24 +28,7 @@ The control boundary is also where \sys{} remains compatible with existing safet
 
 The voice layer exposes a small contract to the rest of the system. It does not expose a long command grammar or natural-language plan. The contract contains three visible intent events: emergency, movement, and unknown. This choice is deliberately conservative. It gives the system enough information to distinguish safety-critical speech from ordinary interaction, while keeping unsupported or low-confidence audio on a no-action path.
 
-Table~\ref{tab:intent_state_contract} summarizes how each event is interpreted before reaching the control boundary. The table describes system semantics: it says what the voice layer is allowed to communicate, not what the drone must immediately do.
-
-\begin{table}[t]
-    \centering
-    \caption{Voice events exposed by \sys{} and their control-boundary meaning.}
-    \label{tab:intent_state_contract}
-    \small
-    \begin{tabular}{@{}p{0.22\linewidth}p{0.35\linewidth}p{0.33\linewidth}@{}}
-        \toprule
-        Event & Meaning & Boundary handling \\
-        \midrule
-        Emergency & The speaker appears to express an urgent safety-related intent. & Prioritize a safe response path such as hold, stop, or escalation under policy. \\
-        Movement & The speaker appears to request ordinary interaction with the drone. & Keep pending until authorization, vehicle state, and policy checks allow action. \\
-        Unknown & The audio is unsupported, ambiguous, or too uncertain to trust. & Log and ignore, or map to fallback/no action. \\
-        Low confidence & Any predicted event below the operating threshold. & Treat as unknown before it can affect control. \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+Table~\ref{tab:intent_state_contract} describes system semantics: it says what the voice layer is allowed to communicate, not what the drone must immediately do.
 
 Emergency is the safety-critical event. It is useful because it can make the voice channel responsive to nearby human concern, but it is still an event rather than proof of a hazard. The control boundary can decide whether to hold position, stop a task, escalate to an operator, or request confirmation, depending on the UAV state and the surrounding safety inputs.
 

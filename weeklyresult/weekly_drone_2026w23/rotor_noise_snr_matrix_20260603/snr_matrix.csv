@@ -1,0 +1,6 @@
+condition,snr_db,model_role,accuracy,macro_f1,emergency_recall,unknown_false_event_rate,n_total,n_emergency,n_movement,n_unknown
+No added rotor noise,,offline_acoustic_reference_w14_preprocess_ext,0.887090,0.886621,0.805755,0.069245,10008,3336,3336,3336
+"Rotor noise, 0 dB SNR",0.0,offline_acoustic_reference_w14_preprocess_ext,0.888789,0.888810,0.863909,0.092326,10008,3336,3336,3336
+"Rotor noise, -5 dB SNR",-5.0,offline_acoustic_reference_w14_preprocess_ext,0.862110,0.862076,0.858813,0.117806,10008,3336,3336,3336
+"Rotor noise, -10 dB SNR",-10.0,offline_acoustic_reference_w14_preprocess_ext,0.826539,0.826510,0.853118,0.163369,10008,3336,3336,3336
+"Rotor noise, -15 dB SNR",-15.0,offline_acoustic_reference_w14_preprocess_ext,0.755496,0.754982,0.812950,0.233513,10008,3336,3336,3336

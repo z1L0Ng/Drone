@@ -1,11 +1,9 @@
 \section{Prototype}
 \label{sec:prototype}
 
-\input{figures/prototype_pipeline}
-
 \subsection{Embedded Event Source}
 
-The prototype turns the architecture into a local event source near the UAV. Figure~\ref{fig:prototype_pipeline} shows the prototype path from local audio capture through event generation and the safety-state bridge. An ESP32-S3 microphone board captures audio, forms one-second analysis windows, computes log-mel features, invokes the embedded integer recognizer, and reports the resulting event. The board is not the flight controller. Its responsibility is to make the voice layer local: speech can be heard and summarized near the drone before control-side policy considers action.
+The prototype turns the architecture into a local event source near the UAV. An ESP32-S3 microphone board captures audio, forms one-second analysis windows, computes log-mel features, invokes the embedded integer recognizer, and reports the resulting event to the safety-state bridge. The board is not the flight controller. Its responsibility is to make the voice layer local: speech can be heard and summarized near the drone before control-side policy considers action.
 
 This placement is intentionally close to the acoustic source. If the microphone and recognizer depend on a phone, laptop, or remote service, the voice channel inherits the availability and latency of that external path. By putting capture and inference on the microcontroller, the prototype tests the harder system question: whether the UAV-side device can produce an intent event under the same resource limits that would constrain an onboard safety accessory.
 
@@ -19,38 +17,38 @@ The event sent by the board contains the predicted voice event, confidence, timi
 
 The prototype reports voice events to a safety-state bridge as compact timestamped intent events. The bridge attaches the current interaction state, applies the control-boundary policy, and records the outcome. This arrangement keeps the embedded board focused on local speech processing while making the control decision inspectable.
 
-The event payload is deliberately closer to a sensor report than to a command. It includes a sequence number or timestamp, the predicted event, confidence, timing information, and status fields. The bridge adds the state that the board should not decide locally: whether manual authority is present, whether the vehicle is in a grounded test mode, whether a prior event is still active, and whether the downstream Tello SDK interface acknowledged or timed out. This split lets the prototype test the safety interaction layer without requiring the recognizer to understand the full UAV policy.
+The event payload is deliberately closer to a sensor report than to a command. It includes a sequence number or timestamp, the predicted event, confidence, timing information, and status fields. The bridge adds the state that the board should not decide locally: whether manual authority is present, whether the vehicle is allowed to respond, whether a prior event is still active, and whether a vehicle-facing response completed or timed out. This split lets the prototype test the safety interaction layer without requiring the recognizer to understand the full UAV policy.
 
-Table~\ref{tab:prototype_interfaces} summarizes the prototype interfaces. The table is organized by system role rather than by internal implementation labels, because the important question for the paper is what evidence each interface contributes to the UAV safety interaction layer.
+Table~\ref{tab:prototype_interfaces} summarizes the prototype evidence path. The table is organized around the paper's safety-interaction story: nearby speech is captured locally, converted into an intent event, recorded for inspection, and then mediated before any vehicle-facing action can occur.
 
 \begin{table}[t]
     \centering
-    \caption{Prototype interfaces used to connect local voice events to a conservative control boundary.}
+    \caption{Prototype evidence path from nearby speech to a conservative control boundary.}
     \label{tab:prototype_interfaces}
-    \small
-    \begin{tabular}{@{}p{0.28\linewidth}p{0.33\linewidth}p{0.29\linewidth}@{}}
+    \footnotesize
+    \begin{tabular}{@{}p{0.28\linewidth}p{0.62\linewidth}@{}}
         \toprule
-        Interface & Role in the prototype & Evidence supported \\
+        Story step & Prototype realization \\
         \midrule
-        ESP32-S3 microphone path & Captures nearby speech and rotor-noisy audio windows. & Local input capture and repeated windowing. \\
-        Embedded recognizer & Converts log-mel features into an intent event. & On-device inference and event generation. \\
-        Event reporting & Delivers label, confidence, and timing fields to the safety-state bridge. & Event throughput and reporting stability. \\
-        Safety-state bridge & Logs state, policy decision, acknowledgement, or rejection. & Control-boundary behavior before flight use. \\
-        Tello SDK boundary & Keeps physical commands behind grounded and no-propeller checks. & Gated command dispatch without direct motion from speech. \\
+        Local voice sensing & A microphone board records one-second audio windows near the noisy UAV. \\
+        Onboard event source & Log-mel features and integer inference produce a constrained intent event: emergency, movement, or unknown. \\
+        Event record & Each event carries label, confidence, and timing fields for auditable runtime and reporting behavior. \\
+        Safety-state boundary & The bridge combines the event with policy, authority, and vehicle state before deciding whether to hold, reject, or forward. \\
+        Gated actuation & Vehicle-facing dispatch is reached only after logged boundary handling. \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 The bridge exposes the same semantics as the architecture. Emergency events are routed to safety-critical handling under policy. Movement events remain pending until the bridge decides whether the request is authorized and safe. Unknown and low-confidence events are logged and mapped to no action. This behavior lets the prototype exercise the safety-state contract without treating the recognizer as a direct controller.
 
-The bridge also supports repeatable inspection of failure cases. If the board reports an unknown event, the bridge record shows whether it was ignored. If a movement event is produced while manual authority is absent, the bridge record shows whether the event was blocked. If an emergency event is produced, the record shows whether it entered the intended safety-critical path. These records are the basis for the control-boundary evaluation because they expose the step that a speech benchmark cannot measure.
+The bridge also supports repeatable inspection of failure cases. If the board reports an unknown event, the bridge record shows whether it was ignored. If a movement event is produced while manual authority is absent, the bridge record shows whether the event was blocked. If an emergency event is produced, the record shows whether it entered the intended safety-critical path. These records explain the mediated response shown in the emergency demonstration because they expose the step that a speech benchmark cannot measure.
 
-\subsection{Grounded Control Boundary}
+\subsection{Emergency Response Boundary}
 
-The control side is deliberately staged before flight use. The bridge communicates with the Tello SDK boundary, but the prototype does not allow speech to become an immediate movement command. Instead, event handling is evaluated in dry, grounded, and no-propeller settings where the bridge can record what it would hold, reject, escalate, or forward under a known policy.
+The control side is implemented as a mediated emergency-response boundary for the laboratory demonstration in Section~\ref{sec:evaluation}. During the demonstration, the UAV continues normal operation while the embedded event source keeps processing local audio windows. When emergency speech is detected, the bridge treats the event as a safety-critical request and routes it to a configured safe landing or stopped response. Speech still does not become an arbitrary movement command; it becomes a constrained event that the boundary interprets under policy.
 
-This setup is useful because it tests the part of the system that a speech-only benchmark cannot see. A recognizer may correctly label a window as movement, but the bridge blocks direct motion unless the current policy permits it. A recognizer may identify emergency speech, but the bridge still records how that event changes the control state. By evaluating these transitions before flight, the prototype keeps the system evidence tied to the exercised control path.
+This setup is useful because it exposes the part of the system that a speech-only benchmark cannot see. A recognizer may correctly label a window as emergency, but the paper's claim depends on whether that event reaches a mediated response path while the drone is operating. The demonstration therefore connects local inference, event generation, boundary handling, and visible UAV behavior in one controlled scene.
 
-A flight-facing version of \sys{} can move more of the bridge logic onto the vehicle or into a tightly integrated companion process. The current prototype is a step toward that design: it demonstrates local voice-event generation, event transport, and inspectable control-boundary handling while preserving a clear barrier between speech recognition and physical actuation.
+A flight-facing version of \sys{} can move more of the bridge logic onto the vehicle or into a tightly integrated companion process. The current prototype is a step toward that design: it demonstrates local voice-event generation, mediated emergency response, and visible safe landing or stopped behavior while preserving a clear barrier between speech recognition and physical actuation.
 
-This boundary is also useful for demonstrations. A demo can show the person speaking, the board event stream, the bridge decision, and the visible UAV or proxy response as synchronized evidence. That is stronger than showing a model label alone, because the viewer can see whether speech stayed inside the event boundary before any control behavior was displayed.
+This boundary is also what makes the demonstration more informative than a model label alone. The viewer can see the person speaking, the embedded recognizer continuing to run, the emergency event entering the safety-state boundary, and the UAV moving to a safe landing or stopped state. The result is evidence that the proposed interaction loop works in a constrained laboratory scene, while broader safety validation remains a separate requirement.
