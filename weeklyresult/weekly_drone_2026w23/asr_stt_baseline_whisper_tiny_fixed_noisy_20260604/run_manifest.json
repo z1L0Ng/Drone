@@ -1,0 +1,111 @@
+{
+  "timestamp": "2026-06-04T17:26:19",
+  "git": {
+    "branch": "main",
+    "head": "0f3da223f64689cfa5103b6dfdf5cd5f137f313f",
+    "status_short_branch": [
+      "## main...origin/main",
+      " M docs/.DS_Store",
+      " M docs/paper_sensys2027/figures/figure1.png",
+      " M docs/paper_sensys2027/sections/1introduction.tex",
+      " M docs/weekly_todo/handoff_log.md",
+      " M scripts/paper_figures/render_figure1_opening_scenario.py",
+      "?? docs/paper_sensys2027/figures/figure1.pdf",
+      "?? docs/paper_sensys2027/figures/source/",
+      "?? docs/weekly_todo/2026/2026w23/",
+      "?? scripts/eval_asr_stt_intent_baseline.py",
+      "?? weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604/",
+      "?? weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604_smoke/",
+      "?? weeklyresult/weekly_drone_2026w23/asr_stt_model_cache/"
+    ]
+  },
+  "command": {
+    "argv": [
+      "scripts/eval_asr_stt_intent_baseline.py",
+      "--asr-system",
+      "whisper",
+      "--model-name",
+      "tiny.en",
+      "--condition-slug",
+      "snr_m10db",
+      "--progress-every",
+      "500",
+      "--output-dir",
+      "weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604"
+    ],
+    "shell_command": "MPLCONFIGDIR=/tmp/matplotlib NUMBA_CACHE_DIR=/tmp/numba_cache NUMBA_DISABLE_JIT=1 KMP_DUPLICATE_LIB_OK=TRUE conda run -n drone python scripts/eval_asr_stt_intent_baseline.py --asr-system whisper --model-name tiny.en --condition-slug snr_m10db --progress-every 500 --output-dir weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604",
+    "python_executable": "/opt/anaconda3/envs/drone/bin/python",
+    "python_version": "3.11.13 | packaged by conda-forge | (main, Jun  4 2025, 14:52:34) [Clang 18.1.8 ]"
+  },
+  "asr": {
+    "system": "whisper",
+    "model_name": "tiny.en",
+    "device": "cpu",
+    "model_cache_dir": "weeklyresult/weekly_drone_2026w23/asr_stt_model_cache/whisper",
+    "model_cache_size_bytes": 75571315
+  },
+  "parser": {
+    "precedence": "emergency > movement > unknown",
+    "emergency_terms": [
+      "abort",
+      "alert",
+      "backward",
+      "danger",
+      "emergency",
+      "freeze",
+      "help",
+      "hold",
+      "land",
+      "no",
+      "nope",
+      "panic",
+      "stop",
+      "warning",
+      "wow",
+      "yes"
+    ],
+    "movement_terms": [
+      "back",
+      "come",
+      "down",
+      "follow",
+      "forward",
+      "go",
+      "left",
+      "move",
+      "off",
+      "on",
+      "right",
+      "up"
+    ],
+    "unknown_rule": "fallback when no emergency or movement term is matched"
+  },
+  "input": {
+    "processed_data_path": "dataset/processed/data_paths.npz",
+    "test_split": "X_test/y_test",
+    "limit": null,
+    "noise_manifest": "weeklyresult/weekly_drone_2026w23/rotor_noise_snr_matrix_20260603/run_manifest.json",
+    "noise_source_dir": "dataset/raw/tellonoise",
+    "condition": {
+      "name": "Rotor noise, -10 dB SNR",
+      "slug": "snr_m10db",
+      "snr_db": -10.0,
+      "condition_index": 3
+    },
+    "seed": 20260603,
+    "mixing_formula": "P_noise_target = P_speech / 10^(SNR_dB/10); scaled_noise = noise * sqrt(P_noise_target / P_noise); mixed = clean + scaled_noise",
+    "clipping_rule": "if mixed peak abs > 1.0, divide the whole mixed waveform by that peak"
+  },
+  "outputs": {
+    "startup_receipt": "weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604/startup_receipt.md",
+    "run_manifest": "weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604/run_manifest.json",
+    "transcripts": "weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604/transcripts.csv",
+    "parsed_intents": "weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604/parsed_intents.csv",
+    "metrics": "weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604/metrics.json",
+    "classification_report": "weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604/classification_report_intent_parse.txt",
+    "confusion_matrix": "weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604/confusion_matrix_intent_parse.csv",
+    "latency_summary": "weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604/latency_summary.json",
+    "report": "weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604/report.md",
+    "result_tree": "weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604/result_tree.txt"
+  }
+}

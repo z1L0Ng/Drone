@@ -1,20 +1,35 @@
-\section{Discussion and Conclusion}
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Role in UAV Safety}
+
+\sys{} is an additional voice-facing safety interaction layer for small UAVs. It does not replace obstacle avoidance, geofencing, failsafe landing, manual override, or the flight controller. Those mechanisms still monitor the physical environment, enforce operating regions, handle vehicle faults, and preserve operator authority. \sys{} addresses a different interface problem: how nearby human speech can enter the UAV system as a constrained safety-state event rather than as an immediately executable command.
+
+This distinction is important for ordinary movement speech. A movement event does not encode a complete navigation goal, direction, distance, speed, or permission to fly. It only records that the speaker may be requesting an ordinary UAV interaction, which must still be interpreted by a safety-state boundary and the vehicle policy. Similarly, an emergency event is a safety-critical signal that should receive priority handling, not proof that a physical hazard has been detected. Unknown is the containment state for unsupported or uncertain audio, keeping ambiguous speech from becoming an action request.
+
+\subsection{Scope of the Baselines}
+
+The transcript-first baseline in this paper is deliberately scoped. It uses Whisper \texttt{tiny.en} with a deterministic intent parser on fixed rotor-noisy one-second clips. This baseline represents a straightforward speech-to-text and parsing design under the same short-window acoustic condition used by the voice layer. It should not be read as a claim that all ASR systems fail around drones. Larger models, longer windows, different microphones, cloud processing, or task-specific ASR adaptation may change the result, but they also change the deployment and interaction assumptions.
+
+The direct-mapping and no-unknown analyses have a different role. They are offline action-pressure simulations that ask what would happen if recognizer outputs were bound more directly to vehicle-facing actions, or if unsupported audio could no longer remain unknown. They are not flight tests, measured actuation results, or validated flight-safety evidence. Their purpose is to show why the safety-state event contract matters: errors and uncertainty should be contained before they reach a vehicle-facing decision.
+
+The compact classifier baselines are also recognizer baselines, not complete safety-system baselines. They help compare acoustic model behavior and deployment feasibility, but they do not by themselves implement the event-state contract, unknown containment, or safety-state boundary that define \sys{} as a system.
+
+\subsection{Prototype and Study Boundaries}
+
+The embedded prototype evidence shows that local audio capture, feature extraction, integer inference, and event generation can run on the small edge device used in the system. Runtime measurements support the feasibility of producing safety-state events at a steady cadence. They do not, by themselves, establish semantic safety, full vehicle integration, or safe behavior across all UAV operating conditions.
+
+The laboratory emergency demonstration should be interpreted in the same bounded way. It shows the proposed interaction loop in a controlled setting: speech is observed near the UAV, the onboard recognizer continues producing events, and the visible system behavior follows the safety-state path. It is demonstration context for the end-to-end design, not a general flight-safety validation.
+
+The participant study is limited to participant, intent, keyword, and repeat factors. It does not evaluate user geometry, microphone-facing direction, angle, or distance. Those acoustic and interaction conditions should be measured separately if the system is extended toward broader deployment claims.
+
+\subsection{Open Design Questions}
+
+Several questions remain before \sys{} can support stronger deployment claims. The embedded recognizer has lower single-window emergency recall than the offline acoustic reference model, so the safety-state boundary must use confidence, repeated evidence, and temporal policy carefully rather than treating one prediction as a complete decision. Future participant and demonstration logs should quantify how continuous event evidence changes emergency handling and unknown containment.
+
+Physical acoustic design is also still open. Microphone placement, enclosure design, and rotor-noise shielding may reduce the burden on the recognizer, but those choices are platform-dependent and should be evaluated as part of a separate acoustic integration study. Finally, stronger ASR baselines, broader participant coverage, and policy-level evaluation are needed to understand how far the event-state abstraction generalizes beyond the current prototype and dataset.
+
+\section{Conclusion}
 \label{sec:conclusion}
 
-\sys{} argues for a simple shift in how voice should be used around small UAVs. Speaking to a drone is natural and hands-free, but speech should not be treated as direct flight control. The safer abstraction is a voice interaction layer that listens locally, converts nearby speech into constrained intent events, and hands those events to a conservative boundary before the control stack can respond.
-
-This layer complements existing UAV safety mechanisms. Obstacle avoidance monitors nearby objects, geofencing monitors position, failsafe landing monitors vehicle health, and manual override gives authority to an operator. \sys{} adds a human speech channel that can express safety-critical and ordinary interaction intent under rotor self-noise. Its contribution is not that voice replaces those mechanisms, but that voice becomes a structured input they can reason about.
-
-The design also changes how voice interaction should be evaluated for UAVs. A speech-only benchmark can show whether the recognizer selected the right event, but it cannot show whether that event was safely handled. A hardware benchmark can show whether the embedded device produced events at the required cadence, but it cannot show whether those events were meaningful. A demonstration can make the interaction visible, especially when interpreted alongside event records and component measurements. \sys{} ties these pieces together by making the event record the common object across recognition, runtime, bridge behavior, and user interaction.
-
-This framing is useful beyond the specific prototype. Many future UAV interfaces will combine human input, onboard perception, and autonomous policy. The lesson from \sys{} is that natural input should enter such systems through a narrow and auditable boundary. For voice, that means recognizing intent without pretending to understand every utterance, exposing uncertainty rather than hiding it, and making the control-side response visible. The same principle can guide other human-facing signals that are useful near a UAV but too ambiguous to execute directly.
-
-The design also clarifies how evidence should be separated. Recognition quality matters, especially for emergency recall and unknown containment. The rotor-noise SNR sweep supports the acoustic robustness claim, but it remains separate from control-boundary or flight evidence. Embedded runtime matters because the voice layer operates near the drone rather than depending on a remote service. Control-boundary behavior matters because a correct label is not enough unless the event is handled safely. User-facing evidence matters because the system is ultimately meant for people speaking near a UAV, not only for offline audio files.
-
-The embedded recognizer also shows why the bridge is part of the safety argument rather than an implementation detail. Its single-window emergency recall is 0.70 in Table~\ref{tab:offline_recognition_results}, lower than the offline acoustic reference model. \sys{} does not hide this gap by treating one embedded prediction as the whole decision. The deployed path runs continuously, reports one event opportunity per audio window in steady state, and exposes confidence and timing to the bridge. The bridge can then use temporal policy, repeated evidence, confidence thresholds, and vehicle state to decide whether an emergency-like event should be escalated, held, or ignored. This bridge compensation does not replace better recognition, and it should be quantified with the final participant and demonstration logs; it explains why the paper evaluates the voice layer as a continuous event system instead of a one-shot classifier.
-
-Physical acoustic design remains a deployment question rather than a completed evaluation result. A future onboard accessory may use enclosure design, microphone placement, or acoustic shielding to reduce rotor self-noise before the recognizer sees the signal. The current paper treats those choices as design variables for later platform integration, not as measured evidence in the evaluation section.
-
-The main limitations are the same boundaries that make the system testable. The embedded recognizer has lower emergency recall than the offline acoustic reference model. The controlled laboratory emergency demonstration supports end-to-end feasibility, but broader flight-facing safety evaluation is still needed before making general deployment claims. Participant-level trials, keyword coverage, physical acoustic design, and live rotor-noise studies determine how broadly the interaction works outside the initial acoustic setting. These are not separate afterthoughts; they are the next measurements required by the architecture.
-
-Overall, \sys{} frames talk-to-the-drone interaction as an additional UAV safety interaction layer. By keeping speech local, reducing it to auditable intent events, and mediating those events before control, the design offers a path toward natural voice interaction without turning arbitrary speech into direct motion.
+\sys{} frames talk-to-the-drone interaction as a safety-state mediated way to admit human speech into UAV control. Instead of treating speech as a transcript, a keyword trigger, or a direct control input, the system converts short rotor-noisy audio windows into constrained safety-state events and lets a safety-state boundary decide how those events may influence the vehicle. This design keeps voice interaction natural and hands-free while preserving a conservative path between uncertain speech and UAV action.

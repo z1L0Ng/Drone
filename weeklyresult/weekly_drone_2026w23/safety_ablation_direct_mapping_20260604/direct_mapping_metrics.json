@@ -1,0 +1,181 @@
+{
+  "sources": [
+    {
+      "source_id": "akouo_reference_snr_m10db",
+      "source_role": "offline_acoustic_reference_recognizer",
+      "population": "Speech Commands X_test fixed noisy condition, Rotor noise, -10 dB SNR",
+      "evidence_type": "confusion_matrix_only",
+      "n_total": 10008,
+      "support": {
+        "emergency": 3336,
+        "movement": 3336,
+        "unknown": 3336
+      },
+      "predicted_counts": {
+        "emergency": 3559,
+        "movement": 3203,
+        "unknown": 3246
+      },
+      "emergency_action_count": 3559,
+      "movement_action_count": 3203,
+      "no_action_count": 3246,
+      "total_action_count": 6762,
+      "action_pressure_per_100_windows": 67.56594724220624,
+      "false_emergency_action_count": 713,
+      "false_emergency_action_rate_per_window": 0.07124300559552359,
+      "false_emergency_action_rate_among_non_emergency": 0.10686450839328537,
+      "false_movement_action_count": 568,
+      "false_movement_action_rate_per_window": 0.05675459632294165,
+      "false_movement_action_rate_among_non_movement": 0.08513189448441247,
+      "unknown_false_action_count": 545,
+      "unknown_false_action_rate": 0.16336930455635493,
+      "unauthorized_movement_action_count": 3203,
+      "unauthorized_movement_action_rate_per_window": 0.3200439648281375,
+      "missed_emergency_action_count": 490,
+      "missed_emergency_action_rate": 0.14688249400479617,
+      "confusion_matrix": [
+        [
+          2846,
+          240,
+          250
+        ],
+        [
+          496,
+          2635,
+          205
+        ],
+        [
+          217,
+          328,
+          2791
+        ]
+      ],
+      "sequence_available": false,
+      "sequence_caveat": "No sequence-level rows available.",
+      "consecutive_action_pair_count": null,
+      "consecutive_action_pair_rate": null,
+      "consecutive_action_pairs_per_100_transitions": null,
+      "action_run_count": null,
+      "max_consecutive_action_run": null,
+      "mean_action_run_length": null
+    },
+    {
+      "source_id": "asr_whisper_tiny_parser_snr_m10db",
+      "source_role": "transcript_first_asr_parser",
+      "population": "Speech Commands X_test fixed noisy condition, snr_m10db=-10 dB",
+      "evidence_type": "per_sample_labels",
+      "n_total": 10008,
+      "support": {
+        "emergency": 3336,
+        "movement": 3336,
+        "unknown": 3336
+      },
+      "predicted_counts": {
+        "emergency": 805,
+        "movement": 421,
+        "unknown": 8782
+      },
+      "emergency_action_count": 805,
+      "movement_action_count": 421,
+      "no_action_count": 8782,
+      "total_action_count": 1226,
+      "action_pressure_per_100_windows": 12.250199840127898,
+      "false_emergency_action_count": 68,
+      "false_emergency_action_rate_per_window": 0.006794564348521183,
+      "false_emergency_action_rate_among_non_emergency": 0.010191846522781775,
+      "false_movement_action_count": 129,
+      "false_movement_action_rate_per_window": 0.01288968824940048,
+      "false_movement_action_rate_among_non_movement": 0.01933453237410072,
+      "unknown_false_action_count": 68,
+      "unknown_false_action_rate": 0.02038369304556355,
+      "unauthorized_movement_action_count": 421,
+      "unauthorized_movement_action_rate_per_window": 0.04206634692246203,
+      "missed_emergency_action_count": 2599,
+      "missed_emergency_action_rate": 0.7790767386091128,
+      "confusion_matrix": [
+        [
+          737,
+          95,
+          2504
+        ],
+        [
+          34,
+          292,
+          3010
+        ],
+        [
+          34,
+          34,
+          3268
+        ]
+      ],
+      "sequence_available": true,
+      "sequence_caveat": "Per-sample row order is the held-out split order, not a real continuous flight sequence; consecutive-action metrics are adjacency diagnostics only.",
+      "consecutive_action_pair_count": 152,
+      "consecutive_action_pair_rate": 0.015189367442790046,
+      "consecutive_action_pairs_per_100_transitions": 1.5189367442790047,
+      "action_run_count": 1074,
+      "max_consecutive_action_run": 4,
+      "mean_action_run_length": 1.1415270018621975
+    },
+    {
+      "source_id": "embedded_user_study_v4_candidate",
+      "source_role": "embedded_candidate_reinfer_user_study",
+      "population": "User-study v4 participant recordings, desktop TFLite reinference of ESP32 candidate",
+      "evidence_type": "per_sample_probabilities",
+      "n_total": 1462,
+      "support": {
+        "emergency": 542,
+        "movement": 520,
+        "unknown": 400
+      },
+      "predicted_counts": {
+        "emergency": 372,
+        "movement": 634,
+        "unknown": 456
+      },
+      "emergency_action_count": 372,
+      "movement_action_count": 634,
+      "no_action_count": 456,
+      "total_action_count": 1006,
+      "action_pressure_per_100_windows": 68.80984952120383,
+      "false_emergency_action_count": 35,
+      "false_emergency_action_rate_per_window": 0.023939808481532147,
+      "false_emergency_action_rate_among_non_emergency": 0.03804347826086957,
+      "false_movement_action_count": 189,
+      "false_movement_action_rate_per_window": 0.1292749658002736,
+      "false_movement_action_rate_among_non_movement": 0.20063694267515925,
+      "unknown_false_action_count": 65,
+      "unknown_false_action_rate": 0.1625,
+      "unauthorized_movement_action_count": 634,
+      "unauthorized_movement_action_rate_per_window": 0.43365253077975374,
+      "missed_emergency_action_count": 205,
+      "missed_emergency_action_rate": 0.37822878228782286,
+      "confusion_matrix": [
+        [
+          337,
+          144,
+          61
+        ],
+        [
+          15,
+          445,
+          60
+        ],
+        [
+          20,
+          45,
+          335
+        ]
+      ],
+      "sequence_available": true,
+      "sequence_caveat": "This is participant-recording reinference, not the Speech Commands fixed-noisy X_test split; compare as safety-abstraction evidence, not as the offline recognizer leaderboard.",
+      "consecutive_action_pair_count": 878,
+      "consecutive_action_pair_rate": 0.6009582477754962,
+      "consecutive_action_pairs_per_100_transitions": 60.09582477754962,
+      "action_run_count": 128,
+      "max_consecutive_action_run": 58,
+      "mean_action_run_length": 7.859375
+    }
+  ]
+}

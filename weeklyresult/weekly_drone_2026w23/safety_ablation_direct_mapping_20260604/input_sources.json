@@ -1,0 +1,41 @@
+{
+  "created_at": "2026-06-04T19:26:15",
+  "included_sources": [
+    {
+      "source_id": "akouo_reference_snr_m10db",
+      "source_role": "offline_acoustic_reference_recognizer",
+      "population": "Speech Commands X_test fixed noisy condition, Rotor noise, -10 dB SNR",
+      "evidence_type": "confusion_matrix_only",
+      "path": "weeklyresult/weekly_drone_2026w23/rotor_noise_snr_matrix_20260603/confusion_matrices.json",
+      "sequence_available": false,
+      "has_probabilities": false,
+      "caveat": "Only aggregate confusion matrix is available, so repeated/consecutive action pressure and probability-based no-unknown split cannot be computed."
+    },
+    {
+      "source_id": "asr_whisper_tiny_parser_snr_m10db",
+      "source_role": "transcript_first_asr_parser",
+      "population": "Speech Commands X_test fixed noisy condition, snr_m10db=-10 dB",
+      "evidence_type": "per_sample_labels",
+      "path": "weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604/parsed_intents.csv",
+      "sequence_available": true,
+      "has_probabilities": false,
+      "caveat": "Per-sample row order is the held-out split order, not a real continuous flight sequence; consecutive-action metrics are adjacency diagnostics only."
+    },
+    {
+      "source_id": "embedded_user_study_v4_candidate",
+      "source_role": "embedded_candidate_reinfer_user_study",
+      "population": "User-study v4 participant recordings, desktop TFLite reinference of ESP32 candidate",
+      "evidence_type": "per_sample_probabilities",
+      "path": "weeklyresult/weekly_drone_2026w23/user_study_v4_esp32_candidate_reinfer_20260604_121452/trial_predictions.csv",
+      "sequence_available": true,
+      "has_probabilities": true,
+      "caveat": "This is participant-recording reinference, not the Speech Commands fixed-noisy X_test split; compare as safety-abstraction evidence, not as the offline recognizer leaderboard."
+    }
+  ],
+  "unavailable_sources": [
+    {
+      "source_id": "compact_classifier_baselines",
+      "reason": "No compact-baseline per-sample predictions found in the current main worktree; existing paper rows are aggregate first-batch metrics only."
+    }
+  ]
+}

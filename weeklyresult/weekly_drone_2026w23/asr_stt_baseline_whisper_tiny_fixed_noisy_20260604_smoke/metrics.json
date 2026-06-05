@@ -1,0 +1,58 @@
+{
+  "asr_system": "whisper",
+  "asr_model": "tiny.en",
+  "asr_device": "cpu",
+  "condition": "snr_m10db",
+  "snr_db": -10.0,
+  "n_total": 100,
+  "n_success": 100,
+  "transcript_count": 100,
+  "parsed_count": 100,
+  "skipped_failed_files": 0,
+  "transcript_non_empty_rate": 0.47,
+  "keyword_hit_rate": 0.09,
+  "intent_parse_accuracy": 0.36,
+  "intent_parse_macro_f1": 0.2791015217844486,
+  "emergency_recall": 0.14705882352941177,
+  "unknown_false_action_rate": 0.0,
+  "parse_failure_rate": 0.0,
+  "no_rule_hit_rate": 0.91,
+  "model_load_sec": 0.9329429999925196,
+  "model_cache_size_bytes": 75571315,
+  "peak_normalized_count": 55,
+  "peak_normalized_fraction": 0.55,
+  "deployment_caveat": "Whisper tiny.en is a transcript-first ASR baseline; it is not an MCU-deployable intent-event recognizer and requires PyTorch-class runtime.",
+  "classification_report": {
+    "emergency": {
+      "precision": 1.0,
+      "recall": 0.14705882352941177,
+      "f1-score": 0.2564102564102564,
+      "support": 34.0
+    },
+    "movement": {
+      "precision": 0.5,
+      "recall": 0.05405405405405406,
+      "f1-score": 0.0975609756097561,
+      "support": 37.0
+    },
+    "unknown": {
+      "precision": 0.31868131868131866,
+      "recall": 1.0,
+      "f1-score": 0.48333333333333334,
+      "support": 29.0
+    },
+    "accuracy": 0.36,
+    "macro avg": {
+      "precision": 0.6062271062271062,
+      "recall": 0.4003709591944886,
+      "f1-score": 0.2791015217844486,
+      "support": 100.0
+    },
+    "weighted avg": {
+      "precision": 0.6174175824175824,
+      "recall": 0.36,
+      "f1-score": 0.2634437148217636,
+      "support": 100.0
+    }
+  }
+}

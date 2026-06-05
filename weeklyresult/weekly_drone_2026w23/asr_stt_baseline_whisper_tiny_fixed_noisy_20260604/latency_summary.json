@@ -1,0 +1,16 @@
+{
+  "asr_latency_sec": {
+    "median": 0.061826979042962193,
+    "p95": 0.086096189089585,
+    "mean": 0.0789535047080134
+  },
+  "total_per_sample_latency_sec": {
+    "median": 0.0632053124718368,
+    "p95": 0.08747682277462432,
+    "mean": 0.08038133252864109
+  },
+  "model_load_sec": 0.9054435830330476,
+  "total_run_sec": 805.5773240840062,
+  "realtime_factor_asr_median": 0.061826979042962193,
+  "realtime_factor_total_median": 0.0632053124718368
+}

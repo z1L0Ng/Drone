@@ -2,13 +2,13 @@
 \section{Evaluation}
 \label{sec:evaluation}
 
-The evaluation follows the same layered structure as the system. First, we evaluate whether the acoustic recognizer separates emergency, movement, and unknown speech under rotor-noisy conditions. Second, we measure how that behavior changes as the acoustic setting becomes harder. Third, we test whether the embedded prototype can produce and report one intent event per one-second audio window. Fourth, we compare the recognizer with compact speech baselines under matched conditions. Finally, we demonstrate the complete emergency-response loop in a controlled laboratory scene and evaluate whether people can use the interaction naturally in controlled studies.
+The evaluation follows the same layered structure as the system. First, we evaluate whether the acoustic recognizer separates emergency, movement, and unknown speech under rotor-noisy conditions. Second, we measure how that behavior changes as the acoustic setting becomes harder. Third, we test whether the embedded prototype can produce and report one structured safety-state event per one-second audio window. Fourth, we compare \sys{} with transcript-first ASR and compact speech-command classifier baselines. Fifth, we use offline safety-state ablations to estimate the action pressure that appears when speech labels are bound directly to action or when the unknown state is removed. Finally, we demonstrate the complete emergency-response loop in a controlled laboratory scene and evaluate whether people can use the interaction naturally in controlled studies.
 
-This organization keeps each measurement tied to the claim it can support. Offline acoustic tests establish whether the intent-event abstraction is learnable. Rotor-noise and recording-condition tests show how stable that abstraction is when the acoustic setting changes. Embedded runtime measurements show whether the event source can run near the drone. The emergency demonstration shows the integrated loop from local inference to mediated safe response in a constrained scene. User studies connect the technical pipeline back to the interaction that motivates the system.
+This organization keeps each measurement tied to the claim it can support. Offline acoustic tests establish whether the event-state contract is learnable. Rotor-noise and recording-condition tests show how stable that contract is when the acoustic setting changes. Embedded runtime measurements show whether the event source can run near the drone. Transcript-first and compact classifier baselines test common speech-interface alternatives under the same rotor-noisy task. Safety-state ablations test why the unknown fallback and safety-state boundary matter before action. The emergency demonstration shows the integrated loop from local inference to mediated response in a constrained scene. User studies connect the technical pipeline back to the interaction that motivates the system.
 
 \subsection{Offline Recognition Quality}
 
-The first evaluation isolates the acoustic recognizer from the embedded runtime and the control bridge. The setup uses three intent events: emergency, movement, and unknown. For the offline reference recognizer, Table~\ref{tab:offline_recognition_results} reports the same fixed -10 dB SNR point used in Table~\ref{tab:rotor_robustness}, so the reference result is consistent across the recognition and robustness tables. The embedded row reports the current ESP32 prototype recognizer. We report accuracy, macro F1, and per-class precision, recall, and F1. Emergency is reported separately because it is safety-critical. Macro F1 is reported because movement and unknown should not be hidden by a single aggregate score.
+The first evaluation isolates the acoustic recognizer from the embedded runtime and the safety-state boundary. The setup uses three intent events: emergency, movement, and unknown. For the offline reference recognizer, Table~\ref{tab:offline_recognition_results} reports the same fixed -10 dB SNR point used in Table~\ref{tab:rotor_robustness}, so the reference result is consistent across the recognition and robustness tables. The embedded row reports the current ESP32 prototype recognizer. We report accuracy, macro F1, and per-class precision, recall, and F1. Emergency is reported separately because it is safety-critical. Macro F1 is reported because movement and unknown should not be hidden by a single aggregate score.
 
 Table~\ref{tab:offline_recognition_results} reports the current recognition-quality evidence for the reference and embedded recognizers.
 
@@ -32,7 +32,7 @@ At the fixed -10 dB SNR point, the offline acoustic reference model reaches 86.2
 
 The interpretation is that \sys{} has a measurable acoustic separation point, but the embedded recognizer pays a recall cost for deployment. For a safety interaction layer, that cost matters more than a single accuracy number. Threshold sweeps complete this picture by showing the trade-off between emergency recall and unknown containment.
 
-The per-class emergency metrics in Table~\ref{tab:offline_recognition_results} show the main acoustic trade-off. The embedded recognizer preserves high emergency precision but loses recall relative to the offline reference at the fixed -10 dB point. For a safety interaction layer, this means missed emergency speech is the more important embedded-model limitation, while false emergency or movement events from unsupported audio must be handled by the unknown path and the control boundary. This connects model behavior to the event semantics in Section~\ref{sec:system} without treating a single aggregate score as sufficient.
+The per-class emergency metrics in Table~\ref{tab:offline_recognition_results} show the main acoustic trade-off. The embedded recognizer preserves high emergency precision but loses recall relative to the offline reference at the fixed -10 dB point. For a safety interaction layer, this means missed emergency speech is the more important embedded-model limitation, while false emergency or movement events from unsupported audio must be contained by the unknown path and the safety-state boundary. This connects model behavior to the event-state contract in Section~\ref{sec:system} without treating a single aggregate score as sufficient.
 
 \subsection{Robustness Under Rotor Noise}
 
@@ -59,7 +59,7 @@ Table~\ref{tab:rotor_robustness} reports the resulting SNR sweep. The sweep uses
     \end{tabular}
 \end{table}
 
-This evaluation is a robustness curve rather than a leaderboard. Across the three severe SNR conditions in Table~\ref{tab:rotor_robustness}, emergency recall stays above 0.81, while overall accuracy drops from 0.862 at -10 dB to 0.755 at -20 dB. Unknown containment also becomes harder: the unknown false event rate rises from 0.118 to 0.234 over the same sweep. This trend shows why the control boundary must still treat recognizer output as evidence rather than as direct command authority. These numbers are offline acoustic measurements; they do not establish bridge behavior or flight safety.
+This evaluation is a robustness curve rather than a model leaderboard. Across the three severe SNR conditions in Table~\ref{tab:rotor_robustness}, emergency recall stays above 0.81, while overall accuracy drops from 0.862 at -10 dB to 0.755 at -20 dB. Unknown containment also becomes harder: the unknown false event rate rises from 0.118 to 0.234 over the same sweep. This trend shows why the safety-state boundary must still treat recognizer output as evidence rather than as action authority. These numbers are offline acoustic measurements; they do not establish boundary behavior or vehicle behavior.
 
 The same experiment can also compare frontend choices. Log-mel, MFCC, and normalized energy frontends may respond differently to rotor harmonics and loudness changes. The useful comparison is not only which frontend maximizes average accuracy, but which frontend preserves emergency recall while keeping unknown false events low. This is why the robustness table reports safety-facing metrics rather than only a single recognition score.
 
@@ -74,7 +74,7 @@ The third evaluation measures whether the embedded event source can keep up with
     \label{fig:response_time_breakdown}
 \end{figure}
 
-Table~\ref{tab:runtime_evidence} reports the corresponding event-source timing. Control-boundary and vehicle-facing outcomes are evaluated separately because an event opportunity is not a direct command response.
+Table~\ref{tab:runtime_evidence} reports the corresponding event-source timing. Safety-state boundary and vehicle-facing outcomes are evaluated separately because an event opportunity is not a vehicle response.
 
 \begin{table}[t]
     \centering
@@ -94,11 +94,35 @@ Table~\ref{tab:runtime_evidence} reports the corresponding event-source timing. 
     \end{tabular}
 \end{table}
 
-The timing supports the same interpretation as Figure~\ref{fig:response_time_breakdown}. Capture occupies the one-second audio window, while core1 spends 56 ms on log-mel feature extraction and 632 ms on integer inference for the previous window. This post-capture work fits behind the next capture window, so the prototype sustains a p50/p95 event period of 1005/1005 ms over 120 delivered windows, with no drops or overruns. The first event still appears after 1606 ms because the first capture must complete before recognition can begin. In the intended safety-layer deployment, the voice system starts with the UAV and remains active during operation, so the relevant operating condition is the steady-state event cadence rather than a cold first-window response. These measurements support steady-state real-time event generation at the one-second window granularity; they do not claim that speech directly produces a vehicle command.
+The timing supports the same interpretation as Figure~\ref{fig:response_time_breakdown}. Capture occupies the one-second audio window, while core1 spends 56 ms on log-mel feature extraction and 632 ms on integer inference for the previous window. This post-capture work fits behind the next capture window, so the prototype sustains a p50/p95 event period of 1005/1005 ms over 120 delivered windows, with no drops or overruns. The first event still appears after 1606 ms because the first capture must complete before recognition can begin. In the intended safety-layer deployment, the voice system starts with the UAV and remains active during operation, so the relevant operating condition is the steady-state event cadence rather than a cold first-window response. These measurements support steady-state real-time event generation at the one-second window granularity; they do not claim that speech directly produces a vehicle-facing action.
 
-\subsection{Baseline Comparison}
+\subsection{Transcript-First ASR Baseline}
 
-The fourth evaluation compares \sys{} against compact speech models under the same task definition. The comparison is not meant to show that a larger speech architecture is universally better. It asks whether the proposed recognizer provides a better balance of noisy recognition quality, emergency recall, unknown containment, and embedded feasibility for the UAV safety interaction layer.
+A natural alternative is to transcribe the audio first and then parse the transcript for command words. This baseline represents a transcript-first design: a general ASR model produces text from each fixed one-second rotor-noisy clip, and a deterministic parser maps the transcript into emergency, movement, or unknown. The purpose is not to prove that all ASR systems fail near drones. It tests whether a straightforward transcript-first pipeline is a good fit for the short, rotor-noisy, embedded safety-interaction setting used by this paper.
+
+Table~\ref{tab:asr_baseline} reports the result for Whisper \texttt{tiny.en} plus the deterministic parser on the same fixed -10 dB SNR condition used by the reference recognizer. Transcript non-empty rate reports how often the ASR produced text. Keyword hit rate reports how often the parser found a command word in the transcript.
+% Evidence: weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604/report.md
+% Evidence details: metrics.json, classification_report_intent_parse.txt, transcripts.csv, parsed_intents.csv, and run_manifest.json in the same directory.
+
+\begin{table}[t]
+    \centering
+    \caption{Transcript-first ASR baseline on fixed rotor-noisy one-second clips.}
+    \label{tab:asr_baseline}
+    \scriptsize
+    \begin{tabular}{@{}p{0.26\linewidth}ccccc@{}}
+        \toprule
+        Method & Acc. & Macro F1 & Emerg. R & Non-empty & Keyword hit \\
+        \midrule
+        Whisper \texttt{tiny.en} + parser & 0.4294 & 0.3503 & 0.2209 & 0.4253 & 0.1225 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+The transcript-first baseline performs poorly in this condition because the ASR stage often does not produce a usable command transcript from the noisy one-second clip. The result supports a narrow claim: for the fixed rotor-noisy clips in this evaluation, transcript-first parsing is not a strong baseline for the safety-event task. It should not be read as a general claim about every ASR model, longer audio context, microphone layout, or cloud-scale recognizer.
+
+\subsection{Compact Speech-Command Classifier Baselines}
+
+The compact classifier evaluation compares \sys{} against small speech-command model families under the same task definition. The comparison is not meant to show that a larger speech architecture is universally better. It asks whether the proposed recognizer provides a better balance of noisy recognition quality, emergency recall, and unknown containment for the UAV safety interaction layer.
 
 The comparison uses compact keyword-spotting or command-recognition baselines under a common train/test split, frontend budget, label mapping, and noisy evaluation condition. Each baseline reports recognition metrics such as accuracy, macro F1, emergency recall, and unknown false event rate. The rows in Table~\ref{tab:baseline_comparison} use the same three-event target and log-mel frontend, so the comparison focuses on recognizer behavior rather than task mismatch.
 
@@ -123,11 +147,37 @@ Table~\ref{tab:baseline_comparison} compares the current recognizer rows with co
 
 The interpretation focuses on acoustic quality under the shared three-event task. A baseline needs to balance aggregate recognition quality, emergency recall, and false event containment to be a strong fit for a safety interaction layer. BC-ResNet1 achieves higher emergency recall (0.90) at the cost of lower emergency precision: its reported emergency recall and F1 imply about 0.77 precision, producing more false emergency events. For a safety interaction layer, false emergency events create unnecessary interruptions and erode operator trust; the \sys{} reference recovers a better precision-recall balance (0.86/0.86) while also scoring higher on overall accuracy and macro F1.
 
-Baseline fairness is especially important here. A generic keyword model trained on a different label mapping could look strong while avoiding the hardest part of the task: separating emergency speech from ordinary movement speech and unknown audio under rotor noise. The baseline rows above use the same three-event target, split, log-mel frontend, and noisy evaluation condition. They therefore show recognizer context under a matched acoustic task, not complete system alternatives.
+Baseline fairness is especially important here. A generic keyword model trained on a different label mapping could look strong while avoiding the hardest part of the task: separating emergency speech from ordinary movement speech and unknown audio under rotor noise. The baseline rows above use the same three-event target, split, log-mel frontend, and noisy evaluation condition. TC-ResNet8, BC-ResNet1, and DS-CNN-S are therefore compact speech-command classifier baselines. They are not complete safety-system baselines because they do not include the event-state contract, unknown fallback policy, embedded event source, or safety-state boundary.
+
+\subsection{Safety-State Boundary Ablations}
+
+The safety-state ablations ask what pressure the vehicle-facing side would see if recognizer outputs were treated as actions, or if the unknown fallback were removed. These are offline action-pressure simulations over existing predictions and confusion matrices. They are not flight tests and not measured UAV actuation. Their role is to quantify why the architecture keeps speech as a mediated event stream instead of binding every recognized label directly to action.
+
+Table~\ref{tab:safety_ablation} summarizes the direct-mapping and no-unknown ablations. Direct mapping counts every emergency or movement label as an action request. The no-unknown ablation removes the fallback state and forces audio that would otherwise be unknown into emergency or movement.
+% Evidence: weeklyresult/weekly_drone_2026w23/safety_ablation_direct_mapping_20260604/report.md
+% Evidence details: action_pressure_table.csv, direct_mapping_metrics.json, no_unknown_ablation_metrics.json, input_sources.json, and run_manifest.json in the same directory.
+
+\begin{table}[t]
+    \centering
+    \caption{Offline safety-state boundary ablations. Action pressure is simulated from recognizer outputs and is not measured vehicle actuation.}
+    \label{tab:safety_ablation}
+    \scriptsize
+    \begin{tabular}{@{}p{0.33\linewidth}p{0.51\linewidth}@{}}
+        \toprule
+        Ablation & Result \\
+        \midrule
+        Direct mapping from the \sys{} reference recognizer & 67.57 action requests per 100 windows; unknown false action rate 0.1634 \\
+        No-unknown reference ablation & +32.43 action requests per 100 windows \\
+        No-unknown embedded user-study ablation & 82.25\% of true unknown windows forced to emergency and 17.75\% forced to movement \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+The direct-mapping result shows why the safety-state boundary is not just an implementation detail. A recognizer that is useful acoustically can still create high action pressure if its emergency and movement labels are treated as immediate requests. The no-unknown ablation isolates the value of fallback: removing unknown forces unsupported or uncertain audio into actionable states. For the embedded user-study predictions, true unknown audio would be forced mostly into emergency under the two-action ablation, which would create unnecessary safety-critical interruptions. These results support the architecture's conservative event-state contract; they do not establish any particular vehicle behavior as safe.
 
 \subsection{End-to-End Emergency Demonstration}
 
-The fifth evaluation demonstrates the complete emergency interaction in a controlled laboratory scene. During the demo, the UAV remains in normal operation while the embedded recognizer continues to process onboard audio windows. When a nearby person speaks an emergency phrase, the voice layer emits an emergency event, the safety-state boundary mediates that event, and the vehicle transitions to a safe landing or stopped response rather than treating speech as a direct movement command.
+The emergency demonstration exercises the complete interaction in a controlled laboratory scene. During the demo, the UAV remains in normal operation while the embedded recognizer continues to process onboard audio windows. When a nearby person speaks an emergency phrase, the voice layer emits an emergency event, the safety-state boundary mediates that event, and the vehicle transitions to a landing or stopped response rather than treating speech as an immediate movement action.
 
 \begin{figure*}[t]
     \centering
@@ -136,13 +186,13 @@ The fifth evaluation demonstrates the complete emergency interaction in a contro
     \label{fig:emergency_stop_sequence}
 \end{figure*}
 
-Figure~\ref{fig:emergency_stop_sequence} is included as a system demonstration rather than as a complete safety evaluation. It makes the paper's main interaction visible: local recognition continues while the drone is operating, emergency speech is converted into a constrained event, and the response goes through the safety-state boundary before the UAV behavior changes. This is different from a conventional obstacle-avoidance stop, where the vehicle reacts only to objects or proximity. \sys{} adds a nearby human speech channel that can request safety-critical handling before the situation is reduced to a collision response.
+Figure~\ref{fig:emergency_stop_sequence} is included as a system demonstration rather than as complete deployment evidence. It makes the paper's main interaction visible: local recognition continues while the drone is operating, emergency speech is converted into a structured safety-state event, and the response goes through the safety-state boundary before the UAV behavior changes. This is different from a conventional obstacle-avoidance stop, where the vehicle reacts only to objects or proximity. \sys{} adds a nearby human speech channel that can request safety-critical handling before the situation is reduced to a collision response.
 
 The demonstration supports the end-to-end feasibility claim for the proposed interaction loop in a constrained lab setting. It should be read together with the recognition, runtime, and user-study measurements: the demo shows the integrated story, while the quantitative sections measure the pieces that must be reliable before making broader UAV safety claims.
 
 \subsection{User Study}
 
-The sixth evaluation studies whether the interaction remains usable across different participants, intent categories, keywords, and repeated trials. Each participant is assigned a study identifier, and participant results are reported separately before aggregation. This isolation lets the evaluation report aggregate behavior while still exposing per-participant variation, which is important for a voice interface that may fail unevenly across speakers.
+The user study examines whether the interaction remains usable across different participants, intent categories, keywords, and repeated trials. Each participant is assigned a study identifier, and participant results are reported separately before aggregation. This isolation lets the evaluation report aggregate behavior while still exposing per-participant variation, which is important for a voice interface that may fail unevenly across speakers.
 
 Each complete participant record contains three intent categories: emergency, movement, and unknown. Each category is represented by five controlled keywords or short phrases, with ten repeated trials for each keyword, for 150 trials per complete record. Unknown trials include unsupported or irrelevant speech, and may also include silence or background audio, so the class represents audio that should not become a command rather than silence alone. Table~\ref{tab:user_study_participant_variability} reports complete and partial participant records separately, so the reader can distinguish participant-level variation from missing prompt coverage.
 

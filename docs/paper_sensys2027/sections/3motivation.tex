@@ -4,50 +4,58 @@
 \begin{figure}[b]
     \centering
     \includegraphics[width=\linewidth]{cleanvsnoisy.png}
-    \caption{Clean versus rotor-noisy log-mel example used for motivation. Quantitative SNR robustness results are reported in Table~\ref{tab:rotor_robustness}.}
+    \caption{Clean versus rotor-noisy log-mel example used for motivation. The example illustrates why nearby UAV speech differs from quiet command recognition.}
     \label{fig:clean_vs_noisy}
 \end{figure}
 % Figure note: Replace this motivational figure with the final clean/noisy or system-facing visual.
 
-\subsection{Voice as an Additional UAV Safety Layer}
+\subsection{Voice Input Creates Physical Action Risk}
 
-Voice is a natural way for people to interact with a nearby drone because it does not require opening an application, finding a controller, or relying on a network path. This matters most when the interaction is time-sensitive: a person may need to ask the drone to stop, hold position, or respond to a safety-critical situation while the vehicle is already close to people or objects. The design goal is therefore not to replace existing UAV safety mechanisms. It is to add a voice-facing layer that can expose nearby human intent to the drone-side control stack.
+Voice is a natural way for people to interact with a nearby drone because it does not require opening an application, finding a controller, or relying on a network path. This matters most when the interaction is time-sensitive: a person may need to ask the drone to stop, hold position, or respond to a safety-critical situation while the vehicle is already close to people or objects. The design goal is not to replace existing UAV safety mechanisms. It is to add a voice-facing layer that can expose nearby human intent to the drone-side control stack.
 
-This layer must remain conservative. Speech is ambiguous, background audio is uncontrolled, and a drone can create unsafe behavior if a noisy utterance is treated as a direct command. Work on always-on and embedded speech systems already shows that false accepts, misses, latency, and runtime constraints matter in addition to top-line accuracy \cite{rybakov2020streamingkws,banbury2021mlperftiny}. For a UAV, these errors have a physical interpretation. The voice layer therefore produces evidence for a downstream safety decision rather than directly controlling the vehicle. In this paper, the output of speech recognition is an intent-state event that can be logged, ignored, held, escalated, or forwarded by a conservative control boundary.
+The difficulty is that a voice interface near a UAV is not only a speech-recognition problem. Speech is ambiguous, background audio is uncontrolled, and the drone itself creates rotor self-noise. A wrong speech decision can also have a physical interpretation: a missed emergency can delay a safety-relevant response, while a false movement or emergency trigger can interrupt the vehicle at the wrong time. Work on always-on and embedded speech systems already shows that false accepts, misses, latency, and runtime constraints matter in addition to top-line accuracy \cite{rybakov2020streamingkws,banbury2021mlperftiny}. For a UAV, those errors must be mediated before they reach the control stack.
+
+This is why the voice layer must remain conservative. The system should not treat a noisy utterance as a direct command, even when the recognizer is accurate on average. The useful output of speech recognition is evidence for a downstream safety decision: a structured safety-state event that can be logged, ignored, held, escalated, or forwarded by a safety-state boundary.
 
 Table~\ref{tab:safety_components} summarizes the gap this layer addresses relative to existing UAV safety mechanisms.
 
 \begin{table}[t]
     \centering
-    \caption{How Akouo complements existing UAV safety mechanisms.}
+    \caption{How \sys{} complements existing UAV safety mechanisms.}
     \label{tab:safety_components}
     \begin{tabular}{p{0.30\linewidth}p{0.62\linewidth}}
         \toprule
-        Existing mechanism & Complementary role of Akouo \\
+        Existing mechanism & Complementary role of \sys{} \\
         \midrule
         Obstacle avoidance &
-        Senses nearby objects, but not a person's spoken intent. Akouo adds a speech-based intent event. \\
+        Senses nearby objects, but not a person's spoken intent. \sys{} adds a structured safety-state event. \\
         \addlinespace
         Geofencing &
-        Constrains where the UAV may operate, but does not capture local human requests. Akouo adds a nearby speech channel. \\
+        Constrains where the UAV may operate, but does not capture local human requests. \sys{} adds a nearby speech channel. \\
         \addlinespace
         Failsafe landing &
-        Responds to vehicle or link failures. Akouo can surface safety-critical speech before such a failure state is reached. \\
+        Responds to vehicle or link failures. \sys{} can surface safety-critical speech before such a failure state is reached. \\
         \addlinespace
         Manual controller &
-        Provides explicit control, but requires device access. Akouo adds hands-free input near the UAV. \\
+        Provides explicit control, but requires device access. \sys{} adds hands-free input near the UAV. \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\subsection{Intent States Instead of Flight Commands}
+\subsection{Failure Modes of Common Speech Interfaces}
 
-Transcript-first processing is not the natural first target for this setting. Small-footprint keyword spotting shows that limited-vocabulary speech interfaces can be compact enough for always-on and embedded use \cite{sainath2015cnn_kws,warden2018speechcommands,zhang2017helloedge}, while spoken language understanding work has shown that intent decisions can be learned directly from speech without full transcripts \cite{lugosch19_interspeech,kuo20_interspeech,mhiri20_interspeech}. For a nearby drone, the question is not whether every word can be recovered. The question is whether a short audio window provides enough evidence for a small set of safety-relevant interaction states.
+The most direct design is a transcript-first pipeline: run speech-to-text, then parse the transcript for command words. This is attractive because it appears general and easy to extend. The problem is that nearby UAV audio is short, noisy, and action-sensitive. Rotor self-noise can reduce transcript coverage in one-second clips, and an incomplete or distorted transcript can make the parser miss an emergency phrase or extract the wrong command. This is a scoped concern about short rotor-noisy clips, not a universal statement about every ASR configuration; longer context, different microphones, or larger models may improve transcript quality. The systems hazard is that transcript-first processing asks the system to recover free-form text even though the control side needs only a narrow, safety-relevant decision.
 
-The paper uses a deliberately narrow intent contract: \emph{emergency}, \emph{movement}, and \emph{unknown}. Emergency represents a safety-critical event that can be handled differently by the bridge. Movement represents ordinary control-oriented speech, but it remains pending until a downstream policy supplies direction, authorization, and vehicle-state checks. Unknown represents unsupported, uncertain, or out-of-contract audio. This contract is the reason the recognizer can participate in a safety layer: it prevents every utterance from being forced into an actionable command class.
+Keyword spotting and compact speech-command classifiers avoid full transcripts and are much closer to embedded deployment \cite{sainath2015cnn_kws,warden2018speechcommands,zhang2017helloedge}. They are useful baselines for limited-vocabulary recognition, but a detected keyword or command class is still not a safety mechanism. A keyword trigger does not say whether a movement request has authority, whether the vehicle state permits action, whether an emergency-like word should interrupt the current task, or whether repeated detections should be suppressed. Without a safety-state boundary, the classifier output can become a direct trigger rather than a controlled input.
 
-\subsection{Rotor Noise and Local Deployment Constraints}
+Direct speech-to-command mapping creates the sharpest hazard. If every recognized emergency or movement label is bound to an action, then recognition errors become action pressure on the control stack. False emergency events can create unnecessary interruptions, false movement events can request unauthorized motion, and missed emergency events can leave the voice channel silent when it is needed. This is a design hazard that follows from binding noisy recognition output directly to action.
 
-Small drones create their own acoustic interference. The microphone is close to the rotors, the noise changes with operating state, and the resulting speech condition differs from quiet indoor command recognition. Prior UAV speech-interface and UAV-noise studies motivate this setting \cite{oneata19_interspeech,oneata2021multimodal,miesikowska2021uavnoise,park2023uavvehicle}, and broader drone-audition work treats platform ego-noise as a core obstacle for aerial audio sensing \cite{chevtchenko2025drone_ssl}. The clean-versus-noisy example in Figure~\ref{fig:clean_vs_noisy} illustrates the kind of acoustic shift that the system must handle; the quantitative evidence is reported in Section~\ref{sec:evaluation}.
+Removing the unknown fallback creates a related failure mode. Unsupported speech, background audio, or low-confidence windows still have to go somewhere. If the classifier has only actionable classes, then out-of-contract audio is forced into emergency or movement. For a UAV, that forced decision is not just a classification error. It is pressure on the safety-state boundary to handle audio that should have remained non-actionable.
 
-The same safety motivation also argues for local inference. A voice safety layer should remain available when a phone application is not open, a network path is unreliable, or a cloud service would add avoidable dependency. Local deployment turns recognition into a systems problem: the model must fit the embedded operator set and memory budget, report timing and confidence, and expose enough state for the bridge to audit the decision. Microcontroller speech runtimes and benchmarks make this constraint explicit by treating kernels, memory, latency, energy, and target hardware as part of the result \cite{david2021tflm,lai2018cmsisnn,banbury2021mlperftiny}. Board-level runtime measurements show whether the local event path can execute at the required cadence; labeled acoustic trials and bridge tests then show whether those events are correct and safely mediated. The evaluation therefore separates recognition quality, runtime feasibility, response time, and bridge behavior.
+\subsection{Constrained Safety-State Events}
+
+Small drones create their own acoustic interference. The microphone is close to the rotors, the noise changes with operating state, and the resulting speech condition differs from quiet indoor command recognition. Prior UAV speech-interface and UAV-noise studies motivate this setting \cite{oneata19_interspeech,oneata2021multimodal,miesikowska2021uavnoise,park2023uavvehicle}, and broader drone-audition work treats platform ego-noise as a core obstacle for aerial audio sensing \cite{chevtchenko2025drone_ssl}. The clean-versus-noisy example in Figure~\ref{fig:clean_vs_noisy} illustrates the kind of acoustic shift that the system must handle.
+
+The design response is to make speech produce constrained safety-state events, not transcripts or direct commands. The paper uses a deliberately narrow event-state contract: \emph{emergency}, \emph{movement}, and \emph{unknown}. Emergency represents a safety-critical event that can be handled differently by the safety-state boundary. Movement represents ordinary control-oriented speech, but it remains pending until a downstream policy supplies direction, authorization, and vehicle-state checks. Unknown represents unsupported, uncertain, or out-of-contract audio. This contract is the reason the recognizer can participate in a safety layer: it prevents every utterance from being forced into an actionable command class.
+
+The same safety motivation also argues for local inference. A voice safety layer should remain available when a phone application is not open, a network path is unreliable, or a cloud service would add avoidable dependency. Local deployment turns recognition into a systems problem: the model must fit the embedded operator set and memory budget, report timing and confidence, and expose enough state for the safety-state boundary to audit the decision. Microcontroller speech runtimes and benchmarks make this constraint explicit by treating kernels, memory, latency, energy, and target hardware as part of the result \cite{david2021tflm,lai2018cmsisnn,banbury2021mlperftiny}. The required output is therefore a local structured safety-state event stream with confidence and timing, followed by boundary checks that decide whether to ignore, hold, escalate, or forward the event.

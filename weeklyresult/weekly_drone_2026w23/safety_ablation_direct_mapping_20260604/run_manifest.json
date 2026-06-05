@@ -1,0 +1,54 @@
+{
+  "created_at": "2026-06-04T19:26:15",
+  "repo": {
+    "branch": "main",
+    "head": "0f3da223f64689cfa5103b6dfdf5cd5f137f313f",
+    "status_short_branch": [
+      "## main...origin/main",
+      " M docs/.DS_Store",
+      " M docs/paper_sensys2027/figures/figure1.png",
+      " M docs/paper_sensys2027/sections/1introduction.tex",
+      " M docs/weekly_todo/handoff_log.md",
+      " M scripts/paper_figures/render_figure1_opening_scenario.py",
+      "?? docs/paper_sensys2027/figures/figure1.pdf",
+      "?? docs/paper_sensys2027/figures/source/",
+      "?? docs/weekly_todo/2026/2026w23/",
+      "?? scripts/eval_asr_stt_intent_baseline.py",
+      "?? scripts/eval_safety_ablation_direct_mapping.py",
+      "?? weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604/",
+      "?? weeklyresult/weekly_drone_2026w23/asr_stt_baseline_whisper_tiny_fixed_noisy_20260604_smoke/",
+      "?? weeklyresult/weekly_drone_2026w23/asr_stt_model_cache/"
+    ]
+  },
+  "command": {
+    "argv": [
+      "scripts/eval_safety_ablation_direct_mapping.py",
+      "--output-dir",
+      "weeklyresult/weekly_drone_2026w23/safety_ablation_direct_mapping_20260604"
+    ],
+    "shell_command": "python3 scripts/eval_safety_ablation_direct_mapping.py --output-dir weeklyresult/weekly_drone_2026w23/safety_ablation_direct_mapping_20260604"
+  },
+  "policy": {
+    "emergency_prediction": "emergency action",
+    "movement_prediction": "movement action",
+    "unknown_prediction": "no action",
+    "bridge": "disabled in simulator",
+    "manual_override": "absent in simulator",
+    "policy_gate": "absent in simulator"
+  },
+  "metrics_definition": {
+    "action_pressure_per_100_windows": "(predicted emergency + predicted movement) / total_windows * 100",
+    "unknown_false_action_rate": "among true unknown windows, fraction predicted emergency or movement",
+    "unauthorized_movement_action_count": "all movement actions under the no-bridge/no-authority simulator",
+    "missed_emergency_action_rate": "among true emergency windows, fraction not mapped to emergency action"
+  },
+  "outputs": {
+    "run_manifest": "weeklyresult/weekly_drone_2026w23/safety_ablation_direct_mapping_20260604/run_manifest.json",
+    "input_sources": "weeklyresult/weekly_drone_2026w23/safety_ablation_direct_mapping_20260604/input_sources.json",
+    "direct_mapping_metrics": "weeklyresult/weekly_drone_2026w23/safety_ablation_direct_mapping_20260604/direct_mapping_metrics.json",
+    "no_unknown_ablation_metrics": "weeklyresult/weekly_drone_2026w23/safety_ablation_direct_mapping_20260604/no_unknown_ablation_metrics.json",
+    "action_pressure_table": "weeklyresult/weekly_drone_2026w23/safety_ablation_direct_mapping_20260604/action_pressure_table.csv",
+    "report": "weeklyresult/weekly_drone_2026w23/safety_ablation_direct_mapping_20260604/report.md",
+    "result_tree": "weeklyresult/weekly_drone_2026w23/safety_ablation_direct_mapping_20260604/result_tree.txt"
+  }
+}
