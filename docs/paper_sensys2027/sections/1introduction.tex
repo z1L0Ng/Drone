@@ -3,46 +3,103 @@ Unmanned Aerial Vehicles (UAVs/drones) are expected to become more prevalent in 
 %
 \begin{figure}[t]
     \centering
-    \begin{minipage}{0.48\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{figures/figure1.png}
-        \caption{Illustrative talk-to-the-drone scenario in which nearby speech provides a hands-free interaction channel while any UAV-facing response remains mediated by a safety-state boundary.}
-        \label{fig:talk_to_drone_scenario}
-        \Description{A nearby person speaks toward a rotor-noisy drone; the onboard Akouo layer emits a structured safety-state event that is mediated by a safety-state boundary before any response.}
-    \end{minipage}
+    \includegraphics[width=\columnwidth]{figures/figure1.png}
+    \caption{Illustrative talk-to-the-drone scenario in which nearby speech provides a hands-free interaction channel while any UAV-facing response remains mediated by a safety-state boundary.}
+    \label{fig:talk_to_drone_scenario}
+    \Description{A nearby person speaks toward a rotor-noisy drone; the onboard Akouo layer reports an intent-state update that is mediated by a safety-state boundary before any response.}
 \end{figure}
 
 Figure~\ref{fig:talk_to_drone_scenario} illustrates the interaction style this paper targets: nearby speech becomes an input to a UAV-side safety interaction layer rather than a direct replacement for the existing control stack.
 
 Given the potential extent of applications of Unmanned Aerial Vehicles (UAVs), policymakers have been contemplating ensuring the deployment of these systems is bound by safety standards and regulations to potentially reduce unwarranted consequences. For example, the \textit{European Aviation Safety Agency} in Regulation 2019/947 has provided guidelines for the widespread deployment of UAVs, particularly in urban areas. The guidelines instruct UAV operators to perform a risk assessment and mitigation before UAVs are considered airworthy, and may require UAVs to implement fail-safe systems. Most available UAVs on the market lack fault-detection systems, which can pose a safety risk. Soon, we expect regulators worldwide to establish safe operating conditions. 
 
-Speaking to a drone is a natural interaction mode because it aligns with how people already communicate in shared spaces. For a nearby UAV, voice is especially useful because it is hands-free: a person can express intent without reaching for a controller, opening a phone application, or relying on a network connection. When the drone is very close to people or structures, or is about to collide with them, it should be able to understand voice commands, since speech is often the most natural way humans react in such situations.
+Speaking to a drone during an emergency is a natural reflex response because it aligns with how people react in such situations. It is an automatic and instinctive reaction to shout. For a nearby UAV, voice is especially useful because it is hands-free -- a person can express intent without reaching for a controller, opening a phone application, or relying on a network connection. It is also a real-time and immediate response to convey the dangerous situation the drone may get into. When the drone is very close to people or structures, or is about to collide with them, it should be able to understand voice commands, since speech is often the most natural way humans react in such situations.
 
-However, the acoustic environment around a UAV is often highly challenging, with propeller noise and other surrounding sounds making speech recognition difficult. This problem becomes more severe for small UAVs or quadrotors, where the microphone is close to the propellers, causing strong self-noise. In addition, the noise spectrum changes with motor speed, distance, and drone motion. Prior work has shown that UAV speech interfaces are feasible in principle~\cite{oneata19_interspeech,oneata2021multimodal}, while studies on UAV noise indicate that operating conditions can significantly degrade voice-command recognition~\cite{miesikowska2021uavnoise,park2023uavvehicle}.
+However, the acoustic environment around a UAV is often highly challenging, with mainly propeller noise and other surrounding sounds making speech recognition highly difficult. This problem becomes much more severe for small UAVs or quadrotors, where the microphone will be very close to the propellers, causing strong self-noise. In addition, the noise spectrum changes with motor speed, distance, and drone motion. Prior work has shown that UAV speech interfaces are feasible in principle~\cite{oneata19_interspeech,oneata2021multimodal}, while studies on UAV noise indicate that operating conditions can significantly degrade voice-command recognition~\cite{miesikowska2021uavnoise,park2023uavvehicle}.
 
-A straightforward response is to attach a conventional speech interface to the drone: transcribe the audio and parse the text, detect keywords, or map a recognised command directly to an action. These approaches are attractive because they are familiar, but they leave a systems gap for UAV safety interaction. Short rotor-noisy clips can make transcript-first parsing brittle, keyword or command labels do not define how speech should be mediated before physical action, and direct mapping can turn recognition errors into action pressure.
+A straightforward response is to attach a conventional speech interface module to the drone -- transcribe the audio, parse the text, detect keywords, and map the recognised command directly to an action. This approach is attractive because it is simple and familiar, but there are some shortcomings %have a few leave a systems gap
+for safe operations of UAVs.
+Mainly, short, rotor-noise clips can make transcript-first parsing brittle, keyword or command labels do not define how speech should be mediated before the physical action, and direct mapping can turn recognition errors into immediate, unnecessary actions.
 
-This paper introduces \emph{Akouo}, an onboard voice safety layer for small UAVs. Akouo listens for nearby speech and converts each short audio window into a structured safety-state event before any action is considered. The event-state contract is deliberately small: movement represents an ordinary control-oriented request, emergency represents safety-critical speech, and unknown contains unsupported or uncertain audio. Akouo keeps this contract narrow so that ambiguous speech can be logged and contained instead of being forced into a flight command.
+% This paper introduces \emph{Akouo}, an onboard voice safety layer for small UAVs. Akouo listens for nearby speech and converts each short window of audio signal into a structured safety-state event  == "state of the intent for safe operations" before any action is considered. The event-state contract is deliberately small: movement represents an ordinary control-oriented request, emergency represents safety-critical speech, and unknown contains unsupported or uncertain audio. Akouo keeps this contract narrow so that ambiguous speech can be logged and contained instead of being forced into a flight command.
 
-This framing changes the evaluation question. Recognition accuracy still matters, but the system must also show why the event-state contract is needed, whether the recognizer can sustain the contract under rotor noise, whether the embedded path can produce events locally, and whether the safety-state boundary prevents unsupported speech from becoming an unintended action. We therefore evaluate Akouo against transcript-first, compact-classifier, and direct-mapping alternatives, not only as an isolated speech classifier.
+% intent?? three emergency "normal movement"  unknown
 
-\textbf{Our Approach.} Akouo follows three principles. First, the system should focus on the safety-relevant intent of speech, not on recovering every word. Second, the voice layer should run locally on the UAV whenever possible, so the onboard recognizer must fit the computation, memory, and operator constraints of the embedded processor. Third, speech should not directly trigger drone motion. The system must first create a structured safety-state event, record confidence and timing, and pass the event through a safety-state boundary before any vehicle-facing response is allowed.
+% safety-state event  == "state of the intent for safe operations"
+% event-state = state of the event
+%%%%%%%%%% Write again the above para here below
+This paper introduces \emph{Akouo}, an onboard voice safety layer for small UAVs. In Akouo, an \emph{intent} is the speaker's communicative goal inferred from a short audio window. The recognizer does not output a flight command. Instead, it assigns each window to one of three intent states: \emph{emergency}, \emph{movement}, or \emph{unknown}. Emergency captures speech that should enter safety-critical handling, movement captures normal control-oriented speech, and unknown captures unsupported or uncertain audio. Akouo then reports this intent state with confidence and timing as an intent-state update for the safety-state boundary.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The prototype shows how this listening and recognition path can run close to the drone and produce structured safety-state events for a boundary that logs and mediates possible actions.
+
+This framing changes the evaluation question. Recognition accuracy still matters, but the system must also show why the intent-state mapping is needed, whether the recogniser can sustain the mapping under rotor noise, whether the embedded path can produce intent-state updates locally, and whether the safety-state boundary prevents unsupported speech from becoming an unintended action. We therefore evaluate Akouo against transcript-first, compact-classifier, and direct-mapping alternatives, not only as an isolated speech classifier.
+
+\textbf{Our Approach.} Akouo follows three principles. First, the system should focus on the safety-relevant intent of speech, not on recovering every word. Second, the voice layer should run locally on the UAV whenever possible, so the onboard recogniser must fit the computation, memory, and operator constraints of the embedded processor. Third, speech should not directly trigger drone motion. The system must first produce an intent-state update, record confidence and timing, and pass the update through a safety-state boundary before any vehicle-facing response is allowed.
+
+The prototype shows how this listening and recognition path can run close to the drone and produce intent-state updates for a boundary that logs and mediates possible actions.
 
 Akouo is not a replacement for collision avoidance, geofencing, emergency landing, or manual override. Instead, it adds a way for nearby people to express speech-based intent, which the UAV can record and check before any action is considered.
 
 %%%The evaluation is organized around the same layers. Offline recognition tests evaluate whether the system can separate movement, emergency, and unknown speech under rotor-noisy conditions. Board-level tests evaluate whether the local hardware can capture audio, run the recognizer, and report events reliably. Control-side tests are needed to evaluate how those events are ignored, held, escalated, or forwarded by the bridge. We keep these claims separate because recognition accuracy alone does not prove a safe UAV interaction, and a working board pipeline does not prove readiness for live flight.
 
 %%%********* PLEASE REWITE ABOVE TWO PARAS TO MAKE IT EASY TO UNDERSTAND STORY .... BECAUSE THE READER IN THE BEGINNING WILL NOT HAVE ANY IDEA OF THE SPECIFIC WORDS YOU USE!!! ************ Please 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% contract => construct: Synonyms
+% STRONGEST
+% build up
+% compose
+% create
+% design
+% erect
+% establish
+% fashion
+% forge
+% form
+% formulate
+% found
+% manufacture
+% organize
+% produce
+% put up
+% set up
+% shape
+% STRONG
+% compound
+% constitute
+% elevate
+% engineer
+% envision
+% fabricate
+% frame
+% imagine
+% invent
+% make
+% prefab
+% raise
+% rear
+% WEAK
+% cobble up
+% cook up
+% dream up
+% fudge together
+% hammer out
+% hoke up
+% put out
+% put together
+% throw together
+% throw up
+% trump up
+% uprear
+% whip up
+%%%%%%%%%%%%%%%%%%%%
 
 
 This paper makes four contributions:
 \begin{itemize}
 \item \textbf{Safety-State Mediated Voice Interaction.} We define Akouo, a UAV-side safety interaction layer that treats nearby speech as a safety-relevant signal under rotor self-noise and admits it through a safety-state boundary rather than as a general speech assistant or direct speech-to-flight controller.
-\item \textbf{Event-State Contract.} Akouo models voice input as structured safety-state events rather than merely command labels: emergency maps to safety-critical handling, movement remains pending until policy supplies authority and context, and unknown provides containment for unsupported or uncertain audio.
-\item \textbf{Rotor-Noise Robust On-Device Recognition.} We instantiate the event source on an ESP32-S3 microcontroller with microphone capture, feature extraction, inference, and event reporting, positioning the board as the edge deployment path for rotor-noisy safety interaction without claiming live flight or fully onboard drone control.
+\item \textbf{Intent-State Mapping.} Akouo models voice input as safety-relevant intent states rather than merely command labels: emergency maps to safety-critical handling, movement remains pending until policy supplies authority and context, and unknown provides containment for unsupported or uncertain audio.
+\item \textbf{Rotor-Noise Robust On-Device Recognition.} We instantiate the intent-state source on an ESP32-S3 microcontroller with microphone capture, feature extraction, inference, and intent-state reporting, positioning the board as the edge deployment path for rotor-noisy safety interaction without claiming live flight or fully onboard drone control.
 \item \textbf{Evaluation.} We evaluate recognition quality, rotor-noise robustness, embedded deployment feasibility, safety-state boundary behavior, and participant-level use while contrasting Akouo with transcript-first ASR, compact speech-command classifiers, direct mapping, and no-unknown ablations.
 \end{itemize}
 
-The rest of the paper is organized as follows. Section~\ref{sec:motivation} motivates constrained safety-state events under drone self-noise. Section~\ref{sec:system} presents the system architecture and event-state contract. Section~\ref{sec:recognizer} describes the recognizer design. Section~\ref{sec:prototype} presents the prototype and safety-state boundary interface. Section~\ref{sec:evaluation} evaluates the system components and contrasts Akouo with common speech-interface alternatives.
+The rest of the paper is organized as follows. Section~\ref{sec:motivation} motivates constrained intent states under drone self-noise. Section~\ref{sec:system} presents the system architecture and intent-state mapping. Section~\ref{sec:recognizer} describes the recognizer design. Section~\ref{sec:prototype} presents the prototype and safety-state boundary interface. Section~\ref{sec:evaluation} evaluates the system components and contrasts Akouo with common speech-interface alternatives.

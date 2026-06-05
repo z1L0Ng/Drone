@@ -8,10 +8,10 @@ Project target: SenSys 2027 first-round submission.
 
 ## Current Repo Audit
 
-Audit time: 2026-06-04 16:58 CDT.
+Audit time: 2026-06-05 12:19 CDT.
 
 - Branch: `main`
-- HEAD: `0f3da223f64689cfa5103b6dfdf5cd5f137f313f`
+- HEAD: `9f73717bf176cb5adc7eb0072d3e26076c18eae7`
 - Worktree status: clean.
 - Latest result directory: `weeklyresult/weekly_drone_2026w23`.
 
@@ -107,7 +107,7 @@ Required evaluation additions:
       be produced quickly.
 - [x] Ask writing agent to prepare concrete section rewrite patches only after
       baseline feasibility is known.
-- [ ] Keep figure work limited to supporting the new framing.
+- [x] Keep figure work limited to supporting the new framing.
 
 ## Evaluation-Agent Baseline Feasibility Receipt
 
@@ -858,7 +858,7 @@ Global figure/table rules:
 
 Figure tasks:
 
-- [ ] Figure 1 / opening scenario:
+- [x] Figure 1 / opening scenario:
   - Purpose: motivate talk-to-the-drone under rotor noise.
   - Show person speech, rotor-noisy UAV, onboard Akouo event generation, and
     conservative boundary before response.
@@ -866,19 +866,39 @@ Figure tasks:
   - Do not show full architecture or too many pipeline blocks.
   - Caption should say this is a hands-free interaction scenario, not a proven
     safety outcome.
+  - 2026-06-05 user completed Figure 1 polish; no further action unless final
+    compile/page-fit shows a problem.
 
-- [ ] System architecture:
+- [x] System architecture:
   - Use `figure*` if possible.
   - Separate physical context, onboard event recognizer, safety-state bridge,
     and gated UAV response.
   - Make naive direct speech-to-command path visibly absent or blocked.
   - Avoid duplicating Figure 1; this figure should explain mechanism, not scene.
+  - 2026-06-05 audit decision: keep as `figure*`, keep asset unchanged, keep
+    `width=\textwidth`; single-column would over-compress the wide asset.
+  - 2026-06-05 caption patch completed: caption now foregrounds rotor-noisy
+    speech, structured safety-state event, UAV policy, and separation between
+    recognition and vehicle-facing action.
+  - Completed minimal patch: update caption to foreground rotor-noisy speech,
+    structured safety-state event, UAV policy, and separation between
+    recognition and vehicle-facing action.
 
-- [ ] Safety-state flow:
+- [x] Safety-state flow:
   - Decide whether to keep as a standalone figure or merge into system
     architecture.
   - If kept, show only emergency/movement/unknown -> boundary handling.
   - Movement must remain pending / policy-required, not direct navigation.
+  - 2026-06-05 audit decision: keep as `table*`, do not merge into
+    `fig:system_architecture`, do not resize to one column; table defines event
+    semantics while the architecture figure shows pipeline separation.
+  - 2026-06-05 minimal patch completed: caption now says each recognizer output
+    is a structured safety-state update with boundary handling semantics, not a
+    direct flight command.
+  - Completed minimal patch: caption should say each recognizer output is a
+    structured safety-state update with boundary handling semantics, not a
+    direct flight command. Header `Boundary action` may become
+    `Safety-state boundary handling`.
 
 - [ ] Recognizer architecture:
   - Single-column is acceptable only if readable.
@@ -922,6 +942,16 @@ Table tasks:
   - Suggested columns:
     rotor-noise focus, MCU/onboard feasibility, constrained intent events,
     safety-state boundary, deployment/evaluation link.
+  - 2026-06-05 audit result: current `2relatedwork.tex` has no comparison
+    table. Add a qualitative comparison table only, without invented numbers.
+  - Recommended rows: `ASR/STT + parser`, `KWS/speech-command classifiers`,
+    `embedded speech/TinyML`, `UAV safety mechanisms`, `Akouo`.
+  - Recommended columns: `Approach family`, `Rotor-noisy UAV setting`,
+    `Onboard/MCU feasibility`, `Constrained event output`,
+    `Safety-state boundary / paper role`.
+  - If page budget is tight, let this table absorb or replace
+    `tab:safety_components` rather than adding another overlapping Motivation
+    table.
 
 - [ ] Baseline comparison table:
   - Rename TC-ResNet, BC-ResNet, DS-CNN rows as compact speech-command
@@ -947,3 +977,225 @@ Table tasks:
 - [ ] Rotor robustness / shielding tables:
   - Keep only if final values are available and support a main claim.
   - Otherwise move to Discussion or remove.
+
+## Figure/Table Polish Plan
+
+Planning time: 2026-06-05 12:19 CDT.
+
+Decision:
+- Figure 1 is done by the user.
+- Remaining work should polish the figures/tables that carry paper claims.
+- Demo video work remains deferred; focus on paper figures/tables and baseline
+  presentation.
+
+Meeting-driven requirements:
+- Rename unclear figures/tables so the caption says the claim, not the internal
+  artifact name.
+- Resize important figures; use `figure*` or `table*` when single-column
+  layout makes the claim unreadable.
+- Add a Related Work comparison table.
+- Improve reference clarity and make each visual align with the new framing.
+- Separate Discussion/Conclusion is already handled; the figure/table pass
+  should now reinforce that story rather than add new claims.
+
+### Priority 0: claim-bearing visuals/tables
+
+- [x] `fig:system_architecture`
+  - Role: main mechanism figure, not a scenario illustration.
+  - Required message: speech becomes a structured safety-state event before the
+    safety-state boundary considers any gated vehicle-facing response.
+  - Layout: keep/convert to `figure*`; make boundary visually dominant.
+  - Must show: onboard event recognizer, event-state contract, safety-state
+    boundary, existing UAV safety mechanisms/policy inputs, gated response.
+  - Must avoid: direct speech-to-command path as a valid route; decorative map
+    clutter; internal transport/debug labels.
+  - Audit result: keep; asset does not need modification; caption-only polish
+    recommended.
+  - Caption patch completed with:
+    `\sys{} system architecture. Rotor-noisy nearby speech is converted into a
+    structured safety-state event and admitted to UAV policy only through the
+    safety-state boundary, separating recognition from vehicle-facing action.`
+
+- [x] `tab:intent_state_contract` / safety-state flow
+  - Role: explain the event-state contract.
+  - Decision needed: keep as a table, convert to a clean visual flow, or merge
+    into `fig:system_architecture`.
+  - If kept, caption should foreground the claim:
+    emergency/movement/unknown are structured updates to the safety-state
+    boundary, not commands.
+  - Movement must remain pending/policy-required.
+  - Audit result: keep as `table*`, keep separate from architecture, do not
+    resize to one column.
+  - Patch completed: caption-only polish plus header change from
+    `Boundary action` to `Safety-state boundary handling`.
+
+- [ ] Related Work comparison table
+  - Role: answer the reviewer question "why not ASR/KWS/other UAV safety?"
+    before Evaluation.
+  - Suggested columns: Approach family, rotor-noise setting, onboard MCU
+    feasibility, constrained event output, safety-state boundary, paper role.
+  - Suggested rows: ASR/STT + parser, KWS/speech-command classifiers,
+    embedded speech/TinyML, UAV safety mechanisms, Akouo.
+  - Keep wording careful: prior work is not "wrong"; it leaves a different
+    systems gap.
+  - Audit result: current Related Work has no comparison table; implement a
+    qualitative table with the recommended rows/columns and no experimental
+    numbers.
+  - Page-budget rule: prefer replacing/absorbing `tab:safety_components` over
+    adding a redundant table.
+
+### Priority 1: evaluation visuals/tables
+
+- [ ] `fig:response_time_breakdown`
+  - Role: support real-time event-source claim.
+  - Layout: consider `figure*` if the current one-column figure is compressed.
+  - Must separate first-event latency from steady-state event cadence.
+  - Must not imply first-window subsecond latency.
+  - Highlight measured pieces: capture window, frontend, integer inference,
+    steady event period, first event latency.
+
+- [ ] `tab:baseline_comparison` and `tab:asr_baseline`
+  - Role: compare natural speech-interface alternatives.
+  - Decision needed: keep as separate tables or combine into one baseline table.
+  - If combined, separate rows by family:
+    transcript-first ASR baseline vs compact speech-command classifier baselines.
+  - Caption must make scope clear: fixed rotor-noisy one-second clips and
+    offline/parser comparison, not universal ASR failure.
+
+- [ ] `tab:safety_ablation`
+  - Role: quantify why the safety-state boundary and unknown fallback matter.
+  - Keep as a small, high-impact table if space allows.
+  - Caption must retain boundary: offline action-pressure simulation, not
+    vehicle actuation or flight safety validation.
+
+- [ ] `tab:user_study_participant_variability`
+  - Role: show participant variability and user-study evidence.
+  - Meeting/use-case: occupy meaningful paper space with real participant data
+    rather than a protocol-only table.
+  - Consider converting to a figure or mixed figure/table:
+    participant-level bars for emergency recall and unknown false event rate,
+    with trial counts visible.
+  - No geometry, direction, angle, distance, or speaker-position content.
+
+### Priority 2: optional / drop candidates
+
+- [ ] `fig:recognizer_architecture`
+  - Role: show offline reference and embedded recognizer share the same event
+    contract.
+  - Check whether `figure*` is needed for readability.
+  - Avoid run/profile/internal labels; make the output contract visually clear.
+
+- [ ] `fig:clean_vs_noisy`
+  - Role: motivate rotor-noise difficulty.
+  - Keep only if visually legible and clearly useful.
+  - If weak or redundant, drop or replace with a cleaner signal visualization.
+
+- [ ] `tab:safety_components`
+  - Role: complement existing UAV safety mechanisms.
+  - Possible merge with Related Work comparison table.
+  - Drop if it repeats prose without adding a claim.
+
+- [ ] `tab:prototype_interfaces`
+  - Role: explain prototype evidence path.
+  - Drop or compress if `fig:system_architecture` and Prototype prose already
+    cover the same pipeline.
+
+- [ ] `fig:emergency_stop_sequence`
+  - Role: controlled demonstration visual.
+  - Keep only if the figure is clear and does not imply broad flight validation.
+  - Demo video link remains deferred.
+
+Validation required after figure/table agent:
+- [ ] `git diff --check -- docs/paper_sensys2027`.
+- [ ] Forbidden internal-term check.
+- [ ] No-geometry user-study check.
+- [ ] LaTeX compile and page-count check.
+- [ ] Orphan figure/table/reference check.
+
+## Figure/Table Receipt - System Architecture Caption and Event-State Contract Audit
+
+Receipt time: 2026-06-05 12:40 CDT.
+
+Status:
+- Figure/table agent applied the caption-only patch for
+  `fig:system_architecture`.
+- `figure*` and `width=\textwidth` are unchanged.
+- Figure/table agent completed a read-only audit for
+  `tab:intent_state_contract` / `safety_state_flow`.
+
+Completed:
+- `fig:system_architecture` caption now states:
+  rotor-noisy speech -> structured safety-state event -> UAV policy through
+  safety-state boundary -> separation between recognition and vehicle-facing
+  action.
+- Validation reported: `git diff --check -- docs/paper_sensys2027` passed.
+
+Event-state contract audit:
+- Decision: keep as `table*`.
+- Do not merge into `fig:system_architecture`; the figure shows pipeline
+  separation, while the table defines event semantics.
+- Do not resize to one column because the three columns need full width.
+- Intended message: Emergency, Movement, Unknown, and Low confidence are
+  structured safety-state updates with distinct boundary handling, not commands.
+- Claim supported: Akouo's novelty is the event-state contract; speech becomes
+  constrained safety-state events and the safety-state boundary determines how
+  each event may affect UAV behavior.
+
+Recommended next patch:
+- Caption:
+  `Event-state contract exposed by \sys{}. Each recognizer output is treated as
+  a structured safety-state update with boundary handling semantics, not as a
+  direct flight command.`
+- Optional header:
+  `Boundary action` -> `Safety-state boundary handling`.
+
+Risk:
+- Low overclaim risk. Rows are conservative because they use policy, pending,
+  fallback/no action, and threshold handling language.
+
+## Figure/Table Receipt - Event-State Contract Patch and Related Work Table Audit
+
+Receipt time: 2026-06-05 12:45 CDT.
+
+Status:
+- Figure/table agent completed the minimal patch for
+  `docs/paper_sensys2027/figures/safety_state_flow.tex`.
+- Figure/table agent completed a read-only audit for the Related Work
+  comparison table.
+
+Completed event-state contract patch:
+- Caption replaced with:
+  `Event-state contract exposed by \sys{}. Each recognizer output is treated as
+  a structured safety-state update with boundary handling semantics, not as a
+  direct flight command.`
+- Header changed:
+  `Boundary action` -> `Safety-state boundary handling`.
+- Kept `table*`.
+- Did not merge with `fig:system_architecture`.
+- Did not resize to one column.
+- Validation reported: `git diff --check -- docs/paper_sensys2027` passed.
+
+Related Work comparison table audit:
+- Current `docs/paper_sensys2027/sections/2relatedwork.tex` has no comparison
+  table.
+- Recommended table type: qualitative comparison table, no experimental
+  numbers.
+- Recommended rows:
+  - `ASR/STT + parser`
+  - `KWS/speech-command classifiers`
+  - `embedded speech/TinyML`
+  - `UAV safety mechanisms`
+  - `Akouo`
+- Recommended columns:
+  - `Approach family`
+  - `Rotor-noisy UAV setting`
+  - `Onboard/MCU feasibility`
+  - `Constrained event output`
+  - `Safety-state boundary / paper role`
+- Page-budget recommendation: if space is tight, this table should absorb or
+  replace `tab:safety_components` rather than adding another overlapping
+  Motivation table.
+
+Next:
+- Implement Related Work comparison table or ask the figure/table agent for a
+  proposed exact LaTeX table first.

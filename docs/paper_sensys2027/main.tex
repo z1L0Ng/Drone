@@ -13,6 +13,7 @@
 \usepackage{amsmath}
 \usepackage{enumitem}
 \usepackage{xcolor}
+\usepackage{placeins}
 \usepackage{hyperref}
 \setlength{\marginparwidth}{2cm}
 \usepackage{todonotes}
@@ -27,7 +28,7 @@
 \title{\sys: Voice-Driven UAV Safety Interaction Under Rotor Noise}
 
 \begin{abstract}
-Speaking to a nearby drone is a natural interaction mode, especially when a person cannot quickly reach a controller, phone application, or networked interface. However, rotor self-noise and flight-control risk make common speech-interface designs insufficient: transcript-first parsing can be brittle on short noisy clips, keyword or command classifiers do not specify how speech should be mediated before action, and direct speech-to-command mapping can turn recognition errors into physical action pressure. This paper introduces \sys, an onboard voice safety layer for small UAVs. The key idea is to admit speech into the UAV system as a structured safety-state event rather than as a transcript, keyword trigger, or flight command. \sys{} uses a narrow event-state contract: movement represents ordinary control-oriented speech, emergency represents safety-critical speech, and unknown contains unsupported or uncertain audio. A safety-state boundary then decides how each event may influence the vehicle. We implement \sys{} with a noise-aware recognizer and an ESP32 runtime path that performs local audio capture, feature extraction, integer inference, and event reporting, and we evaluate it against transcript-first, compact-classifier, and safety-state boundary ablation alternatives.
+Speaking to a nearby drone is a natural interaction mode, especially when a person cannot quickly reach a controller, phone application, or networked interface. However, rotor self-noise and flight-control risk make common speech-interface designs insufficient: transcript-first parsing can be brittle on short noisy clips, keyword or command classifiers do not specify how speech should be mediated before action, and direct speech-to-command mapping can turn recognition errors into physical action pressure. This paper introduces \sys, an onboard voice safety layer for small UAVs. The key idea is to map speech into safety-relevant intent states rather than treating it as a transcript, keyword trigger, or flight command. \sys{} uses a narrow intent-state mapping: movement represents ordinary control-oriented speech, emergency represents safety-critical speech, and unknown contains unsupported or uncertain audio. A safety-state boundary then decides how each intent-state update may influence the vehicle. We implement \sys{} with a noise-aware recognizer and an ESP32 runtime path that performs local audio capture, feature extraction, integer inference, and intent-state reporting, and we evaluate it against transcript-first, compact-classifier, and safety-state boundary ablation alternatives.
 \end{abstract}
 
 \maketitle

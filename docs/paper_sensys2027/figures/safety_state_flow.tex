@@ -1,24 +1,22 @@
-\begin{table*}[t]
+\begin{table}[t]
     \centering
-    \caption{Event-state contract exposed by \sys{}. Events are structured safety-state updates to the safety-state boundary, not direct flight commands.}
-    \label{tab:intent_state_contract}
-    \small
-    \begin{tabular}{@{}p{0.16\textwidth}p{0.35\textwidth}p{0.45\textwidth}@{}}
+    \caption{Intent-state mapping used by \sys{}. Each short audio window is mapped to a safety-relevant intent state; low-confidence predictions are handled as unknown.}
+    \label{tab:intent_state_mapping}
+    \footnotesize
+    \setlength{\tabcolsep}{3pt}
+    \begin{tabular}{@{}p{0.22\linewidth}p{0.33\linewidth}p{0.35\linewidth}@{}}
         \toprule
-        Event & Voice-layer meaning & Boundary action \\
+        Intent state & Speech meaning & Boundary handling \\
         \midrule
         Emergency
-        & The speaker appears to express urgent safety-related intent.
-        & Prioritize safe response path; hold, stop, or escalate under policy. \\
+        & Urgent safety-related speech.
+        & Prioritize safe response under policy. \\
         Movement
-        & The speaker appears to request ordinary interaction with the UAV.
-        & Keep pending; require authority, vehicle state, and policy checks. \\
+        & Ordinary control-oriented speech.
+        & Keep pending for authority and state checks. \\
         Unknown
-        & The audio is unsupported, ambiguous, or too uncertain to trust.
-        & Log and ignore, or map to fallback/no action. \\
-        Low confidence
-        & Any predicted event below the operating threshold.
-        & Treat as unknown before any UAV-facing action path. \\
+        & Unsupported or uncertain audio.
+        & Log and map to fallback/no action. \\
         \bottomrule
     \end{tabular}
-\end{table*}
+\end{table}
