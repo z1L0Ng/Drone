@@ -1,0 +1,113 @@
+digraph RecognizerArchitecture {
+  graph [
+    layout=neato,
+    splines=line,
+    overlap=false,
+    outputorder=nodesfirst,
+    bgcolor="white",
+    margin=0.04,
+    pad=0.02
+  ];
+
+  node [
+    shape=rect,
+    style="rounded,filled",
+    color="#28343C",
+    fillcolor="#F8FBFC",
+    fontname="Helvetica",
+    fontsize=10,
+    penwidth=1.2,
+    width=1.05,
+    height=0.34,
+    fixedsize=true
+  ];
+
+  edge [
+    color="#28343C",
+    arrowsize=0.55,
+    penwidth=1.0,
+    fontname="Helvetica",
+    fontsize=9
+  ];
+
+  speech_label [
+    shape=plaintext,
+    label="speech window",
+    pos="0.62,1.18!",
+    width=1.05,
+    height=0.16,
+    fixedsize=true,
+    fontsize=9
+  ];
+  wave1 [label="", shape=rect, style=filled, color="#2563EB", fillcolor="#2563EB", pos="0.30,1.65!", width=0.035, height=0.12, fixedsize=true];
+  wave2 [label="", shape=rect, style=filled, color="#2563EB", fillcolor="#2563EB", pos="0.38,1.65!", width=0.035, height=0.26, fixedsize=true];
+  wave3 [label="", shape=rect, style=filled, color="#2563EB", fillcolor="#2563EB", pos="0.46,1.65!", width=0.035, height=0.42, fixedsize=true];
+  wave4 [label="", shape=rect, style=filled, color="#2563EB", fillcolor="#2563EB", pos="0.54,1.65!", width=0.035, height=0.20, fixedsize=true];
+  wave5 [label="", shape=rect, style=filled, color="#2563EB", fillcolor="#2563EB", pos="0.62,1.65!", width=0.035, height=0.34, fixedsize=true];
+  wave6 [label="", shape=rect, style=filled, color="#2563EB", fillcolor="#2563EB", pos="0.70,1.65!", width=0.035, height=0.48, fixedsize=true];
+  wave7 [label="", shape=rect, style=filled, color="#2563EB", fillcolor="#2563EB", pos="0.78,1.65!", width=0.035, height=0.24, fixedsize=true];
+  wave8 [label="", shape=rect, style=filled, color="#2563EB", fillcolor="#2563EB", pos="0.86,1.65!", width=0.035, height=0.36, fixedsize=true];
+  wave9 [label="", shape=rect, style=filled, color="#2563EB", fillcolor="#2563EB", pos="0.94,1.65!", width=0.035, height=0.16, fixedsize=true];
+  audio_anchor [label="", shape=point, style=invis, pos="1.08,1.65!", width=0.01, height=0.01, fixedsize=true];
+  logmel [label="Log-mel", pos="1.90,1.65!", width=1.05];
+
+  noisy [label="Noisy view", pos="3.20,2.35!", width=1.18, fillcolor="#EEF7F7"];
+  clean [label="Clean view", pos="3.20,0.95!", width=1.18];
+
+  nstem [label="Conv2D\nstem", pos="4.60,2.35!", width=1.05];
+  nblock [label="Branchformer-style\nencoder", pos="6.00,2.35!", width=1.35];
+  npool [label="Pool +\ndense", pos="7.45,2.35!", width=1.05];
+  nout [label="Intent-state\noutput", pos="8.87,2.35!", width=1.25];
+  quant [label="Int8 export", pos="10.30,2.35!", width=1.15];
+
+  cstem [label="Conv2D\nstem", pos="4.60,0.95!", width=1.05];
+  cblock [label="Branchformer-style\nencoder", pos="6.00,0.95!", width=1.35];
+  cpool [label="Pool +\ndense", pos="7.45,0.95!", width=1.05];
+  cembed [label="Clean-view\nembedding", pos="8.87,0.95!", width=1.25];
+
+  inset [
+    shape=rect,
+    label="",
+    pos="6.70,3.60!",
+    width=4.10,
+    height=0.88,
+    fixedsize=true,
+    style="rounded,filled",
+    fillcolor="white"
+  ];
+  inset_title [
+    shape=plaintext,
+    label="Branchformer-style encoder",
+    pos="6.70,4.18!",
+    width=2.2,
+    height=0.20,
+    fixedsize=true,
+    fontsize=10
+  ];
+  ffn1 [label="FFN", pos="5.15,3.60!", width=0.55, height=0.24, fontsize=8];
+  conv [label="DW-conv\nbranch", pos="6.05,3.82!", width=0.95, height=0.26, fontsize=8];
+  attn [label="MHA\nbranch", pos="6.05,3.38!", width=0.95, height=0.26, fontsize=8];
+  merge [label="Merge", pos="7.05,3.60!", width=0.65, height=0.24, fontsize=8];
+  ffn2 [label="FFN", pos="7.92,3.60!", width=0.55, height=0.24, fontsize=8];
+
+  audio_anchor -> logmel;
+  logmel -> noisy;
+  logmel -> clean;
+
+  noisy -> nstem -> nblock -> npool -> nout -> quant;
+  clean -> cstem -> cblock -> cpool -> cembed;
+
+  cembed -> nout [
+    label="align\nembeddings",
+    color="#D97706",
+    fontcolor="#D97706",
+    style=dashed,
+    constraint=false
+  ];
+
+  ffn1 -> conv;
+  ffn1 -> attn;
+  conv -> merge;
+  attn -> merge;
+  merge -> ffn2;
+}

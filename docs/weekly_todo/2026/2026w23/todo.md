@@ -14,6 +14,10 @@ Audit time: 2026-06-05 12:19 CDT.
 - HEAD: `9f73717bf176cb5adc7eb0072d3e26076c18eae7`
 - Worktree status: clean.
 - Latest result directory: `weeklyresult/weekly_drone_2026w23`.
+- Related Work status correction: current
+  `docs/paper_sensys2027/sections/2relatedwork.tex` already contains
+  `tab:related_work_comparison`; the remaining action is to polish/expand it,
+  not to add a table from scratch.
 
 ## Priority Update
 
@@ -719,15 +723,16 @@ Section-level tasks:
   - 2026-06-05 scoped pass completed in `1introduction.tex`; later final polish
     can still adjust prose rhythm, but the framing target is now represented.
 
-- [ ] Related Work:
+- [x] Related Work:
   - Reorganize around the approaches Akouo contrasts with:
     ASR/STT speech interfaces, KWS/speech-command classifiers, embedded
     speech/TinyML, and UAV safety mechanisms.
-  - Add a related-work comparison table if space allows.
+  - Add/polish a related-work comparison table if space allows.
   - Each subsection should close with why the prior family does not provide
     rotor-noisy, onboard, safety-state-mediated voice events.
   - 2026-06-05 scoped transition pass completed in `2relatedwork.tex`; the
-    related-work comparison table is still open, so this item remains unchecked.
+    related-work comparison table was simplified on 2026-06-06. Final page-fit
+    and prose rhythm can still be reviewed after compile.
 
 - [x] Motivation:
   - Treat this as the next active rewrite target before Introduction.
@@ -750,14 +755,16 @@ Section-level tasks:
   - Explain logging/auditability and safety-state boundary as design mechanisms.
   - Make clear speech is never directly bound to UAV motion.
 
-- [ ] Recognizer:
+- [x] Recognizer:
   - Open with “the recognizer exists to produce the event contract.”
   - Reduce model-report language unless it supports rotor-noisy event generation
     or embedded deployment constraints.
   - Connect compact speech-command baselines to this section, not to safety
     mechanism comparison.
-  - 2026-06-05 terminology pass completed; full prose flow and table/figure
-    integration review remains unchecked.
+  - 2026-06-05 terminology pass completed.
+  - 2026-06-06 scoped recognizer naming pass completed: paper-facing
+    `CBranchformer` removed; section and figure now use compact
+    Branchformer-style temporal encoder wording.
 
 - [ ] Prototype:
   - Present the prototype as realizing onboard event generation plus
@@ -1199,3 +1206,329 @@ Related Work comparison table audit:
 Next:
 - Implement Related Work comparison table or ask the figure/table agent for a
   proposed exact LaTeX table first.
+
+## Current Repo Audit Refresh - 2026-06-06 00:13 CDT
+
+- Branch: `main`
+- HEAD: `055d62d1e0dcc2a214af969aa270577dd7a9da4c`
+- Worktree status: dirty paper/figure draft.
+- Dirty scope includes `docs/paper_sensys2027/main.tex`,
+  `references.bib`, sections `1-8`, recognizer figure asset, figure source
+  directory, and `archive/figure2.aup3`.
+- Latest result directory: `weeklyresult/weekly_drone_2026w23`.
+
+## Advisor Late Feedback - 2026-06-05 23:42 CDT
+
+Status:
+- Advisor reviewed the latest draft shortly before final submission.
+- Main concern: current paper may still look under-novel because the technical
+  design can read like a generic speech interface, standard model design, and
+  noise augmentation pipeline.
+- Submission is still worth pursuing, but the paper needs a more explicit
+  novelty and technical-contribution pass.
+
+Advisor feedback summary:
+- Introduction needs a clearer answer to why this is new compared with existing
+  UAV speech interfaces.
+- The strongest differentiator should be real drone-side deployment under rotor
+  noise, plus the safety-state framing.
+- Branchformer-like recognizer must be explained better without introducing an
+  unpublished model name as the paper-facing contribution.
+- If possible, use existing or fast ablation evidence to show why the selected
+  recognizer and training path are useful.
+- Noise augmentation alone is not novel; do not frame it as the primary
+  contribution.
+- Style needs another human-polish pass to remove AI-generated phrasing.
+- Remove or revise figures that do not add clear value.
+- Final authorship order needs to be finalized: advisor last, VP second-to-last.
+- Keep advisor updated until submission.
+
+Manager interpretation:
+- Do not start a new large training campaign before submission.
+- Treat this as a paper rescue pass:
+  1. tighten Introduction novelty against UAV speech-interface prior work;
+  2. revise Recognizer to explain the Branchformer-like recognizer and
+     clean/noisy embedding alignment as deployment-oriented design choices for
+     rotor-noisy event generation;
+  3. reuse existing compact baselines as the model-family comparison evidence
+     where possible;
+  4. only request additional ablation if it can be run from existing artifacts or
+     a very short local harness;
+  5. cut figures/tables that do not support novelty, model design, deployment,
+     or evaluation contrast.
+
+Immediate checklist:
+- [x] Introduction: add a sharper paragraph on why prior UAV speech interfaces
+      do not solve real-time rotor-noisy onboard safety-state interaction.
+- [x] Introduction: make novelty read as `real drone deployment under rotor
+      noise + constrained safety-state event mediation`, not just voice command
+      classification.
+- [ ] Related Work: ensure the qualitative comparison table explicitly separates
+      prior UAV speech interfaces, generic ASR/STT, compact KWS/classifiers,
+      embedded TinyML speech, UAV safety mechanisms, and Akouo.
+- [x] Recognizer: replace paper-facing `CBranchformer` naming with
+      `Branchformer-like` or `compact Branchformer-style temporal encoder`.
+- [x] Recognizer: add a concise technical explanation of why this
+      Branchformer-like structure is used: local rotor-noise/speech cues, global
+      one-second window context, and embedded-friendly depthwise temporal path.
+- [x] Recognizer: explain clean-view/noisy-view same-architecture training as a
+      robustness method, but do not claim it is independently novel.
+- [ ] Evaluation: verify that TC-ResNet, BC-ResNet, and DS-CNN rows can be read
+      as model-family comparison evidence for the Branchformer-like recognizer.
+- [ ] Evaluation: decide whether any additional lightweight ablation is feasible
+      before submission. Default is no new large run.
+- [ ] Style: run a pass from Motivation onward for direct, human systems-paper
+      prose; remove generic AI-like phrasing.
+- [ ] Figures/tables: delete, shrink, or demote any visual that does not support
+      novelty, model design, deployment, or evaluation contrast.
+- [ ] Authorship: finalize metadata order outside the anonymous paper; advisor
+      last, VP second-to-last.
+- [ ] Venue fallback: after submission, discuss alternative venues if rejected;
+      do not spend submission-time energy on venue planning now.
+
+Risk:
+- If the recognizer section still reads as generic Branchformer plus noise
+  augmentation, reviewers may see insufficient technical novelty.
+- If Branchformer-like design advantages are asserted without comparison, use
+  conservative wording and point to compact baseline comparison rather than
+  claiming a full architectural ablation.
+- If the introduction over-focuses on safety framing without model/deployment
+  specificity, the paper may still look like a broad idea rather than a concrete
+  systems contribution.
+
+## Writing Agent Receipt - Recognizer Naming Pass - 2026-06-06 00:33 CDT
+
+Status:
+- Writing agent completed the scoped recognizer naming pass.
+- No experiments, model code, firmware, or evaluation numbers were changed.
+
+Changed files:
+- `docs/paper_sensys2027/sections/5recognizer.tex`
+- `docs/paper_sensys2027/figures/source/recognizer_architecture.dot`
+- `docs/paper_sensys2027/figures/recognizer_architecture.pdf`
+
+Completed:
+- Removed paper-facing `CBranchformer`.
+- Replaced visible paper wording with `compact Branchformer-style temporal
+  encoder` / `Branchformer-style encoder`.
+- Revised Section 5.2 to explain the design by purpose:
+  local speech/rotor-noise cues, global one-second window context,
+  embedded-friendly depthwise temporal path, and clean/noisy same-architecture
+  embedding alignment.
+- Avoided unsupported claims that the architecture is superior to all baselines.
+
+Verification:
+- `rg -n "CBranchformer" docs/paper_sensys2027`: no matches.
+- `pdftotext docs/paper_sensys2027/figures/recognizer_architecture.pdf - |
+  rg -n "CBranchformer"`: no matches.
+- `git diff --check -- docs/paper_sensys2027`: passed.
+
+Remaining:
+- Figure/table agent is not required for this naming fix.
+- Future visual polish can still adjust layout/readability of the recognizer
+  figure if page fit demands it.
+- Evaluation still needs a conservative statement that compact baselines are
+  model-family comparisons, not proof of full architectural superiority.
+
+## Writing Agent Receipt - Introduction Novelty Pass - 2026-06-06 00:48 CDT
+
+Status:
+- Writing agent completed the minimal Introduction novelty pass.
+- No experiments, model code, firmware, figures, or evaluation numbers were
+  changed.
+- `main.tex` was checked and left unchanged in this pass.
+
+Changed files:
+- `docs/paper_sensys2027/sections/1introduction.tex`
+
+Completed:
+- Added a sharper systems-gap sentence after prior UAV speech-interface
+  discussion: the gap is not only whether speech can be recognized near a drone,
+  but whether short rotor-noisy speech can be converted locally, while the UAV
+  is operating, into a constrained safety-state update before any vehicle-facing
+  response is considered.
+- Replaced the vague `some shortcomings` wording with a clearer systems-paper
+  contrast:
+  transcript-first parsing is brittle on short rotor-noisy clips;
+  KWS/command classifiers provide labels without mediation semantics;
+  direct mapping can turn recognition errors into vehicle-facing actions.
+- Preserved the current Akouo definition, contribution list, advisor comment
+  blocks, and overall Introduction structure.
+
+Verification:
+- `git diff --check -- docs/paper_sensys2027`: passed.
+
+Remaining:
+- The phrase `while the UAV is operating` should be watched during final
+  proofread because it could be read as implying live safety validation.
+  Current sentence is bounded by `before any vehicle-facing response is
+  considered`, so it does not make a completed safety-validation claim.
+- Related Work comparison-table polish is complete; final page-fit/prose check
+  remains.
+- Evaluation wording still needs to ensure compact baselines are model-family
+  comparisons, not proof of full architectural superiority.
+
+## Writing Agent Receipt - Related Work Table Polish - 2026-06-06 00:56 CDT
+
+Status:
+- Writing/figure-table pass simplified Table 1 in Related Work.
+- No experiments, model code, firmware, figures outside the table, or evaluation
+  numbers were changed.
+
+Changed files:
+- `docs/paper_sensys2027/sections/2relatedwork.tex`
+
+Completed:
+- Simplified `tab:related_work_comparison` from a wider qualitative table to
+  three columns.
+- Table now compares two core setting constraints:
+  `Rotor-noisy UAV speech` and `Onboard real-time inference`.
+- Rows remain qualitative:
+  UAV speech interfaces, ASR/STT + parser, KWS/speech-command classifiers,
+  embedded speech/TinyML, UAV safety mechanisms, and Akouo.
+- Caption changed to:
+  `How related work addresses the two core constraints in our setting.`
+- Kept `table*` because the qualitative rows are still too compressed for a
+  single-column ACM layout.
+
+Verification:
+- `git diff --check -- docs/paper_sensys2027`: passed.
+
+Remaining:
+- Final page-fit check is still needed after LaTeX compile.
+- Table no longer explicitly has a `safety-state boundary` column; surrounding
+  prose must continue to state that this is the remaining systems gap.
+
+## Writing/Evaluation Agent Receipt - Evaluation Model-Family Wording Audit - 2026-06-06 01:06 CDT
+
+Status:
+- Writing/evaluation agent completed the scoped Evaluation/model-family wording
+  audit.
+- No experiments, model code, firmware, figure assets, training, or server
+  tasks were changed.
+
+Changed files:
+- `docs/paper_sensys2027/sections/7evaluation.tex`
+
+Completed:
+- Reframed the second evaluation as a recognizer/interface-level comparison:
+  Akouo-Ref is compared with common speech-interface alternatives, not with
+  complete safety systems.
+- Renamed TC-ResNet, BC-ResNet, and DS-CNN rows as compact
+  speech-command `model-family` baselines.
+- Updated the baseline table caption to clarify:
+  the ASR row is a transcript-first parser baseline, while compact rows are
+  recognizer alternatives under the same three-intent rotor-noisy task.
+- Changed table row names from `baseline` to `family` for TC-ResNet8,
+  BC-ResNet1, and DS-CNN-S.
+- Changed Akouo-Ref comparison wording to `At this fixed comparison point`
+  so the paper does not imply unconditional Branchformer-style superiority.
+
+Decision:
+- No additional lightweight ablation is required for this wording pass.
+- Current evaluation already has:
+  transcript-first ASR + parser;
+  compact speech-command model-family comparison;
+  direct mapping / no-unknown action-pressure simulation.
+- A threshold operating curve would strengthen the safety story, but it is not
+  required before rewriting the contribution paragraph.
+
+Verification:
+- `git diff --check -- docs/paper_sensys2027`: passed.
+
+Remaining:
+- Rewrite the contribution list completely so it matches Stephen's requested
+  framing:
+  common/naive approaches fail under the target constraints;
+  the paper insight is safety-state mediation;
+  Akouo realizes that insight with constrained events, onboard recognition, and
+  layered evaluation.
+- Do not write the contribution list as a module checklist.
+- Do not claim TC-ResNet/BC-ResNet/DS-CNN prove Branchformer-style encoder
+  superiority.
+
+## Writing Agent Receipt - Contribution Rewrite - 2026-06-06 01:34 CDT
+
+Status:
+- Writing agent completed the contribution rewrite pass.
+- No experiments, model code, firmware, figure assets, training, or server
+  tasks were changed.
+
+Changed files:
+- `docs/paper_sensys2027/sections/1introduction.tex`
+
+Completed:
+- Rewrote the contribution block from a module checklist into a systems
+  abstraction story.
+- Contribution 1 is now `A speech-admission abstraction for UAV safety
+  interaction`, identifying the missing layer between speech recognition and UAV
+  action.
+- Contribution 2 is now `A constrained intent-state interface for noisy human
+  input`, where emergency, movement, and unknown define safe-admission semantics
+  rather than command execution.
+- Contribution 3 is now `An onboard rotor-noisy recognizer for that interface`,
+  tying the recognizer to one-second rotor-noisy speech, local feature
+  extraction, embedded-compatible inference, clean/noisy alignment, and compact
+  Branchformer-style temporal encoding.
+- Contribution 4 is now `Evidence organized around the failure modes of naive
+  designs`, aligning evaluation with ASR+parser, compact model-family baselines,
+  direct mapping/no-unknown action-pressure simulations, embedded timing, and
+  participant-level onboard recognition.
+
+Manager read:
+- This version matches Stephen's requested structure better than the previous
+  contribution list: the novelty is now phrased as speech admission into a
+  safety-state boundary, not as recognizer + ESP32 + evaluation modules.
+- It is acceptable to continue from this version.
+
+Verification:
+- `git diff --check -- docs/paper_sensys2027`: passed by writing agent.
+- Forbidden-term check reported only one acceptable hit:
+  `all ASR` appears in Evaluation as a boundary sentence saying the result does
+  not prove all ASR systems fail.
+
+Remaining:
+- Run a final style pass over Introduction after the rest of the manuscript is
+  stable, especially to remove leftover advisor comment blocks and reduce
+  AI-like phrasing.
+- Keep Contribution 3 conservative: do not let the Branchformer-style encoder
+  sentence become an unsupported architecture-superiority claim.
+- Continue figure/table pruning and compile/page-count checks.
+
+## Urgent Advisor Fixes - Table 1 Citations and Human Subjects Statement - 2026-06-06 02:06 CDT
+
+Status:
+- Completed two urgent paper fixes requested by advisor.
+- No experiments, model code, firmware, figure assets, training, or server
+  tasks were changed.
+
+Changed files:
+- `docs/paper_sensys2027/sections/2relatedwork.tex`
+- `docs/paper_sensys2027/sections/7evaluation.tex`
+
+Completed:
+- Table 1 now includes citations for each of the first five approach-family
+  rows:
+  UAV speech interfaces;
+  ASR/STT + parser;
+  KWS / speech-command classifiers;
+  embedded speech / TinyML;
+  UAV safety mechanisms.
+- The participant-level live recognition subsection now includes an anonymized
+  human-subjects statement:
+  the participant protocol was approved by the authors' institutional review
+  board, with identifying approval details omitted for double-blind review.
+- The statement does not reveal institution names, investigator names, or IRB
+  identifiers.
+
+Verification:
+- `git diff --check -- docs/paper_sensys2027`: passed.
+- All newly referenced citation keys exist in `references.bib`.
+- Anonymity grep for institution names in the new IRB sentence found no
+  exposed names.
+
+Remaining:
+- Final compile must confirm Table 1 still fits after citation insertion.
+- Final ethics statement should be checked against submission instructions; if
+  HotCRP or camera-ready requires exact IRB details later, add them only after
+  anonymity constraints no longer apply.

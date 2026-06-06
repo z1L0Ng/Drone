@@ -9,32 +9,38 @@ Other UAV-focused studies explain why this question is difficult. Drone operatin
 
 \begin{table*}[t]
     \centering
-    \caption{Qualitative comparison of related approach families. \sys{} combines rotor-noisy UAV speech with embedded intent-state generation, while the intent-state mapping and safety-state boundary are detailed in Section~\ref{sec:system}.}
+    \caption{How related work addresses the two core constraints in our setting.}
     \label{tab:related_work_comparison}
-    \small
-    \begin{tabular}{@{}p{0.24\linewidth}p{0.34\linewidth}p{0.34\linewidth}@{}}
+    \footnotesize
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{1.08}
+    \begin{tabular}{@{}p{0.22\linewidth}p{0.36\linewidth}p{0.34\linewidth}@{}}
         \toprule
-        Approach family & Rotor-noise UAV setting & Onboard/MCU feasibility \\
+        Approach family & Rotor-noisy UAV speech & Onboard real-time inference \\
         \midrule
-        ASR/STT + parser &
-        Can be applied to UAV audio, but transcript coverage can degrade in short windows. &
-        Often depends on larger models, longer context, or offboard processing. \\
+        UAV speech interfaces~\cite{oneata19_interspeech,oneata2021multimodal} &
+        Show that voice can be used around UAVs and expose rotor-noise challenges. &
+        May use platform audio, multimodal sensing, or offboard recognition depending on the system. \\
         \addlinespace
-        KWS / speech-command classifiers &
-        Can classify limited vocabularies under noise when trained for the condition. &
-        Strong fit for compact and embedded recognition. \\
+        ASR/STT + parser~\cite{lugosch19_interspeech,haghani2018audio_semantics} &
+        Produces text that can be parsed, but short rotor-noisy windows can limit transcript coverage. &
+        Often benefits from larger models, longer context, or offboard processing. \\
         \addlinespace
-        Embedded speech / TinyML &
-        Addresses real-hardware constraints but is usually platform-agnostic. &
-        Designed for memory, operator, latency, and energy limits. \\
+        KWS / speech-command classifiers~\cite{sainath2015cnn_kws,choi2019tcresnet,zhang2017helloedge} &
+        Can learn limited noisy vocabularies when trained for the condition. &
+        Strong fit for compact recognition and streaming speech decisions. \\
         \addlinespace
-        UAV safety mechanisms &
-        Operate in the UAV physical domain, including vehicle state and environment. &
-        Already part of UAV control or supervisory systems. \\
+        Embedded speech / TinyML~\cite{david2021tflm,lin2020mcunet,banbury2021mlperftiny} &
+        Addresses real-hardware constraints but is usually not UAV-self-noise specific. &
+        Designed around memory, operator, latency, and energy limits. \\
+        \addlinespace
+        UAV safety mechanisms~\cite{eu2019uasops,eu2019uasdesign} &
+        Address vehicle state and environment rather than nearby speech under rotor noise. &
+        Often run inside UAV control or supervisory systems. \\
         \addlinespace
         \sys{} &
-        Treats rotor self-noise as the default speech condition. &
-        Uses an onboard intent-state source for local recognition and reporting. \\
+        Treats rotor self-noise as the default speech condition for nearby interaction. &
+        Generates intent-state updates locally on the embedded path. \\
         \bottomrule
     \end{tabular}
 \end{table*}
@@ -47,10 +53,10 @@ Speech-to-intent models provide an alternative to transcript-first pipelines whe
 
 \subsection{Robust Embedded Audio and Safety-Oriented Evaluation}
 
-Robust speech learning and frontend techniques are relevant because the target operating condition contains severe self-noise. Multi-style training and gain control improve small-footprint keyword spotting under noisy and far-field conditions \cite{prabhavalkar2015agc}; PCEN moves part of loudness and far-field robustness into a trainable frontend \cite{wang2017pcen}; and SpecAugment improves robustness through time-frequency masking without modifying the inference model \cite{park2019specaugment}. Device mismatch and low-complexity acoustic-scene benchmarks show that audio robustness depends on microphone, enclosure, and recording conditions, not only on additive noise \cite{heittola2020dcase,schmid2024dcase}. Noisy-student training and self-supervised speech representations have further improved robustness in broader speech settings \cite{park2020improvednoisystudent,baevski2020wav2vec20,yang21c_interspeech}.
+Robust speech learning and frontend techniques are relevant because the target operating condition contains severe self-noise. Multi-style training and gain control improve small-footprint keyword spotting under noisy and far-field conditions \cite{prabhavalkar2015agc}; PCEN moves part of loudness and far-field robustness into a trainable frontend \cite{wang2017pcen}; and SpecAugment improves robustness through time-frequency masking without modifying the inference model \cite{park2019specaugment}. Device mismatch and low-complexity acoustic-scene benchmarks show that audio robustness depends on microphone, enclosure, and recording conditions, not only on additive noise \cite{heittola2020dcase,schmid2024dcase}. Teacher-student robustness training and self-supervised speech representations have further improved robustness in broader speech settings \cite{park2020improvednoisystudent,baevski2020wav2vec20,yang21c_interspeech}.
 
 Embedded speech systems are often evaluated as standalone keyword or command recognizers, but deployment introduces constraints that are not visible from model accuracy alone. TinyML runtimes and kernels such as TensorFlow Lite Micro and CMSIS-NN make microcontroller inference practical, while MCUNet and MLPerf Tiny demonstrate that memory, operator support, latency, energy, and real-hardware measurements are first-order design variables \cite{david2021tflm,lai2018cmsisnn,lin2020mcunet,banbury2021mlperftiny}. Compression methods such as pruning, integer quantization, and distillation are also part of the deployment design space because they affect not only model size, but also operator support, activation memory, and robustness after conversion \cite{han2016deepcompression,hinton2015distilling,jacob2018integerquant}. Personalization and open-set keyword work point toward future user adaptation, but also reinforce the need to preserve rejection behavior when speech varies across users or commands \cite{leroy2019fedkws,rusci2023fewshotopenset}.
 
 Our deployment contribution is therefore not simply an embedded model. It is the complete path from onboard audio capture to an intent-state update, which can be evaluated separately for recognition quality, runtime feasibility, response time, and safety-state behavior.
 
-Table~\ref{tab:related_work_comparison} summarizes this positioning. Taken together, prior work motivates the individual components of a voice-enabled UAV interface: speech input near drones, rotor-noise robustness, compact recognition, embedded inference, and existing UAV safety mechanisms. What remains is the systems question that motivates the next section: why speech should enter UAV control as a constrained intent-state mapping rather than as a transcript, keyword trigger, or direct command.
+Table~\ref{tab:related_work_comparison} summarizes how related work covers the two core constraints in our setting: rotor-noisy UAV speech and onboard real-time inference. Taken together, prior work motivates the individual components of a voice-enabled UAV interface. What remains is the systems question that motivates the next section: why speech should enter UAV control as a constrained intent-state mapping rather than as a transcript, keyword trigger, or direct command.
