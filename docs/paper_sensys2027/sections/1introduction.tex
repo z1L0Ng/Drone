@@ -3,10 +3,13 @@ Unmanned Aerial Vehicles (UAVs/drones) are expected to become more prevalent in 
 %
 \begin{figure}[t]
     \centering
-    \includegraphics[width=\columnwidth]{figures/figure1.png}
-    \caption{Illustrative talk-to-the-drone scenario in which nearby speech provides a hands-free interaction channel while any UAV-facing response remains mediated by a safety-state boundary.}
-    \label{fig:talk_to_drone_scenario}
-    \Description{A nearby person speaks toward a rotor-noisy drone; the onboard Akouo layer reports an intent-state update that is mediated by a safety-state boundary before any response.}
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/figure1.png}
+        \caption{Illustrative talk-to-the-drone scenario in which nearby speech provides a hands-free interaction channel while any UAV-facing response remains mediated by a safety-state boundary.}
+        \label{fig:talk_to_drone_scenario}
+        \Description{A nearby person speaks toward a rotor-noisy drone; the onboard Akouo layer reports an intent-state update that is mediated by a safety-state boundary before any response.}
+    \end{minipage}
 \end{figure}
 
 Figure~\ref{fig:talk_to_drone_scenario} illustrates the interaction style this paper targets: nearby speech becomes an input to a UAV-side safety interaction layer rather than a direct replacement for the existing control stack.
