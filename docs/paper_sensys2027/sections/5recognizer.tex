@@ -1,12 +1,13 @@
 \section{On-Device Intent Recognizer}
 \label{sec:recognizer}
 
-\begin{figure}[t]
+\begin{figure*}[t]
     \centering
-    \includegraphics[width=\columnwidth]{figures/recognizer_architecture.pdf}
+    \includegraphics[width=\textwidth, height=0.3\textwidth]{figures/recognizer_architecture.pdf}
     \caption{Recognizer design. Each recognizer version uses a compact Branchformer-style temporal encoder with parallel local and global branches. During training, clean-view and noisy-view paths align embeddings; the resulting noisy-view recognizer is used as Akouo-Ref or Akouo-Edge.}
     \label{fig:recognizer_architecture}
-\end{figure}
+    \vspace{-15pt}
+\end{figure*}
 
 \subsection{Task and Dataset Construction}
 

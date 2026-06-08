@@ -1532,3 +1532,49 @@ Remaining:
 - Final ethics statement should be checked against submission instructions; if
   HotCRP or camera-ready requires exact IRB details later, add them only after
   anonymity constraints no longer apply.
+
+## No-Submit Freeze - 2026-06-06 22:21 CDT
+
+Status:
+- User and advisor decided to drop the current submission round for now.
+- Current paper/evaluation/deployment results are frozen until the next meeting.
+- No new writing, evaluation, deployment, server training, figure polishing, or
+  agent dispatch should be started before the next meeting unless the user
+  explicitly reopens the work.
+
+Current local audit:
+- Branch: `main`
+- HEAD: `d3033872657f3b3eb1a4adcd04b64ed5ee486a67`
+- Latest weekly result directory: `weeklyresult/weekly_drone_2026w23`
+- Dirty paper files remain in `docs/paper_sensys2027/`.
+- `docs/.DS_Store` is dirty noise.
+- `docs/paper_sensys2027/figures/source/recognizer_architecture.dot` is shown
+  as deleted in the current worktree and should be reviewed before any future
+  snapshot commit.
+
+Frozen assets to preserve:
+- Current Akouo draft after contribution/framing rewrite.
+- Related Work Table 1 citation patch.
+- Anonymized human-subjects/IRB statement.
+- ASR + parser baseline result.
+- Compact speech-command model-family baseline results.
+- Direct mapping / no-unknown action-pressure ablations.
+- Participant-level live recognition table.
+- ESP32 runtime and event-reporting evidence.
+- Current figure/table assets and editable source folder state.
+
+Restart conditions after next meeting:
+- Confirm new target venue / timeline.
+- Decide whether to continue from the frozen Akouo draft or branch into a new
+  paper direction.
+- Review dirty files and decide whether to create a snapshot commit.
+- Decide whether to keep, restore, or delete the missing
+  `recognizer_architecture.dot` source file.
+- Rebuild the next sprint around stronger novelty/evaluation rather than
+  submission-deadline polishing.
+
+Do not do before next meeting:
+- Do not dispatch new writing/evaluation/deployment agents.
+- Do not start new local or server training.
+- Do not rewrite paper sections opportunistically.
+- Do not delete or restore dirty files without explicit user approval.
