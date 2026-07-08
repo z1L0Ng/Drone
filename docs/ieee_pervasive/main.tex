@@ -1,0 +1,37 @@
+\documentclass[10pt,journal]{IEEEtran}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figures/}}
+
+\title{Speech as a Safety Net for Drone Operation}
+
+\author{Zilong Zeng, Junxi Xia, R. Venkatesha Prasad, and Stephen Xia}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Unmanned Aerial Vehicles (UAVs, or drones) are beginning to operate in shared, low-altitude spaces where nearby people may observe risks before the drone system resolves them on its own. If a drone is drifting toward a wall, moving too close to a person, or continuing a task that should stop, a nearby person should be able to shout an urgent instruction without first reaching a controller, phone application, or networked interface. This article proposes speech as a safety net for drone operation. We describe a drone-side speech-processing path that listens locally, operates in real time, and maps short audio windows into safety-relevant categories: emergency-related speech, movement-related speech, and unsupported input. The resulting category is not treated as an immediate flight command; it is a bounded input that can be kept separate from drone behavior. We outline the design choices behind this framing and summarize implementation evidence from an embedded audio platform, including recognition results, onboard runtime behavior, participant-level live speech trials, and an emergency-related speech demonstration.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Drone interaction, speech processing, safety net, edge sensing.
+\end{IEEEkeywords}
+
+\input{sections/1introduction}
+\input{sections/2system}
+\input{sections/3demo}
+\input{sections/4realworld}
+\input{sections/5conclusion}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

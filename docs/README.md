@@ -1,6 +1,6 @@
 # Documentation Index
 
-This project documentation is organized into three main folders:
+This project documentation is organized into four main folders:
 
 1. `docs/weekly_todo/`
    - Weekly execution docs.
@@ -13,6 +13,9 @@ This project documentation is organized into three main folders:
    - All mainline model/training updates should follow these documents.
 3. `docs/overleaf/`
    - Writing support docs for paper drafting and Overleaf synchronization.
+4. `docs/ieee_pervasive_magazine_template/`
+   - Clean Overleaf starter for the IEEE Pervasive Computing magazine-style
+     article.
 
 Quick links:
 - Current weekly TODO: `docs/weekly_todo/2026/2026w14/todo.md`
