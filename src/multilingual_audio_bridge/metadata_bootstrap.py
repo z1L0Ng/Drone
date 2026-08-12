@@ -21,8 +21,10 @@ from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple
 
 from src.multilingual_three_class_intake import (
     INDEX_SCHEMA_VERSION,
+    build_mapping_index,
     load_json_yaml,
     load_metadata_index,
+    normalize_surface,
     validate_config,
     validate_config_artifacts,
 )
@@ -252,12 +254,16 @@ def generate_gsc_normalized_csv(root: Path, output: Path) -> Dict[str, Any]:
     }
 
 
-def _build_audio_suffix_index(audio_assets: Sequence[Mapping[str, Any]], database: Path) -> Dict[str, int]:
+def _build_audio_suffix_index(
+    audio_assets: Sequence[Mapping[str, Any]], database: Path, target_words: Sequence[str]
+) -> Dict[str, int]:
     connection = sqlite3.connect(database)
     try:
         connection.execute("CREATE TABLE audio (relpath TEXT PRIMARY KEY, count INTEGER NOT NULL)")
         scanned = 0
+        indexed = 0
         malformed = 0
+        prefixes = tuple(f"{word}_" for word in sorted(target_words))
         for asset in audio_assets:
             root = Path(asset["extraction"]["destination"]).resolve()
             for path in root.rglob("*.wav"):
@@ -268,16 +274,19 @@ def _build_audio_suffix_index(audio_assets: Sequence[Mapping[str, Any]], databas
                     malformed += 1
                     continue
                 suffix = relative.name
+                scanned += 1
+                if not suffix.startswith(prefixes):
+                    continue
                 connection.execute(
                     "INSERT INTO audio(relpath,count) VALUES(?,1) "
                     "ON CONFLICT(relpath) DO UPDATE SET count=count+1",
                     (suffix,),
                 )
-                scanned += 1
+                indexed += 1
         connection.commit()
         if malformed:
             raise BridgeError(f"MSWC audio paths are not flat shard filenames: {malformed}")
-        if scanned == 0:
+        if scanned == 0 or indexed == 0:
             raise BridgeError("MSWC audio asset set contains no WAV files")
         unique = int(connection.execute("SELECT COUNT(*) FROM audio").fetchone()[0])
         duplicate_suffixes = int(
@@ -285,7 +294,11 @@ def _build_audio_suffix_index(audio_assets: Sequence[Mapping[str, Any]], databas
         )
         if duplicate_suffixes:
             raise BridgeError(f"MSWC audio suffixes are not unique: {duplicate_suffixes}")
-        return {"scanned_wav_files": scanned, "unique_audio_relpaths": unique}
+        return {
+            "scanned_wav_files": scanned,
+            "indexed_target_wav_files": indexed,
+            "unique_target_audio_relpaths": unique,
+        }
     finally:
         connection.close()
 
@@ -308,11 +321,13 @@ def validate_mswc_metadata_audio(
     metadata_root: Path,
     audio_assets: Sequence[Mapping[str, Any]],
     temporary_root: Path,
+    target_words: Sequence[str],
 ) -> Dict[str, Any]:
-    """Validate all official VALID metadata rows against acquired WAV shards."""
+    """Validate current three-class target rows against acquired WAV shards."""
 
     database = temporary_root / f"mswc-{language}-audio.sqlite3"
-    audio_receipt = _build_audio_suffix_index(audio_assets, database)
+    normalized_targets = {normalize_surface(word) for word in target_words}
+    audio_receipt = _build_audio_suffix_index(audio_assets, database, target_words)
     connection = sqlite3.connect(database)
     split_receipts: Dict[str, Any] = {}
     try:
@@ -333,6 +348,9 @@ def validate_mswc_metadata_audio(
                         counts["invalid_rows"] += 1
                         continue
                     word = row["WORD"].strip()
+                    if normalize_surface(word) not in normalized_targets:
+                        counts["valid_non_target_rows_not_materialization_audited"] += 1
+                        continue
                     speaker = row["SPEAKER"].strip()
                     if not speaker:
                         raise BridgeError(
@@ -369,6 +387,8 @@ def validate_mswc_metadata_audio(
         "speaker_policy": "copy official SPEAKER field; no inference or re-identification",
         "source_family_policy": "official LINK source clip family",
         "audio_relpath_policy": "WORD_<LINK basename without extension>.wav",
+        "locator_audit_scope": "current three-class target vocabulary only",
+        "target_words": sorted(target_words),
         "audio": audio_receipt,
         "splits": split_receipts,
         "validated_unique_audio_rows": used_count,
@@ -518,6 +538,7 @@ def bootstrap_metadata(
     config = load_json_yaml(Path(config_path))
     validate_config(config)
     validate_config_artifacts(Path(config_path), config)
+    mapping_index = build_mapping_index(config)
     gsc_assets = _asset_rows(receipt, "gsc_v2", role="audio_archive")
     if len(gsc_assets) != 1:
         raise BridgeError(f"metadata bootstrap requires one GSC archive root, got {len(gsc_assets)}")
@@ -547,9 +568,15 @@ def bootstrap_metadata(
             if not audio_assets:
                 raise BridgeError(f"metadata bootstrap requires MSWC {language} WAV assets")
             metadata_root = Path(metadata_assets[0]["extraction"]["destination"]).resolve()
+            mapping = mapping_index[("mswc", language)]
+            target_words = sorted(
+                word
+                for word, (role, _entry) in mapping["entries"].items()
+                if role in {"emergency", "movement", "unknown"}
+            )
             mswc_receipts.append(
                 validate_mswc_metadata_audio(
-                    language, metadata_root, audio_assets, temporary_root
+                    language, metadata_root, audio_assets, temporary_root, target_words
                 )
             )
 

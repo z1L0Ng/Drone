@@ -28,7 +28,10 @@ from src.multilingual_audio_bridge.contracts import (
     sha256_file,
 )
 from src.multilingual_audio_bridge.manifest import produce_frozen_manifest
-from src.multilingual_audio_bridge.metadata_bootstrap import bootstrap_metadata
+from src.multilingual_audio_bridge.metadata_bootstrap import (
+    bootstrap_metadata,
+    validate_mswc_metadata_audio,
+)
 from src.multilingual_audio_bridge.materialize import (
     PROPOSAL_REQUIRED_FIELDS,
     freeze_metadata_proposal,
@@ -290,6 +293,15 @@ class AudioBridgeTests(unittest.TestCase):
                             16000,
                             510.0 + word_index * 20.0,
                         )
+                    rows.append(
+                        {
+                            "LINK": f"non-target/common_voice_{language}_{split}_ignored.opus",
+                            "WORD": "non-target",
+                            "VALID": "True",
+                            "SPEAKER": f"published-{language}-{split}-ignored",
+                            "GENDER": "NAN",
+                        }
+                    )
                     with (metadata_root / f"{split}.csv").open(
                         "w", encoding="utf-8", newline=""
                     ) as handle:
@@ -382,6 +394,59 @@ class AudioBridgeTests(unittest.TestCase):
             self.assertTrue(
                 all(row["speaker_id"].startswith("speaker-") for row in normalized_rows)
             )
+            for language_receipt in result["mswc"]:
+                self.assertEqual(
+                    language_receipt["locator_audit_scope"],
+                    "current three-class target vocabulary only",
+                )
+                for split_receipt in language_receipt["splits"].values():
+                    self.assertEqual(split_receipt["valid_rows"], 3)
+                    self.assertEqual(
+                        split_receipt[
+                            "valid_non_target_rows_not_materialization_audited"
+                        ],
+                        1,
+                    )
+
+    def test_metadata_bootstrap_missing_target_audio_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            metadata_root = root / "metadata"
+            audio_root = root / "audio"
+            metadata_root.mkdir(parents=True)
+            audio_root.mkdir(parents=True)
+            for split in ("train", "dev", "test"):
+                family = f"common_voice_es_{split}.opus"
+                with (metadata_root / f"{split}.csv").open(
+                    "w", encoding="utf-8", newline=""
+                ) as handle:
+                    writer = csv.DictWriter(
+                        handle,
+                        fieldnames=("LINK", "WORD", "VALID", "SPEAKER", "GENDER"),
+                        lineterminator="\n",
+                    )
+                    writer.writeheader()
+                    writer.writerow(
+                        {
+                            "LINK": f"alto/{family}",
+                            "WORD": "alto",
+                            "VALID": "True",
+                            "SPEAKER": f"speaker-{split}",
+                            "GENDER": "NAN",
+                        }
+                    )
+                if split != "train":
+                    _write_wave(
+                        audio_root / f"alto_{Path(family).stem}.wav",
+                        16000,
+                        16000,
+                        440.0,
+                    )
+            assets = [{"extraction": {"destination": str(audio_root)}}]
+            with self.assertRaisesRegex(BridgeError, "audio locator must resolve once"):
+                validate_mswc_metadata_audio(
+                    "es", metadata_root, assets, root, ("alto",)
+                )
 
     def test_end_to_end_36_cell_manifest_is_consumer_compatible(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
