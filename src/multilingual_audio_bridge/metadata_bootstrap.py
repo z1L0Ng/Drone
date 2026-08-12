@@ -57,6 +57,18 @@ GSC_NORMALIZED_FIELDS = (
 )
 GSC_FILENAME = re.compile(r"^(?P<speaker>.+)_nohash_(?P<utterance>[0-9]+)\.wav$")
 MSWC_SPLITS = ("train", "dev", "test")
+MSWC_QUARANTINE_FIELDS = (
+    "language",
+    "original_split",
+    "source_metadata_path",
+    "source_metadata_sha256",
+    "source_metadata_row",
+    "source_word",
+    "source_link",
+    "speaker_id",
+    "expected_audio_relpath",
+    "reason",
+)
 
 
 def _load_object(path: Path, context: str) -> Dict[str, Any]:
@@ -321,27 +333,36 @@ def validate_mswc_metadata_audio(
     metadata_root: Path,
     audio_assets: Sequence[Mapping[str, Any]],
     temporary_root: Path,
+    validated_root: Path,
     target_words: Sequence[str],
 ) -> Dict[str, Any]:
-    """Validate current three-class target rows against acquired WAV shards."""
+    """Resolve current target rows and quarantine unavailable source segments."""
 
     database = temporary_root / f"mswc-{language}-audio.sqlite3"
     normalized_targets = {normalize_surface(word) for word in target_words}
     audio_receipt = _build_audio_suffix_index(audio_assets, database, target_words)
     connection = sqlite3.connect(database)
     split_receipts: Dict[str, Any] = {}
+    quarantine_rows: List[Dict[str, Any]] = []
     try:
         connection.execute("CREATE TABLE used (relpath TEXT PRIMARY KEY)")
         for split in MSWC_SPLITS:
             path = metadata_root / f"{split}.csv"
             if not path.is_file():
                 raise BridgeError(f"MSWC {language} metadata split missing: {path}")
+            source_sha256 = sha256_file(path)
             counts: Counter[str] = Counter()
+            resolved_rows: List[Dict[str, Any]] = []
             with path.open("r", encoding="utf-8-sig", newline="") as handle:
                 reader = csv.DictReader(handle)
                 required = {"LINK", "WORD", "VALID", "SPEAKER"}
                 if reader.fieldnames is None or not required.issubset(reader.fieldnames):
                     raise BridgeError(f"MSWC {language}/{split} missing official columns")
+                if "SOURCE_METADATA_ROW" in reader.fieldnames:
+                    raise BridgeError(
+                        f"MSWC {language}/{split} source unexpectedly defines SOURCE_METADATA_ROW"
+                    )
+                derived_fields = [*reader.fieldnames, "SOURCE_METADATA_ROW"]
                 for row_number, row in enumerate(reader, start=2):
                     counts["rows"] += 1
                     if row["VALID"].strip().casefold() not in {"1", "true", "yes", "y"}:
@@ -360,7 +381,24 @@ def validate_mswc_metadata_audio(
                     match = connection.execute(
                         "SELECT count FROM audio WHERE relpath=?", (relative,)
                     ).fetchone()
-                    if match is None or int(match[0]) != 1:
+                    if match is None:
+                        counts["valid_target_missing_audio_rows"] += 1
+                        quarantine_rows.append(
+                            {
+                                "language": language,
+                                "original_split": split,
+                                "source_metadata_path": str(path.resolve()),
+                                "source_metadata_sha256": source_sha256,
+                                "source_metadata_row": row_number,
+                                "source_word": word,
+                                "source_link": row["LINK"].strip(),
+                                "speaker_id": speaker,
+                                "expected_audio_relpath": relative,
+                                "reason": "official_valid_target_row_missing_published_audio",
+                            }
+                        )
+                        continue
+                    if int(match[0]) != 1:
                         raise BridgeError(
                             f"MSWC {language}/{split}:{row_number} audio locator must resolve once: "
                             f"{relative}"
@@ -371,10 +409,18 @@ def validate_mswc_metadata_audio(
                         raise BridgeError(
                             f"MSWC audio locator appears more than once across split CSVs: {relative}"
                         ) from exc
+                    derived_row = dict(row)
+                    derived_row["SOURCE_METADATA_ROW"] = str(row_number)
+                    resolved_rows.append(derived_row)
                     counts["valid_rows"] += 1
+            derived_path = validated_root / language / f"{split}.csv"
+            _atomic_csv(derived_path, derived_fields, resolved_rows)
             split_receipts[split] = {
-                "path": str(path.resolve()),
-                "sha256": sha256_file(path),
+                "path": str(derived_path.resolve()),
+                "sha256": sha256_file(derived_path),
+                "source_path": str(path.resolve()),
+                "source_sha256": source_sha256,
+                "coverage": "resolved_target_vocabulary",
                 **dict(sorted(counts.items())),
             }
         connection.commit()
@@ -382,6 +428,8 @@ def validate_mswc_metadata_audio(
     finally:
         connection.close()
         database.unlink(missing_ok=True)
+    quarantine_path = validated_root / language / "target_locator_quarantine.csv"
+    _atomic_csv(quarantine_path, MSWC_QUARANTINE_FIELDS, quarantine_rows)
     return {
         "language": language,
         "speaker_policy": "copy official SPEAKER field; no inference or re-identification",
@@ -389,9 +437,26 @@ def validate_mswc_metadata_audio(
         "audio_relpath_policy": "WORD_<LINK basename without extension>.wav",
         "locator_audit_scope": "current three-class target vocabulary only",
         "target_words": sorted(target_words),
+        "missing_target_audio_policy": (
+            "quarantine exact unavailable source rows; never substitute or fabricate audio"
+        ),
         "audio": audio_receipt,
         "splits": split_receipts,
         "validated_unique_audio_rows": used_count,
+        "quarantine": {
+            "path": str(quarantine_path.resolve()),
+            "sha256": sha256_file(quarantine_path),
+            "rows": len(quarantine_rows),
+            "counts_by_split_word": {
+                f"{split}:{word}": count
+                for (split, word), count in sorted(
+                    Counter(
+                        (str(row["original_split"]), str(row["source_word"]))
+                        for row in quarantine_rows
+                    ).items()
+                )
+            },
+        },
     }
 
 
@@ -433,7 +498,7 @@ def _emit_metadata_index(
                     "dataset_version": "1.0",
                     "language": language,
                     "original_split": split,
-                    "coverage": "complete_split",
+                    "coverage": split_receipt["coverage"],
                     "source_revision": "0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218",
                 }
             )
@@ -576,7 +641,12 @@ def bootstrap_metadata(
             )
             mswc_receipts.append(
                 validate_mswc_metadata_audio(
-                    language, metadata_root, audio_assets, temporary_root, target_words
+                    language,
+                    metadata_root,
+                    audio_assets,
+                    temporary_root,
+                    intake_root / "mswc_resolved_target",
+                    target_words,
                 )
             )
 
@@ -590,6 +660,11 @@ def bootstrap_metadata(
     for language_receipt in mswc_receipts:
         for split_receipt in language_receipt["splits"].values():
             artifacts[str(Path(split_receipt["path"]).resolve())] = split_receipt["sha256"]
+            artifacts[str(Path(split_receipt["source_path"]).resolve())] = split_receipt[
+                "source_sha256"
+            ]
+        quarantine = language_receipt["quarantine"]
+        artifacts[str(Path(quarantine["path"]).resolve())] = quarantine["sha256"]
     result = {
         "schema_version": METADATA_BOOTSTRAP_RECEIPT_SCHEMA,
         "owner": "dataset",

@@ -41,7 +41,12 @@ from src.multilingual_audio_bridge.materialize import (
 from src.multilingual_audio_bridge.orchestrator import _run_stage, run_orchestrator
 from src.multilingual_retraining.contracts import LABELS, LANGUAGES, SPLITS
 from src.multilingual_retraining.manifest import REQUIRED_FIELDS, load_frozen_manifest
-from src.multilingual_three_class_intake import canonical_json_sha256, load_json_yaml
+from src.multilingual_three_class_intake import (
+    canonical_json_sha256,
+    iter_entry_records,
+    load_json_yaml,
+    load_metadata_index,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -275,7 +280,15 @@ class AudioBridgeTests(unittest.TestCase):
                 audio_root = root / f"sources/mswc/1.0/{language}/all/fixture"
                 metadata_root.mkdir(parents=True, exist_ok=True)
                 for split in ("train", "dev", "test"):
-                    rows = []
+                    rows = [
+                        {
+                            "LINK": f"non-target/common_voice_{language}_{split}_ignored.opus",
+                            "WORD": "non-target",
+                            "VALID": "True",
+                            "SPEAKER": f"published-{language}-{split}-ignored",
+                            "GENDER": "NAN",
+                        }
+                    ]
                     for word_index, word in enumerate(words):
                         family = f"common_voice_{language}_{split}_{word_index}.opus"
                         rows.append(
@@ -293,15 +306,6 @@ class AudioBridgeTests(unittest.TestCase):
                             16000,
                             510.0 + word_index * 20.0,
                         )
-                    rows.append(
-                        {
-                            "LINK": f"non-target/common_voice_{language}_{split}_ignored.opus",
-                            "WORD": "non-target",
-                            "VALID": "True",
-                            "SPEAKER": f"published-{language}-{split}-ignored",
-                            "GENDER": "NAN",
-                        }
-                    )
                     with (metadata_root / f"{split}.csv").open(
                         "w", encoding="utf-8", newline=""
                     ) as handle:
@@ -386,6 +390,15 @@ class AudioBridgeTests(unittest.TestCase):
             self.assertTrue(resumed["resumed"])
             index = json.loads(Path(result["metadata_index"]).read_text(encoding="utf-8"))
             self.assertEqual(index["schema_version"], "talk-to-me-drone.metadata-index.v1")
+            config = load_json_yaml(INTAKE_CONFIG)
+            _, verified_entries = load_metadata_index(Path(result["metadata_index"]), config)
+            mswc_source_rows = {
+                record.metadata_row
+                for entry in verified_entries
+                if entry["dataset_key"] == "mswc"
+                for record in iter_entry_records(entry)
+            }
+            self.assertEqual(mswc_source_rows, {3, 4, 5})
             with (root / "intake/gsc_v2_normalized.csv").open(
                 "r", encoding="utf-8", newline=""
             ) as handle:
@@ -407,8 +420,18 @@ class AudioBridgeTests(unittest.TestCase):
                         ],
                         1,
                     )
+                    self.assertEqual(split_receipt["coverage"], "resolved_target_vocabulary")
+                    with Path(split_receipt["path"]).open(
+                        "r", encoding="utf-8", newline=""
+                    ) as handle:
+                        derived_rows = list(csv.DictReader(handle))
+                    self.assertEqual(len(derived_rows), 3)
+                    self.assertTrue(
+                        all(row["SOURCE_METADATA_ROW"] for row in derived_rows)
+                    )
+                self.assertEqual(language_receipt["quarantine"]["rows"], 0)
 
-    def test_metadata_bootstrap_missing_target_audio_fails_closed(self) -> None:
+    def test_metadata_bootstrap_missing_target_audio_is_quarantined(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             metadata_root = root / "metadata"
@@ -443,10 +466,22 @@ class AudioBridgeTests(unittest.TestCase):
                         440.0,
                     )
             assets = [{"extraction": {"destination": str(audio_root)}}]
-            with self.assertRaisesRegex(BridgeError, "audio locator must resolve once"):
-                validate_mswc_metadata_audio(
-                    "es", metadata_root, assets, root, ("alto",)
-                )
+            result = validate_mswc_metadata_audio(
+                "es", metadata_root, assets, root, root / "validated", ("alto",)
+            )
+            self.assertEqual(result["validated_unique_audio_rows"], 2)
+            self.assertEqual(result["quarantine"]["rows"], 1)
+            self.assertEqual(
+                result["quarantine"]["counts_by_split_word"], {"train:alto": 1}
+            )
+            with Path(result["quarantine"]["path"]).open(
+                "r", encoding="utf-8", newline=""
+            ) as handle:
+                quarantine_rows = list(csv.DictReader(handle))
+            self.assertEqual(
+                quarantine_rows[0]["reason"],
+                "official_valid_target_row_missing_published_audio",
+            )
 
     def test_end_to_end_36_cell_manifest_is_consumer_compatible(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

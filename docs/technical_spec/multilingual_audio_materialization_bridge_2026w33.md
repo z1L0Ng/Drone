@@ -222,8 +222,13 @@ official `VALID` row in the frozen three-class target vocabulary must resolve
 exactly once to
 `WORD_<LINK basename without extension>.wav`, matching the flat official WAV
 shard layout. Missing, duplicate, unsafe, or cross-split target locators fail
-closed. Other official valid rows remain source evidence but are explicitly
-counted as non-target and are not admitted or materialization-audited.
+closed except when the pinned publisher metadata marks a target segment valid
+but the corresponding publisher WAV is absent. Such a row is never substituted
+or fabricated: it is written to a checksummed quarantine artifact and excluded
+from the derived resolved-target metadata. Other official valid rows remain
+source evidence but are explicitly counted as non-target and are not admitted
+or materialization-audited. Duplicate, unsafe, or ambiguous target locators
+remain hard failures.
 
 ## 7. Exact future server commands (not executed here)
 

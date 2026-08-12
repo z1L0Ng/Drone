@@ -515,12 +515,26 @@ def _iter_mswc_csv(entry: Mapping[str, Any], path: Path) -> Iterator[MetadataRec
             speaker = row["SPEAKER"].strip()
             link = row["LINK"].strip()
             family = Path(link).name
+            source_row_value = row.get("SOURCE_METADATA_ROW", "").strip()
+            if source_row_value:
+                try:
+                    source_row_number = int(source_row_value)
+                except ValueError as exc:
+                    raise ContractError(
+                        f"{path}:{row_number} SOURCE_METADATA_ROW must be an integer"
+                    ) from exc
+                if source_row_number < 2:
+                    raise ContractError(
+                        f"{path}:{row_number} SOURCE_METADATA_ROW must be at least 2"
+                    )
+            else:
+                source_row_number = row_number
             if not word or not speaker or not family:
                 raise ContractError(
                     f"{path}:{row_number} missing WORD/SPEAKER/LINK; identity is fail-closed"
                 )
             record_id = _record_id(
-                [entry["entry_id"], str(row_number), family, word, speaker]
+                [entry["entry_id"], str(source_row_number), family, word, speaker]
             )
             yield MetadataRecord(
                 entry_id=entry["entry_id"],
@@ -534,7 +548,7 @@ def _iter_mswc_csv(entry: Mapping[str, Any], path: Path) -> Iterator[MetadataRec
                 source_audio_relpath=f"{word}_{Path(family).stem}.wav",
                 original_split=entry["original_split"],
                 metadata_source=str(path),
-                metadata_row=row_number,
+                metadata_row=source_row_number,
             )
 
 
