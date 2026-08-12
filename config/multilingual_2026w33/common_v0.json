@@ -1,0 +1,144 @@
+{
+  "schema_version": "drone.multilingual_retraining_config.v0",
+  "config_version": "2026w33-clean-slate-v0",
+  "protocol_id": "DRONE-W33-MULTILINGUAL-3CLASS-v0",
+  "labels": [
+    "emergency",
+    "movement",
+    "unknown"
+  ],
+  "dataset": {
+    "manifest_schema": "drone.multilingual_audio_manifest.v0",
+    "validation_receipt_schema": "drone.multilingual_manifest_validation_receipt.v0",
+    "manifest_languages": [
+      "en",
+      "es",
+      "de"
+    ],
+    "language_source_contract": {
+      "en": [
+        "gsc_v2"
+      ],
+      "es": [
+        "mswc"
+      ],
+      "de": [
+        "mswc"
+      ]
+    },
+    "required_splits": [
+      "train",
+      "validation_selection",
+      "validation_calibration",
+      "test"
+    ],
+    "legacy_npz_allowed": false,
+    "file_level_random_split_allowed": false
+  },
+  "audio": {
+    "encoding_contract": "mono_pcm_float32_after_decode",
+    "sample_rate_hz": 16000,
+    "duration_seconds": 1.0,
+    "num_samples": 16000,
+    "channels": 1,
+    "length_policy": "reject_not_exact",
+    "resample_policy": "reject_not_16000"
+  },
+  "frontend": {
+    "contract_id": "current_project_logmel_256x32_v0",
+    "type": "logmel",
+    "implementation": "src.multilingual_retraining.frontend:extract_logmel_input",
+    "n_fft": 1024,
+    "hop_length": 512,
+    "center": false,
+    "n_mels": 256,
+    "fmin_hz": 50.0,
+    "fmax_hz": null,
+    "power": 2.0,
+    "top_db": 80.0,
+    "max_frames": 32,
+    "normalization": "per_example_power_to_db_ref_max",
+    "pad_value_db": 0.0,
+    "dtype": "float32",
+    "tensor_layout": "mel_frames_channel"
+  },
+  "model": {
+    "builder": "src.model:build_model",
+    "profile": "base",
+    "input_shape": [
+      256,
+      32,
+      1
+    ],
+    "num_classes": 3,
+    "output_activation": "softmax",
+    "initialization": "fresh_random",
+    "checkpoint_input": null,
+    "language_head": false,
+    "word_head": false,
+    "hierarchical_head": false
+  },
+  "training": {
+    "seed_ids": [
+      0,
+      1,
+      2
+    ],
+    "max_epochs": 50,
+    "batch_size": 32,
+    "learning_rate": 0.0001,
+    "optimizer": "adam",
+    "loss": "categorical_crossentropy",
+    "budget_contract": "same_epochs_batch_optimizer_lr_and_seed_ids_across_lanes",
+    "teacher_student": "not_in_primary_comparison"
+  },
+  "selection": {
+    "dataset": "validation_selection",
+    "primary": "macro_f1",
+    "tie_break": [
+      "emergency_recall_desc",
+      "nll_asc",
+      "epoch_asc"
+    ],
+    "early_stopping_patience": 10,
+    "test_access": "forbidden"
+  },
+  "calibration": {
+    "dataset": "validation_calibration",
+    "method": "scalar_temperature_nll",
+    "threshold_policy": "calibrated_argmax_no_tuned_thresholds",
+    "test_refit": false
+  },
+  "evaluation": {
+    "dataset": "test",
+    "single_pass_after_selection_and_calibration": true,
+    "support_source": "frozen_manifest_only"
+  },
+  "metrics": {
+    "required": [
+      "per_language_class_support",
+      "per_language_class_precision_recall_f1",
+      "macro_f1",
+      "emergency_recall",
+      "unknown_recall",
+      "false_emergency_rate",
+      "unknown_false_emergency_rate",
+      "nll",
+      "brier",
+      "ece",
+      "reliability"
+    ],
+    "ece_bins": 15,
+    "prediction_rows_required": true
+  },
+  "noise": {
+    "mode": "disabled_clean_primary",
+    "noise_manifest_path": null,
+    "noise_manifest_sha256": null,
+    "snr_db_levels": null,
+    "policy_note": "No numeric SNR or legacy noise policy is inherited in this clean primary comparison"
+  },
+  "paths": {
+    "output_root": "weeklyresult/weekly_drone_2026w33"
+  }
+}

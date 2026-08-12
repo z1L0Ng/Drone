@@ -1,0 +1,30 @@
+{
+  "extends": "common_v0.json",
+  "lane": {
+    "lane_id": "multilingual_language_class_word_speaker_balanced_main",
+    "run_name": "multilingual_balanced_main",
+    "train_languages": [
+      "en",
+      "es",
+      "de"
+    ],
+    "selection_languages": [
+      "en",
+      "es",
+      "de"
+    ],
+    "calibration_languages": [
+      "en",
+      "es",
+      "de"
+    ],
+    "evaluation_languages": [
+      "en",
+      "es",
+      "de"
+    ],
+    "sampler": "language_class_word_speaker_balanced",
+    "source_word_role": "provenance_and_sampling_only",
+    "interpretation_boundary": "Main pooled-source lane with sampling control; source differences still cannot be interpreted as language effects"
+  }
+}

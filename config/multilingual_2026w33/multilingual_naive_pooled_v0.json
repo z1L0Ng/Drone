@@ -1,0 +1,30 @@
+{
+  "extends": "common_v0.json",
+  "lane": {
+    "lane_id": "multilingual_naive_pooled_diagnostic",
+    "run_name": "multilingual_naive_pooled_diagnostic",
+    "train_languages": [
+      "en",
+      "es",
+      "de"
+    ],
+    "selection_languages": [
+      "en",
+      "es",
+      "de"
+    ],
+    "calibration_languages": [
+      "en",
+      "es",
+      "de"
+    ],
+    "evaluation_languages": [
+      "en",
+      "es",
+      "de"
+    ],
+    "sampler": "uniform_examples",
+    "source_word_role": "provenance_and_sampling_only",
+    "interpretation_boundary": "Diagnostic pooled-source baseline; source differences cannot be interpreted as language effects"
+  }
+}
