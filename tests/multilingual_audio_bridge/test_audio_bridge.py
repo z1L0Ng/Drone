@@ -95,59 +95,60 @@ class SyntheticBridgeFixture:
         self.config_sha = sha256_file(INTAKE_CONFIG)
         self.rows: list[dict[str, str]] = []
 
-    def build(self, duplicate_cross_split: bool = False) -> None:
+    def build(self, duplicate_cross_split: bool = False, copies_per_cell: int = 1) -> None:
         counter = 0
         for split in SPLITS:
             for language in LANGUAGES:
                 for label in LABELS:
-                    dataset = "gsc_v2" if language == "en" else "mswc"
-                    word = {
-                        "emergency": {"en": "stop", "es": "alto", "de": "halt"},
-                        "movement": {"en": "go", "es": "adelante", "de": "los"},
-                        "unknown": {"en": "zero", "es": "cero", "de": "null"},
-                    }[label][language]
-                    family = f"{language}-family-{split}-{label}.opus"
-                    if dataset == "gsc_v2":
-                        relative = f"{word}/{language}-{split}-{label}.wav"
-                        audio_path = self.gsc_root / relative
-                    else:
-                        relative = f"{word}_{Path(family).stem}.wav"
-                        audio_path = self.mswc_root / relative
-                    if duplicate_cross_split and counter in {0, 9}:
-                        frequency = 310.0
-                    else:
-                        frequency = 200.0 + counter * 13.0
-                    if language == "en":
-                        _write_wave(audio_path, 8000, 4000, frequency)
-                    elif language == "es":
-                        _write_wave(audio_path, 16000, 8000, frequency, channels=2)
-                    else:
-                        _write_wave(audio_path, 16000, 16000, frequency)
-                    self.rows.append(
-                        {
-                            "source_record_id": f"record-{counter:03d}",
-                            "dataset_key": dataset,
-                            "dataset_version": "raw_v0.02" if dataset == "gsc_v2" else "1.0",
-                            "language": language,
-                            "source_word": word,
-                            "canonical_class": label,
-                            "mapping_role": label,
-                            "mapping_status": "synthetic_fixture",
-                            "mapping_admitted": "true",
-                            "speaker_id": f"speaker-{counter:03d}",
-                            "source_clip_family": family,
-                            "source_audio_relpath": relative,
-                            "isolation_component_id": f"component-{counter:03d}",
-                            "proposed_split": split,
-                            "original_split": "train",
-                            "metadata_entry_id": f"entry-{dataset}",
-                            "metadata_row": str(counter + 2),
-                            "crop_start_sample": "",
-                            "speech_start_sample": "",
-                            "speech_end_sample": "",
-                        }
-                    )
-                    counter += 1
+                    for copy_index in range(copies_per_cell):
+                        dataset = "gsc_v2" if language == "en" else "mswc"
+                        word = {
+                            "emergency": {"en": "stop", "es": "alto", "de": "halt"},
+                            "movement": {"en": "go", "es": "adelante", "de": "los"},
+                            "unknown": {"en": "zero", "es": "cero", "de": "null"},
+                        }[label][language]
+                        family = f"{language}-family-{split}-{label}-{copy_index}.opus"
+                        if dataset == "gsc_v2":
+                            relative = f"{word}/{language}-{split}-{label}-{copy_index}.wav"
+                            audio_path = self.gsc_root / relative
+                        else:
+                            relative = f"{word}_{Path(family).stem}.wav"
+                            audio_path = self.mswc_root / relative
+                        if duplicate_cross_split and counter in {0, 9}:
+                            frequency = 310.0
+                        else:
+                            frequency = 200.0 + counter * 13.0
+                        if language == "en":
+                            _write_wave(audio_path, 8000, 4000, frequency)
+                        elif language == "es":
+                            _write_wave(audio_path, 16000, 8000, frequency, channels=2)
+                        else:
+                            _write_wave(audio_path, 16000, 16000, frequency)
+                        self.rows.append(
+                            {
+                                "source_record_id": f"record-{counter:03d}",
+                                "dataset_key": dataset,
+                                "dataset_version": "raw_v0.02" if dataset == "gsc_v2" else "1.0",
+                                "language": language,
+                                "source_word": word,
+                                "canonical_class": label,
+                                "mapping_role": label,
+                                "mapping_status": "synthetic_fixture",
+                                "mapping_admitted": "true",
+                                "speaker_id": f"speaker-{counter:03d}",
+                                "source_clip_family": family,
+                                "source_audio_relpath": relative,
+                                "isolation_component_id": f"component-{counter:03d}",
+                                "proposed_split": split,
+                                "original_split": "train",
+                                "metadata_entry_id": f"entry-{dataset}",
+                                "metadata_row": str(counter + 2),
+                                "crop_start_sample": "",
+                                "speech_start_sample": "",
+                                "speech_end_sample": "",
+                            }
+                        )
+                        counter += 1
         with self.proposal.open("w", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=PROPOSAL_REQUIRED_FIELDS, lineterminator="\n")
             writer.writeheader()
@@ -533,7 +534,32 @@ class AudioBridgeTests(unittest.TestCase):
             with self.assertRaisesRegex(BridgeError, "duplicate family crosses splits"):
                 fixture.materialize()
 
-    def test_full_scale_audio_is_rejected_without_repair(self) -> None:
+    def test_full_scale_audio_is_quarantined_without_repair(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture = SyntheticBridgeFixture(Path(temporary))
+            fixture.build(copies_per_cell=2)
+            first = fixture.gsc_root / fixture.rows[0]["source_audio_relpath"]
+            samples = np.full((4000,), -32768, dtype="<i2")
+            with wave.open(str(first), "wb") as handle:
+                handle.setnchannels(1)
+                handle.setsampwidth(2)
+                handle.setframerate(8000)
+                handle.writeframes(samples.tobytes())
+            result = fixture.materialize()
+            self.assertEqual(result["proposal_record_count"], 72)
+            self.assertEqual(result["record_count"], 71)
+            self.assertEqual(result["qc_quarantine_count"], 1)
+            quarantine = [
+                json.loads(line)
+                for line in Path(result["qc_quarantine"]).read_text().splitlines()
+            ]
+            self.assertIn("full-scale/clipped", quarantine[0]["reason"])
+            self.assertEqual(
+                quarantine[0]["disposition"],
+                "excluded_without_repair_or_substitution",
+            )
+
+    def test_audio_qc_quarantine_cannot_empty_a_required_cell(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             fixture = SyntheticBridgeFixture(Path(temporary))
             fixture.build()
@@ -544,17 +570,24 @@ class AudioBridgeTests(unittest.TestCase):
                 handle.setsampwidth(2)
                 handle.setframerate(8000)
                 handle.writeframes(samples.tobytes())
-            with self.assertRaisesRegex(BridgeError, "full-scale/clipped"):
+            with self.assertRaisesRegex(BridgeError, "quarantine empties"):
                 fixture.materialize()
 
-    def test_overlength_without_word_boundaries_is_rejected(self) -> None:
+    def test_overlength_without_word_boundaries_is_quarantined(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             fixture = SyntheticBridgeFixture(Path(temporary))
-            fixture.build()
+            fixture.build(copies_per_cell=2)
             first = fixture.gsc_root / fixture.rows[0]["source_audio_relpath"]
             _write_wave(first, 16000, 20000, 321.0)
-            with self.assertRaisesRegex(BridgeError, "requires explicit speech/crop boundaries"):
-                fixture.materialize()
+            result = fixture.materialize()
+            self.assertEqual(result["record_count"], 71)
+            quarantine = [
+                json.loads(line)
+                for line in Path(result["qc_quarantine"]).read_text().splitlines()
+            ]
+            self.assertIn(
+                "requires explicit speech/crop boundaries", quarantine[0]["reason"]
+            )
 
     def test_proposal_speaker_overlap_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

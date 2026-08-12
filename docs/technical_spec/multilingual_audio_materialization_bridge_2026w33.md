@@ -230,6 +230,13 @@ source evidence but are explicitly counted as non-target and are not admitted
 or materialization-audited. Duplicate, unsafe, or ambiguous target locators
 remain hard failures.
 
+S2 applies the same non-fabrication rule to source-audio QC. A source clip that
+cannot satisfy decode, finite-value, full-scale/clipping, or explicit-boundary
+checks is excluded into a checksummed audio-QC quarantine JSONL; it is never
+repaired, substituted, or silently admitted. S2 still fails closed if those
+exclusions empty any of the 36 language × class × split cells. Cross-split
+decoded duplicates remain a hard failure.
+
 ## 7. Exact future server commands (not executed here)
 
 Use explicit paths; do not use shell variables in an audited receipt package.

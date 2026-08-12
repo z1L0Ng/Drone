@@ -12,6 +12,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple
 
 import numpy as np
 
+from src.multilingual_retraining.contracts import LABELS, LANGUAGES, SPLITS
 from src.multilingual_retraining.frontend import load_exact_mono_pcm
 
 from .contracts import (
@@ -488,6 +489,7 @@ def materialize(
     audio_root.mkdir(parents=True, exist_ok=True)
     manifest_records: List[Dict[str, Any]] = []
     lineage_rows: List[Dict[str, Any]] = []
+    qc_quarantine_rows: List[Dict[str, Any]] = []
     duplicate_splits: Dict[str, set[str]] = defaultdict(set)
     support = Counter()
 
@@ -496,7 +498,30 @@ def materialize(
             (row["dataset_key"], row["language"], row["source_audio_relpath"])
         ]
         raw_sha = sha256_file(raw_path)
-        waveform, transform = _decode_and_convert(raw_path, row)
+        try:
+            waveform, transform = _decode_and_convert(raw_path, row)
+        except BridgeError as exc:
+            qc_quarantine_rows.append(
+                {
+                    "schema_version": "drone.multilingual_audio_qc_quarantine.v0",
+                    "source_record_id": row["source_record_id"],
+                    "source_dataset": row["dataset_key"],
+                    "source_release": row["dataset_version"],
+                    "language": row["language"],
+                    "source_word": row["source_word"],
+                    "label": row["canonical_class"],
+                    "split": row["proposed_split"],
+                    "speaker_id": row["speaker_id"],
+                    "source_clip_family": row["source_clip_family"],
+                    "source_archive_id": asset["asset_id"],
+                    "source_archive_sha256": asset["archive_sha256"],
+                    "source_audio_path": str(raw_path),
+                    "source_audio_sha256": raw_sha,
+                    "reason": str(exc),
+                    "disposition": "excluded_without_repair_or_substitution",
+                }
+            )
+            continue
         derived_path, audio_sha, pcm_sha = _content_addressed_audio(audio_root, waveform)
         duplicate_group = f"decoded-pcm-sha256:{pcm_sha}"
         duplicate_splits[duplicate_group].add(row["proposed_split"])
@@ -565,6 +590,17 @@ def materialize(
     leaking = {key: sorted(value) for key, value in duplicate_splits.items() if len(value) > 1}
     if leaking:
         raise BridgeError(f"decoded duplicate family crosses splits: {dict(list(leaking.items())[:3])}")
+    missing_cells = [
+        f"{split}|{language}|{label}"
+        for split in SPLITS
+        for language in LANGUAGES
+        for label in LABELS
+        if support[(split, language, label)] == 0
+    ]
+    if missing_cells:
+        raise BridgeError(
+            f"audio QC quarantine empties language/class/split cells: {missing_cells[:8]}"
+        )
     index_rows = [
         {
             "schema_version": MATERIALIZATION_INDEX_SCHEMA,
@@ -575,12 +611,18 @@ def materialize(
     ]
     index_path = root / "materialization_index.jsonl"
     lineage_path = root / "audio_lineage.jsonl"
+    qc_quarantine_path = root / "audio_qc_quarantine.jsonl"
     atomic_write(index_path, _jsonl_bytes(index_rows))
     atomic_write(lineage_path, _jsonl_bytes(lineage_rows))
+    atomic_write(qc_quarantine_path, _jsonl_bytes(qc_quarantine_rows))
     return {
         "status": "pass",
         "audio_root": str(audio_root),
         "record_count": len(manifest_records),
+        "proposal_record_count": len(proposal_rows),
+        "qc_quarantine_count": len(qc_quarantine_rows),
+        "qc_quarantine": str(qc_quarantine_path),
+        "qc_quarantine_sha256": sha256_file(qc_quarantine_path),
         "materialization_index": str(index_path),
         "materialization_index_sha256": sha256_file(index_path),
         "lineage": str(lineage_path),
