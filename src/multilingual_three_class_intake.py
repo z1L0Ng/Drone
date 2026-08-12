@@ -531,9 +531,7 @@ def _iter_mswc_csv(entry: Mapping[str, Any], path: Path) -> Iterator[MetadataRec
                 source_word=word,
                 speaker_id=speaker,
                 source_clip_family=family,
-                source_audio_relpath=(
-                    f"{word}/{word}_{Path(family).stem}.wav"
-                ),
+                source_audio_relpath=f"{word}_{Path(family).stem}.wav",
                 original_split=entry["original_split"],
                 metadata_source=str(path),
                 metadata_row=row_number,

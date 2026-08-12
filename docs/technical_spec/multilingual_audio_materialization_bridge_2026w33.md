@@ -219,8 +219,8 @@ test-only and is not exposed by either server CLI.
 The six MSWC CSVs remain byte-identical source artifacts. `SPEAKER` is copied
 without inference; `LINK` remains the Common Voice clip-family field. Every
 official `VALID` row must resolve exactly once to
-`WORD/WORD_<LINK basename without extension>.wav`. Missing, duplicate, unsafe,
-or cross-split locators fail closed.
+`WORD_<LINK basename without extension>.wav`, matching the flat official WAV
+shard layout. Missing, duplicate, unsafe, or cross-split locators fail closed.
 
 ## 7. Exact future server commands (not executed here)
 

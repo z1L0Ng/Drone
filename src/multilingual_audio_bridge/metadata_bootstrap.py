@@ -264,10 +264,10 @@ def _build_audio_suffix_index(audio_assets: Sequence[Mapping[str, Any]], databas
                 if path.is_symlink():
                     raise BridgeError(f"MSWC audio symlink is forbidden: {path}")
                 relative = PurePosixPath(path.relative_to(root).as_posix())
-                if len(relative.parts) < 2:
+                if len(relative.parts) != 1 or not relative.name:
                     malformed += 1
                     continue
-                suffix = PurePosixPath(*relative.parts[-2:]).as_posix()
+                suffix = relative.name
                 connection.execute(
                     "INSERT INTO audio(relpath,count) VALUES(?,1) "
                     "ON CONFLICT(relpath) DO UPDATE SET count=count+1",
@@ -276,7 +276,7 @@ def _build_audio_suffix_index(audio_assets: Sequence[Mapping[str, Any]], databas
                 scanned += 1
         connection.commit()
         if malformed:
-            raise BridgeError(f"MSWC audio paths lack word/file structure: {malformed}")
+            raise BridgeError(f"MSWC audio paths are not flat shard filenames: {malformed}")
         if scanned == 0:
             raise BridgeError("MSWC audio asset set contains no WAV files")
         unique = int(connection.execute("SELECT COUNT(*) FROM audio").fetchone()[0])
@@ -300,7 +300,7 @@ def _mswc_expected_relpath(word: str, link: str) -> str:
     stem = Path(family).stem
     if not word or not stem:
         raise BridgeError("MSWC metadata has empty WORD/LINK")
-    return f"{word}/{word}_{stem}.wav"
+    return f"{word}_{stem}.wav"
 
 
 def validate_mswc_metadata_audio(
@@ -368,7 +368,7 @@ def validate_mswc_metadata_audio(
         "language": language,
         "speaker_policy": "copy official SPEAKER field; no inference or re-identification",
         "source_family_policy": "official LINK source clip family",
-        "audio_relpath_policy": "WORD/WORD_<LINK basename without extension>.wav",
+        "audio_relpath_policy": "WORD_<LINK basename without extension>.wav",
         "audio": audio_receipt,
         "splits": split_receipts,
         "validated_unique_audio_rows": used_count,

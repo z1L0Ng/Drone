@@ -103,7 +103,7 @@ class SyntheticBridgeFixture:
                         relative = f"{word}/{language}-{split}-{label}.wav"
                         audio_path = self.gsc_root / relative
                     else:
-                        relative = f"{word}/{word}_{Path(family).stem}.wav"
+                        relative = f"{word}_{Path(family).stem}.wav"
                         audio_path = self.mswc_root / relative
                     if duplicate_cross_split and counter in {0, 9}:
                         frequency = 310.0
@@ -285,7 +285,7 @@ class AudioBridgeTests(unittest.TestCase):
                             }
                         )
                         _write_wave(
-                            audio_root / f"{word}/{word}_{Path(family).stem}.wav",
+                            audio_root / f"{word}_{Path(family).stem}.wav",
                             16000,
                             16000,
                             510.0 + word_index * 20.0,
