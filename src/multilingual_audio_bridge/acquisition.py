@@ -373,10 +373,19 @@ def _extract_tar(archive_path: Path, destination: Path) -> None:
         if declared_bytes > expansion_limit:
             raise BridgeError("archive declared size exceeds expansion safety limit")
         for member in members:
+            # Some publisher tarballs begin with a root-directory entry named
+            # ``./``.  ``tarfile`` normalizes that member name to an empty
+            # string.  It is safe only when it is a directory representing the
+            # extraction root; every file and non-root directory still passes
+            # the strict path validation below.
+            if not member.name and member.isdir():
+                continue
             _safe_member_path(member.name)
             if member.issym() or member.islnk() or member.isdev():
                 raise BridgeError(f"archive links/devices are forbidden: {member.name}")
         for member in members:
+            if not member.name and member.isdir():
+                continue
             relative = _safe_member_path(member.name)
             target = destination.joinpath(*relative.parts)
             if member.isdir():

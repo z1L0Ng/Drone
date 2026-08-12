@@ -488,6 +488,29 @@ class AudioBridgeTests(unittest.TestCase):
                 )
             self.assertFalse((root / "escape.wav").exists())
 
+    def test_safe_extract_allows_tar_root_directory_member(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = root / "root-member.tar"
+            payload = b"safe"
+            with tarfile.open(archive, "w") as handle:
+                root_info = tarfile.TarInfo("./")
+                root_info.type = tarfile.DIRTYPE
+                handle.addfile(root_info)
+                file_info = tarfile.TarInfo("safe.wav")
+                file_info.size = len(payload)
+                handle.addfile(file_info, io.BytesIO(payload))
+
+            receipt = safe_extract(
+                archive,
+                root / "out",
+                "tar",
+                {"kind": "mswc_wav_shard", "minimum_wav_files": 1},
+            )
+
+            self.assertEqual(receipt["tree"]["wav_files"], 1)
+            self.assertEqual((root / "out" / "safe.wav").read_bytes(), payload)
+
     def test_mswc_split_metadata_hash_mismatch_fails_extraction(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
