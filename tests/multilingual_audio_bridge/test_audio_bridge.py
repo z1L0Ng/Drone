@@ -15,6 +15,7 @@ import numpy as np
 
 from src.multilingual_audio_bridge.acquisition import (
     _download_stream,
+    _tar_expansion_limit,
     acquire,
     load_plan,
     safe_extract,
@@ -510,6 +511,18 @@ class AudioBridgeTests(unittest.TestCase):
 
             self.assertEqual(receipt["tree"]["wav_files"], 1)
             self.assertEqual((root / "out" / "safe.wav").read_bytes(), payload)
+
+    def test_mswc_pinned_shard_has_bounded_absolute_expansion_limit(self) -> None:
+        expected = {
+            "kind": "mswc_wav_shard",
+            "maximum_declared_bytes": 2_000_000_000,
+        }
+        self.assertEqual(_tar_expansion_limit(237_079_627, expected), 2_000_000_000)
+        with self.assertRaisesRegex(BridgeError, "declared-byte exception"):
+            _tar_expansion_limit(
+                237_079_627,
+                {"kind": "mswc_wav_shard", "maximum_declared_bytes": 2_100_000_000},
+            )
 
     def test_mswc_split_metadata_hash_mismatch_fails_extraction(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

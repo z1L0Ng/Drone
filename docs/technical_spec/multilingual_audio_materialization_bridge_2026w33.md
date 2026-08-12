@@ -125,6 +125,9 @@ The runner provides:
   URLs are accepted;
 - safe TAR/ZIP extraction that rejects absolute paths, `..`, links, devices,
   and unexpected tree contents;
+- an eight-times compressed-size expansion gate, except that checksum-pinned
+  MSWC WAV shards have a stricter absolute declared-size ceiling of
+  2,000,000,000 bytes; the member-count and path/type gates still apply;
 - extraction into a temporary directory followed by atomic rename;
 - expected GSC split-list/word/WAV and MSWC WAV-shard tree validation.
 

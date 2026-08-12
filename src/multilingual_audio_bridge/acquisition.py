@@ -43,6 +43,7 @@ ALLOWED_HOSTS = {
 DOWNLOAD_CHUNK_BYTES = 1024 * 1024
 MAX_ARCHIVE_MEMBERS = 2_000_000
 MAX_EXPANSION_RATIO = 8
+MSWC_MAX_WAV_SHARD_DECLARED_BYTES = 2_000_000_000
 
 
 def load_plan(path: str | Path) -> Dict[str, Any]:
@@ -240,7 +241,11 @@ def fetch_hf_tree_assets(source: Mapping[str, Any], tree: Mapping[str, Any]) -> 
                 "language": tree["language"],
                 "original_split": original_split,
                 "source_path": relative,
-                "expected_tree": {"kind": "mswc_wav_shard", "minimum_wav_files": 1},
+                "expected_tree": {
+                    "kind": "mswc_wav_shard",
+                    "minimum_wav_files": 1,
+                    "maximum_declared_bytes": MSWC_MAX_WAV_SHARD_DECLARED_BYTES,
+                },
             }
         )
     return assets, {
@@ -363,13 +368,26 @@ def _tree_fingerprint(root: Path) -> str:
     return digest.hexdigest()
 
 
-def _extract_tar(archive_path: Path, destination: Path) -> None:
+def _tar_expansion_limit(archive_size_bytes: int, expected: Mapping[str, Any]) -> int:
+    ratio_limit = max(archive_size_bytes * MAX_EXPANSION_RATIO, 1024**3)
+    declared_limit = expected.get("maximum_declared_bytes")
+    if declared_limit is None:
+        return ratio_limit
+    if (
+        expected.get("kind") != "mswc_wav_shard"
+        or declared_limit != MSWC_MAX_WAV_SHARD_DECLARED_BYTES
+    ):
+        raise BridgeError("unsupported archive declared-byte exception")
+    return max(ratio_limit, MSWC_MAX_WAV_SHARD_DECLARED_BYTES)
+
+
+def _extract_tar(archive_path: Path, destination: Path, expected: Mapping[str, Any]) -> None:
     with tarfile.open(archive_path, mode="r:*") as archive:
         members = archive.getmembers()
         if len(members) > MAX_ARCHIVE_MEMBERS:
             raise BridgeError("archive member count exceeds safety limit")
         declared_bytes = sum(member.size for member in members if member.isfile())
-        expansion_limit = max(archive_path.stat().st_size * MAX_EXPANSION_RATIO, 1024**3)
+        expansion_limit = _tar_expansion_limit(archive_path.stat().st_size, expected)
         if declared_bytes > expansion_limit:
             raise BridgeError("archive declared size exceeds expansion safety limit")
         for member in members:
@@ -482,7 +500,7 @@ def safe_extract(archive_path: Path, destination: Path, extract_kind: str, expec
     temporary = Path(tempfile.mkdtemp(prefix=f".{destination.name}.", dir=destination.parent))
     try:
         if extract_kind == "tar":
-            _extract_tar(archive_path, temporary)
+            _extract_tar(archive_path, temporary, expected)
         elif extract_kind == "zip":
             _extract_zip(archive_path, temporary)
         else:
