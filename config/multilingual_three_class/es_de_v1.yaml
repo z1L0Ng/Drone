@@ -1,0 +1,379 @@
+{
+  "schema_version": "talk-to-me-drone.multilingual-three-class-intake.v1",
+  "task_id": "DATA-20260812-02",
+  "contract_id": "es_de_three_class_v1",
+  "status": "implementation_ready_metadata_only_no_go_for_audio_or_training",
+  "evidence_boundary": {
+    "source_receipts": "Verified Source Fact at the recorded revision",
+    "surface_mapping": "Audit candidate; not native-approved unless explicitly stated",
+    "split_and_sampling": "Proposed Policy; never a canonical split without later authorization"
+  },
+  "lexical_audit_receipts": [
+    {
+      "surface": "alto",
+      "language": "es",
+      "source": "RAE Diccionario de la lengua española",
+      "url": "https://dle.rae.es/alto",
+      "accessed": "2026-08-12",
+      "source_fact": "alto has an interjection sense used to order someone to stop or suspend an activity",
+      "audit_limit": "the same spelling has many adjective, noun, and adverb senses; the dictionary does not establish the sense of an isolated MSWC segment",
+      "native_review_status": "not_native_approved"
+    },
+    {
+      "surface": "halt",
+      "language": "de",
+      "source": "Duden Online-Wörterbuch",
+      "url": "https://www.duden.de/rechtschreibung/halt_halten_stoppen",
+      "accessed": "2026-08-12",
+      "source_fact": "halt has an interjection/imperative stop sense",
+      "audit_limit": "Duden links a same-spelling particle entry; the dictionary does not establish the sense of an isolated MSWC segment",
+      "native_review_status": "not_native_approved"
+    },
+    {
+      "surface": "los",
+      "language": "de",
+      "source": "Duden Online-Wörterbuch",
+      "url": "https://www.duden.de/rechtschreibung/los_Aufforderung_locker",
+      "accessed": "2026-08-12",
+      "source_fact": "los has an adverbial prompt/start-command sense",
+      "audit_limit": "the entry also records other senses and a same-spelling adjective; the dictionary does not establish the sense of an isolated MSWC segment",
+      "native_review_status": "not_native_approved"
+    }
+  ],
+  "lexical_gate_policy": {
+    "phase1_engineering": "management_provisional_surfaces_may_enter_metadata_feasibility",
+    "missing_native_reviewer_is_engineering_hard_no_go": false,
+    "paper_or_cross_language_semantic_claim_requires_future_native_review": true,
+    "homograph_context_policy": "dictionary sense existence does not label every same-spelling source segment",
+    "approved_dictionary_backed_surfaces": ["es:alto:emergency", "de:halt:emergency", "de:los:movement"]
+  },
+  "approved_unknown_inventory": {
+    "version": "v0",
+    "path": "config/multilingual_three_class/approved_unknown_inventory_v0.csv",
+    "file_sha256": "24ac0f8b6536af1645dea604abb5acdf57cb14525a01e509c6c47663c2d0ac02",
+    "canonical_tuple_sha256": "b699c0fe9ae8672e67a05da6b76cc3cccfb8f9a1cb4c7de36b40bee11d8d57b5",
+    "row_count": 20,
+    "language_counts": {"es": 10, "de": 10},
+    "selection_rule": "cardinal-number words only; present with nonzero support in train/dev/test; exclude all positive, protected, ambiguous, direction, stop, start, go, return, and follow terms",
+    "policy_limit": "approved for phase-1 engineering feasibility only; re-review if the command vocabulary expands to numeric control",
+    "source_metadata_receipts": {
+      "es_train_sha256": "926bad99d81dabb0c17e9df6f34fa9db64a0f7b6b70cf957577dee40e32836a5",
+      "es_dev_sha256": "621d1b17e285c21515f1e9b4b1b13c4a8e44fb45f999960c211647bfa515a0",
+      "es_test_sha256": "81571a8d5c876247e1993e97f53837674cc0637a9c8ca4f7a73c473a99934b53",
+      "de_train_sha256": "7915f4ddd4c85250e51d681bad813c2b157519463a94bfd8b204d42c32dfdfd9",
+      "de_dev_sha256": "c3b4ac22c183a6143e80f5b180ad179e85341bccbb5a60c59c277b6afa3ec9ba",
+      "de_test_sha256": "79f56b3665bd8bf5ead154e3998b3e746f3d0dc603e0f90b7b80a3166f2bc89e"
+    }
+  },
+  "model_contract": {
+    "canonical_classes": ["emergency", "movement", "unknown"],
+    "output_count": 3,
+    "source_words_are_model_outputs": false,
+    "source_word_role": "provenance_and_within_class_sampling_only",
+    "fine_grained_or_language_specific_heads": "deferred_out_of_scope"
+  },
+  "future_audio_contract": {
+    "container": "WAV",
+    "codec": "PCM",
+    "sample_rate_hz": 16000,
+    "channels": 1,
+    "duration_seconds": 1.0,
+    "sample_count": 16000,
+    "bit_depth": 16,
+    "decode_rule": "pin decoder and version; preserve input checksum",
+    "channel_rule": "reject unknown channel count; deterministic arithmetic-mean downmix only after approval",
+    "resample_rule": "resample only when native rate differs; pin implementation and version",
+    "crop_rule": "crop only when the entire aligned word remains in-window; otherwise invalidate label",
+    "pad_rule": "deterministic right-pad with zeros; record input length and pad samples",
+    "required_transform_receipts": [
+      "input_sha256",
+      "input_container_codec_rate_bits_channels_samples",
+      "decoder_and_version",
+      "resampler_and_version",
+      "crop_start_end",
+      "pad_left_right",
+      "output_sha256",
+      "transform_config_sha256"
+    ]
+  },
+  "split_policy": {
+    "proposal_only": true,
+    "split_names": ["train", "val", "test"],
+    "ratios": {"train": 0.6, "val": 0.2, "test": 0.2},
+    "seed": 20260812,
+    "global_group_keys": ["speaker_id", "source_clip_family"],
+    "identity_namespace": "dataset_key",
+    "component_rule": "union every speaker_id and source_clip_family edge across languages, words, classes, and original source splits before assignment",
+    "original_split_role": "provenance_only_not_inherited",
+    "canonical_split_creation": "forbidden_in_this_task"
+  },
+  "sampling_policy": {
+    "language_weights": {"en": 0.3333333333333333, "es": 0.3333333333333333, "de": 0.3333333333333333},
+    "class_weights": {"emergency": 0.3333333333333333, "movement": 0.3333333333333333, "unknown": 0.3333333333333333},
+    "per_speaker_per_class_per_split_cap": 5,
+    "per_language_per_class_cap": "smallest_admitted_class_after_global_grouping_and_speaker_cap",
+    "cross_language_cap": "smallest_language_class_support_within_each_split",
+    "replacement": false,
+    "movement_sampling": "source_word_then_speaker",
+    "unknown_sampling": "native_reviewed_word_then_speaker_only",
+    "unknown_background_lane": "separate_provenance_not_silently_mixed",
+    "report_pre_and_post_cap_support": true
+  },
+  "metadata_contract": {
+    "index_schema": "talk-to-me-drone.metadata-index.v1",
+    "required_index_fields": [
+      "entry_id",
+      "adapter",
+      "path",
+      "sha256",
+      "dataset_key",
+      "dataset_version",
+      "language",
+      "original_split",
+      "source_revision"
+    ],
+    "required_normalized_row_fields": [
+      "source_record_id",
+      "dataset_key",
+      "dataset_version",
+      "language",
+      "source_word",
+      "speaker_id",
+      "source_clip_family",
+      "original_split"
+    ],
+    "fail_closed_on": [
+      "missing_or_mismatched_checksum",
+      "missing_dataset_version_or_source_revision",
+      "missing_speaker_id",
+      "missing_source_clip_family",
+      "unknown_dataset_or_language",
+      "network_url_in_metadata_index"
+    ]
+  },
+  "downstream_hard_gates": {
+    "management_license_and_no_reidentification_acceptance": false,
+    "gsc_immutable_archive_and_metadata_receipt": false,
+    "audio_header_and_boundary_qc": false,
+    "audio_download_authorization": false,
+    "audio_transform_authorization": false,
+    "canonical_split_authorization": false,
+    "training_authorization": false,
+    "evaluation_authorization": false
+  },
+  "datasets": {
+    "gsc_v2": {
+      "dataset_id": "Google Speech Commands",
+      "version": "raw_v0.02",
+      "source_revision": "archive_etag_6b74f3901214cb2c2934e98196829835",
+      "official_url": "https://storage.googleapis.com/download.tensorflow.org/data/speech_commands_v0.02.tar.gz",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "restrictions": "attribution_required"
+      },
+      "provenance": {
+        "origin": "human purpose-recorded isolated words",
+        "recording_owner": "Google Speech Commands contributors/project",
+        "tts": false,
+        "native_audio": "WAVE linear PCM; 16-bit; mono; 16000 Hz; one second or less",
+        "speaker_identity": "filename prefix before _nohash_ under official convention",
+        "source_clip_family": "one isolated source clip; duplicate-cluster audit remains separate"
+      },
+      "receipt": {
+        "archive_sha256": "UNKNOWN_metadata_intake_required",
+        "http_etag": "6b74f3901214cb2c2934e98196829835",
+        "content_length_bytes": 2428923189,
+        "last_modified": "2018-04-11",
+        "paper_inventory_total": 105829
+      },
+      "languages": {
+        "en": {
+          "role": "English anchor",
+          "surface_mapping": {
+            "engineering_positive_candidates_admitted": true,
+            "emergency": [
+              {"surface": "stop", "mapping_status": "current_project_mapping", "semantic_risk": "direct stop word; project emergency policy", "native_review": "not_applicable_english_anchor_current_policy"}
+            ],
+            "movement": [
+              {"surface": "up", "mapping_status": "current_project_mapping", "semantic_risk": "direction word rather than full imperative", "native_review": "not_applicable_english_anchor_current_policy"},
+              {"surface": "down", "mapping_status": "current_project_mapping", "semantic_risk": "direction word rather than full imperative", "native_review": "not_applicable_english_anchor_current_policy"},
+              {"surface": "left", "mapping_status": "current_project_mapping", "semantic_risk": "direction word rather than full imperative", "native_review": "not_applicable_english_anchor_current_policy"},
+              {"surface": "right", "mapping_status": "current_project_mapping", "semantic_risk": "direction word rather than full imperative", "native_review": "not_applicable_english_anchor_current_policy"},
+              {"surface": "forward", "mapping_status": "current_project_mapping", "semantic_risk": "direction word rather than full imperative", "native_review": "not_applicable_english_anchor_current_policy"},
+              {"surface": "backward", "mapping_status": "current_project_mapping", "semantic_risk": "direction word rather than full imperative", "native_review": "not_applicable_english_anchor_current_policy"},
+              {"surface": "follow", "mapping_status": "current_project_mapping", "semantic_risk": "bare verb lacks object", "native_review": "not_applicable_english_anchor_current_policy"},
+              {"surface": "go", "mapping_status": "current_project_mapping", "semantic_risk": "generic motion verb", "native_review": "not_applicable_english_anchor_current_policy"}
+            ],
+            "protected": [
+              {"surface": "_background_noise_", "mapping_status": "separate_provenance_lane", "semantic_risk": "long non-word asset, not a spoken unknown label", "native_review": "not_applicable_english_anchor_current_policy"}
+            ],
+            "unknown": {
+              "candidate_rule": "allowlist_only",
+              "candidate_admitted": false,
+              "engineering_allowlist_admitted": true,
+              "approved": [
+                {"surface": "bed", "mapping_status": "current_project_unknown", "semantic_risk": "non-command spoken word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "bird", "mapping_status": "current_project_unknown", "semantic_risk": "non-command spoken word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "cat", "mapping_status": "current_project_unknown", "semantic_risk": "non-command spoken word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "dog", "mapping_status": "current_project_unknown", "semantic_risk": "non-command spoken word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "eight", "mapping_status": "current_project_unknown", "semantic_risk": "digit word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "five", "mapping_status": "current_project_unknown", "semantic_risk": "digit word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "four", "mapping_status": "current_project_unknown", "semantic_risk": "digit word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "happy", "mapping_status": "current_project_unknown", "semantic_risk": "non-command spoken word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "house", "mapping_status": "current_project_unknown", "semantic_risk": "non-command spoken word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "learn", "mapping_status": "current_project_unknown", "semantic_risk": "verb outside current control mapping", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "marvin", "mapping_status": "current_project_unknown", "semantic_risk": "name", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "nine", "mapping_status": "current_project_unknown", "semantic_risk": "digit word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "no", "mapping_status": "current_project_unknown", "semantic_risk": "could be safety-relevant in other policies; frozen here only as current anchor unknown", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "off", "mapping_status": "current_project_unknown", "semantic_risk": "could be operational in other systems; not current movement mapping", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "on", "mapping_status": "current_project_unknown", "semantic_risk": "could be operational in other systems; not current movement mapping", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "one", "mapping_status": "current_project_unknown", "semantic_risk": "digit word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "seven", "mapping_status": "current_project_unknown", "semantic_risk": "digit word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "sheila", "mapping_status": "current_project_unknown", "semantic_risk": "name", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "six", "mapping_status": "current_project_unknown", "semantic_risk": "digit word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "three", "mapping_status": "current_project_unknown", "semantic_risk": "digit word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "tree", "mapping_status": "current_project_unknown", "semantic_risk": "non-command spoken word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "two", "mapping_status": "current_project_unknown", "semantic_risk": "digit word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "visual", "mapping_status": "current_project_unknown", "semantic_risk": "non-command spoken word", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "wow", "mapping_status": "current_project_unknown", "semantic_risk": "exclamation; remains current anchor unknown", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "yes", "mapping_status": "current_project_unknown", "semantic_risk": "confirmation; remains current anchor unknown", "native_review": "not_applicable_english_anchor_current_policy"},
+                {"surface": "zero", "mapping_status": "current_project_unknown", "semantic_risk": "digit word", "native_review": "not_applicable_english_anchor_current_policy"}
+              ]
+            }
+          }
+        }
+      }
+    },
+    "mswc": {
+      "dataset_id": "MLCommons Multilingual Spoken Words Corpus",
+      "version": "1.0",
+      "source_revision": "0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218",
+      "official_url": "https://huggingface.co/datasets/MLCommons/ml_spoken_words",
+      "license": {
+        "id": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "restrictions": "attribution_required; no_reidentification"
+      },
+      "provenance": {
+        "origin": "human Common Voice sentence recordings segmented by forced alignment",
+        "recording_owner": "Common Voice contributors; derived corpus by MLCommons",
+        "tts": false,
+        "metadata_fields": ["LINK", "WORD", "VALID", "SPEAKER", "GENDER"],
+        "source_clip_family": "LINK; original Common Voice sentence clip family",
+        "preferred_future_audio_representation": "one pinned first-party hosted 16 kHz WAV representation",
+        "native_audio_uncertainties": ["bit_depth", "channels", "decoded_duration_distribution", "silence_and_padding_policy"]
+      },
+      "receipt": {
+        "spanish_metadata_bundle_sha256": "d78b2c6ce54edeb8fa8d2b87b70989cfb98b042925b10fec2879dfb2d27cc6c2",
+        "german_metadata_bundle_sha256": "012c26fdb5a2cbaeb1a750ec5c494cbff47c0d47240a5fc8c245fbc879819ae5"
+      },
+      "languages": {
+        "es": {
+          "role": "selected next-stage language; metadata feasibility only",
+          "surface_mapping": {
+            "engineering_positive_candidates_admitted": true,
+            "emergency": [
+              {"surface": "alto", "mapping_status": "dictionary_backed_management_provisional_not_native_approved", "semantic_risk": "can mean stop as an interjection/sign but also high or tall; isolated sentence-derived token lacks imperative context", "native_review": "not_native_approved"}
+            ],
+            "movement": [
+              {"surface": "arriba", "mapping_status": "audit_candidate_not_native_approved", "semantic_risk": "direction/locative rather than guaranteed command", "native_review": "not_native_approved"},
+              {"surface": "abajo", "mapping_status": "audit_candidate_not_native_approved", "semantic_risk": "direction/locative rather than guaranteed command", "native_review": "not_native_approved"},
+              {"surface": "izquierda", "mapping_status": "audit_candidate_not_native_approved", "semantic_risk": "noun/adjective/direction rather than guaranteed imperative", "native_review": "not_native_approved"},
+              {"surface": "derecha", "mapping_status": "audit_candidate_not_native_approved", "semantic_risk": "noun/adjective/direction rather than guaranteed imperative", "native_review": "not_native_approved"},
+              {"surface": "adelante", "mapping_status": "audit_candidate_not_native_approved", "semantic_risk": "direction/adverb; command force depends on context", "native_review": "not_native_approved"},
+              {"surface": "atrás", "mapping_status": "audit_candidate_not_native_approved", "semantic_risk": "direction/adverb; command force depends on context", "native_review": "not_native_approved"},
+              {"surface": "sigue", "mapping_status": "audit_candidate_not_native_approved", "semantic_risk": "may mean continue or follow; addressee/object is absent", "native_review": "not_native_approved"}
+            ],
+            "protected": [
+              {"surface": "para", "mapping_status": "protected_ambiguous", "semantic_risk": "may be stop imperative or preposition; must not enter unknown", "native_review": "not_native_approved"},
+              {"surface": "stop", "mapping_status": "protected_emergency_synonym", "semantic_risk": "loanword may express stop", "native_review": "not_native_approved"},
+              {"surface": "sube", "mapping_status": "protected_movement_synonym", "semantic_risk": "candidate go-up imperative", "native_review": "not_native_approved"},
+              {"surface": "baja", "mapping_status": "protected_movement_synonym", "semantic_risk": "candidate go-down imperative plus other meanings", "native_review": "not_native_approved"},
+              {"surface": "sígueme", "mapping_status": "protected_movement_synonym", "semantic_risk": "candidate follow-me imperative", "native_review": "not_native_approved"},
+              {"surface": "vamos", "mapping_status": "protected_movement_ambiguous", "semantic_risk": "let-us-go/interjection; context dependent", "native_review": "not_native_approved"}
+            ],
+            "unknown": {
+              "candidate_rule": "allowlist_only",
+              "candidate_admitted": false,
+              "engineering_allowlist_admitted": true,
+              "approved": [
+                {"surface": "cero", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "uno", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "dos", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "tres", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "cuatro", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "cinco", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "seis", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "siete", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "ocho", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "nueve", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"}
+              ]
+            }
+          }
+        },
+        "de": {
+          "role": "selected next-stage language; metadata feasibility only",
+          "surface_mapping": {
+            "engineering_positive_candidates_admitted": true,
+            "emergency": [
+              {"surface": "halt", "mapping_status": "dictionary_backed_management_provisional_not_native_approved", "semantic_risk": "can command stop but is also a frequent discourse particle; isolated sentence-derived token lacks imperative context", "native_review": "not_native_approved"}
+            ],
+            "movement": [
+              {"surface": "hoch", "mapping_status": "audit_candidate_not_native_approved", "semantic_risk": "upward/locative or adjective; not guaranteed imperative", "native_review": "not_native_approved"},
+              {"surface": "runter", "mapping_status": "audit_candidate_not_native_approved", "semantic_risk": "colloquial downward direction; register and imperative force need review", "native_review": "not_native_approved"},
+              {"surface": "links", "mapping_status": "audit_candidate_not_native_approved", "semantic_risk": "direction/adverb; not guaranteed imperative", "native_review": "not_native_approved"},
+              {"surface": "rechts", "mapping_status": "audit_candidate_not_native_approved", "semantic_risk": "direction/adverb; not guaranteed imperative", "native_review": "not_native_approved"},
+              {"surface": "vorwärts", "mapping_status": "audit_candidate_not_native_approved", "semantic_risk": "forward direction; command force depends on context", "native_review": "not_native_approved"},
+              {"surface": "rückwärts", "mapping_status": "audit_candidate_not_native_approved", "semantic_risk": "backward direction; command force depends on context", "native_review": "not_native_approved"},
+              {"surface": "folge", "mapping_status": "audit_candidate_not_native_approved", "semantic_risk": "can be imperative follow or noun form; object absent", "native_review": "not_native_approved"},
+              {"surface": "los", "mapping_status": "dictionary_backed_management_provisional_not_native_approved", "semantic_risk": "can mean go/start as an interjection but is highly polysemous outside an imperative phrase", "native_review": "not_native_approved"}
+            ],
+            "protected": [
+              {"surface": "stopp", "mapping_status": "protected_emergency_synonym", "semantic_risk": "clearer orthographic stop candidate but sparse; must not enter unknown", "native_review": "not_native_approved"},
+              {"surface": "stop", "mapping_status": "protected_emergency_synonym", "semantic_risk": "loanword stop candidate", "native_review": "not_native_approved"},
+              {"surface": "oben", "mapping_status": "protected_movement_synonym", "semantic_risk": "upper location", "native_review": "not_native_approved"},
+              {"surface": "aufwärts", "mapping_status": "protected_movement_synonym", "semantic_risk": "upward direction", "native_review": "not_native_approved"},
+              {"surface": "hinauf", "mapping_status": "protected_movement_synonym", "semantic_risk": "upward direction", "native_review": "not_native_approved"},
+              {"surface": "rauf", "mapping_status": "protected_movement_synonym", "semantic_risk": "colloquial upward direction", "native_review": "not_native_approved"},
+              {"surface": "unten", "mapping_status": "protected_movement_synonym", "semantic_risk": "lower location", "native_review": "not_native_approved"},
+              {"surface": "abwärts", "mapping_status": "protected_movement_synonym", "semantic_risk": "downward direction", "native_review": "not_native_approved"},
+              {"surface": "hinunter", "mapping_status": "protected_movement_synonym", "semantic_risk": "downward direction", "native_review": "not_native_approved"},
+              {"surface": "zurück", "mapping_status": "protected_movement_synonym", "semantic_risk": "back/return ambiguity", "native_review": "not_native_approved"},
+              {"surface": "folgen", "mapping_status": "protected_movement_synonym", "semantic_risk": "infinitive follow", "native_review": "not_native_approved"},
+              {"surface": "geh", "mapping_status": "protected_movement_synonym", "semantic_risk": "go imperative but person/register dependent", "native_review": "not_native_approved"},
+              {"surface": "gehen", "mapping_status": "protected_movement_synonym", "semantic_risk": "infinitive go/walk", "native_review": "not_native_approved"}
+            ],
+            "unknown": {
+              "candidate_rule": "allowlist_only",
+              "candidate_admitted": false,
+              "engineering_allowlist_admitted": true,
+              "approved": [
+                {"surface": "null", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "eins", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "zwei", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "drei", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "vier", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "fünf", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "sechs", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "sieben", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "acht", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"},
+                {"surface": "neun", "mapping_status": "management_provisional_conservative_unknown_v0", "semantic_risk": "cardinal number outside phase-1 command vocabulary; re-review if numeric control is added", "native_review": "not_native_approved"}
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "execution_policy": {
+    "audio_download_authorized": false,
+    "audio_transform_authorized": false,
+    "canonical_split_authorized": false,
+    "training_authorized": false,
+    "evaluation_authorized": false,
+    "network_access_in_tool": false,
+    "default_mode": "dry_run",
+    "proposal_output_is_canonical": false
+  }
+}

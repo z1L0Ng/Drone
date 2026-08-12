@@ -1,0 +1,5 @@
+LINK,WORD,VALID,SPEAKER,GENDER
+alto/cv_es_family_001.opus,alto,True,cv_es_speaker_001,female
+arriba/cv_es_family_001.opus,arriba,True,cv_es_speaker_002,male
+para/cv_es_family_002.opus,para,True,cv_es_speaker_003,female
+casa/cv_es_family_003.opus,casa,False,cv_es_speaker_004,male

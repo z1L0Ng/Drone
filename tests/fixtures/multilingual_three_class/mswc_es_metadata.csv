@@ -1,0 +1,14 @@
+source_record_id,dataset_key,dataset_version,language,source_word,speaker_id,source_clip_family,original_split
+es_a_alto,mswc,1.0,es,alto,es_spk_a,es_fam_a_1,train
+es_a_arriba,mswc,1.0,es,arriba,es_spk_a,es_fam_a_2,train
+es_a_cero,mswc,1.0,es,cero,es_spk_a,es_fam_a_3,train
+es_b_alto,mswc,1.0,es,alto,es_spk_b1,es_fam_shared,dev
+es_b_abajo,mswc,1.0,es,abajo,es_spk_b2,es_fam_shared,test
+es_b_uno,mswc,1.0,es,uno,es_spk_b3,es_fam_shared,train
+es_c_alto,mswc,1.0,es,alto,es_spk_c,es_fam_c_1,train
+es_c_izquierda,mswc,1.0,es,izquierda,es_spk_c,es_fam_c_2,dev
+es_c_dos,mswc,1.0,es,dos,es_spk_c,es_fam_c_3,test
+es_d_alto,mswc,1.0,es,alto,es_spk_d,es_fam_d_1,train
+es_d_sigue,mswc,1.0,es,sigue,es_spk_d,es_fam_d_2,dev
+es_d_tres,mswc,1.0,es,tres,es_spk_d,es_fam_d_3,test
+es_protected_para,mswc,1.0,es,para,es_spk_p,es_fam_p,train

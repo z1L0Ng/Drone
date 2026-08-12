@@ -1,0 +1,89 @@
+{
+  "schema_version": "talk-to-me-drone.metadata-index.v1",
+  "entries": [
+    {
+      "entry_id": "gsc-v002-inventory",
+      "adapter": "normalized_csv",
+      "path": "/ABSOLUTE/PATH/TO/PINNED/gsc_v002_metadata_inventory.csv",
+      "sha256": "REPLACE_WITH_64_HEX_SHA256",
+      "dataset_key": "gsc_v2",
+      "dataset_version": "raw_v0.02",
+      "language": "en",
+      "original_split": "inventory",
+      "coverage": "complete_inventory",
+      "source_revision": "archive_etag_6b74f3901214cb2c2934e98196829835"
+    },
+    {
+      "entry_id": "mswc-es-train",
+      "adapter": "mswc_csv",
+      "path": "/ABSOLUTE/PATH/TO/PINNED/mswc_1.0/es_train.csv",
+      "sha256": "REPLACE_WITH_64_HEX_SHA256",
+      "dataset_key": "mswc",
+      "dataset_version": "1.0",
+      "language": "es",
+      "original_split": "train",
+      "coverage": "complete_split",
+      "source_revision": "0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218"
+    },
+    {
+      "entry_id": "mswc-es-dev",
+      "adapter": "mswc_csv",
+      "path": "/ABSOLUTE/PATH/TO/PINNED/mswc_1.0/es_dev.csv",
+      "sha256": "REPLACE_WITH_64_HEX_SHA256",
+      "dataset_key": "mswc",
+      "dataset_version": "1.0",
+      "language": "es",
+      "original_split": "dev",
+      "coverage": "complete_split",
+      "source_revision": "0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218"
+    },
+    {
+      "entry_id": "mswc-es-test",
+      "adapter": "mswc_csv",
+      "path": "/ABSOLUTE/PATH/TO/PINNED/mswc_1.0/es_test.csv",
+      "sha256": "REPLACE_WITH_64_HEX_SHA256",
+      "dataset_key": "mswc",
+      "dataset_version": "1.0",
+      "language": "es",
+      "original_split": "test",
+      "coverage": "complete_split",
+      "source_revision": "0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218"
+    },
+    {
+      "entry_id": "mswc-de-train",
+      "adapter": "mswc_csv",
+      "path": "/ABSOLUTE/PATH/TO/PINNED/mswc_1.0/de_train.csv",
+      "sha256": "REPLACE_WITH_64_HEX_SHA256",
+      "dataset_key": "mswc",
+      "dataset_version": "1.0",
+      "language": "de",
+      "original_split": "train",
+      "coverage": "complete_split",
+      "source_revision": "0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218"
+    },
+    {
+      "entry_id": "mswc-de-dev",
+      "adapter": "mswc_csv",
+      "path": "/ABSOLUTE/PATH/TO/PINNED/mswc_1.0/de_dev.csv",
+      "sha256": "REPLACE_WITH_64_HEX_SHA256",
+      "dataset_key": "mswc",
+      "dataset_version": "1.0",
+      "language": "de",
+      "original_split": "dev",
+      "coverage": "complete_split",
+      "source_revision": "0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218"
+    },
+    {
+      "entry_id": "mswc-de-test",
+      "adapter": "mswc_csv",
+      "path": "/ABSOLUTE/PATH/TO/PINNED/mswc_1.0/de_test.csv",
+      "sha256": "REPLACE_WITH_64_HEX_SHA256",
+      "dataset_key": "mswc",
+      "dataset_version": "1.0",
+      "language": "de",
+      "original_split": "test",
+      "coverage": "complete_split",
+      "source_revision": "0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+source_record_id,dataset_key,dataset_version,language,source_word,speaker_id,source_clip_family,original_split
+en_a_stop,gsc_v2,raw_v0.02,en,stop,en_spk_a,en_fam_a_stop,inventory
+en_a_up,gsc_v2,raw_v0.02,en,up,en_spk_a,en_fam_a_up,inventory
+en_a_bed,gsc_v2,raw_v0.02,en,bed,en_spk_a,en_fam_a_bed,inventory
+en_b_stop,gsc_v2,raw_v0.02,en,stop,en_spk_b,en_fam_b_stop,inventory
+en_b_down,gsc_v2,raw_v0.02,en,down,en_spk_b,en_fam_b_down,inventory
+en_b_cat,gsc_v2,raw_v0.02,en,cat,en_spk_b,en_fam_b_cat,inventory
+en_c_stop,gsc_v2,raw_v0.02,en,stop,en_spk_c,en_fam_c_stop,inventory
+en_c_left,gsc_v2,raw_v0.02,en,left,en_spk_c,en_fam_c_left,inventory
+en_c_dog,gsc_v2,raw_v0.02,en,dog,en_spk_c,en_fam_c_dog,inventory
+en_d_stop,gsc_v2,raw_v0.02,en,stop,en_spk_d,en_fam_d_stop,inventory
+en_d_go,gsc_v2,raw_v0.02,en,go,en_spk_d,en_fam_d_go,inventory
+en_d_bird,gsc_v2,raw_v0.02,en,bird,en_spk_d,en_fam_d_bird,inventory
