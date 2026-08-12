@@ -12,7 +12,9 @@ import hashlib
 import io
 import json
 import math
+import os
 import re
+import tempfile
 import unicodedata
 from collections import Counter, defaultdict
 from dataclasses import dataclass
@@ -24,7 +26,12 @@ SCHEMA_VERSION = "talk-to-me-drone.multilingual-three-class-intake.v1"
 INDEX_SCHEMA_VERSION = "talk-to-me-drone.metadata-index.v1"
 REPORT_SCHEMA_VERSION = "talk-to-me-drone.metadata-feasibility-report.v1"
 CANONICAL_CLASSES = ("emergency", "movement", "unknown")
-SPLITS = ("train", "val", "test")
+SPLITS = (
+    "train",
+    "validation_selection",
+    "validation_calibration",
+    "test",
+)
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -131,7 +138,10 @@ def validate_config(config: Mapping[str, Any]) -> List[str]:
         raise ContractError(f"split_policy.split_names must be {list(SPLITS)}")
     ratios = _require(split, "ratios", "split_policy")
     if set(ratios) != set(SPLITS):
-        raise ContractError("split_policy.ratios must contain train/val/test only")
+        raise ContractError(
+            "split_policy.ratios must contain train/validation_selection/"
+            "validation_calibration/test only"
+        )
     if not math.isclose(sum(float(ratios[s]) for s in SPLITS), 1.0, abs_tol=1e-9):
         raise ContractError("split_policy.ratios must sum to 1")
     if not isinstance(split.get("seed"), int):
@@ -181,6 +191,44 @@ def validate_config(config: Mapping[str, Any]) -> List[str]:
         raise ContractError("downstream_hard_gates fields do not match the frozen gate set")
     if any(not isinstance(value, bool) for value in downstream.values()):
         raise ContractError("downstream_hard_gates values must be booleans")
+    if downstream["management_license_and_no_reidentification_acceptance"] is not True:
+        raise ContractError("Management license/no-reidentification acceptance must remain recorded")
+    if downstream["gsc_immutable_archive_and_metadata_receipt"] is not True:
+        raise ContractError("GSC immutable archive receipt must remain recorded")
+
+    bridge = _require(config, "audio_bridge", "config")
+    if bridge.get("metadata_index_schema") != INDEX_SCHEMA_VERSION:
+        raise ContractError("audio_bridge metadata index schema changed")
+    if bridge.get("metadata_bootstrap_receipt_schema") != (
+        "drone.multilingual_metadata_bootstrap_receipt.v0"
+    ):
+        raise ContractError("audio_bridge metadata bootstrap receipt schema changed")
+    if bridge.get("gsc_speaker_rule") != "filename prefix before _nohash_":
+        raise ContractError("GSC speaker grouping rule changed")
+    if bridge.get("gsc_source_family_duplicate_rule") != "exact raw WAV byte SHA-256":
+        raise ContractError("GSC duplicate grouping rule changed")
+    if bridge.get("mswc_source_family_rule") != "official LINK source clip family":
+        raise ContractError("MSWC source-family grouping rule changed")
+    if bridge.get("mswc_speaker_rule") != (
+        "copy official SPEAKER field without inference or re-identification"
+    ):
+        raise ContractError("MSWC speaker provenance rule changed")
+    if bridge.get("manifest_schema") != "drone.multilingual_audio_manifest.v0":
+        raise ContractError("audio_bridge manifest schema changed")
+    if bridge.get("validation_receipt_schema") != "drone.multilingual_manifest_validation_receipt.v0":
+        raise ContractError("audio_bridge validation receipt schema changed")
+    if bridge.get("manifest_required_field_count_from_baseline_consumer") != 21:
+        raise ContractError("audio_bridge must follow the audited Baseline 21-field contract")
+    expected_guards = {
+        "download_execution_guard": "--execute plus DRONE_W33_DATA_DOWNLOAD_APPROVED=YES",
+        "proposal_freeze_guard": "DRONE_W33_SPLIT_FREEZE_APPROVED=YES",
+        "audio_transform_guard": "DRONE_W33_AUDIO_TRANSFORM_APPROVED=YES",
+        "manifest_freeze_guard": "DRONE_W33_MANIFEST_FREEZE_APPROVED=YES",
+    }
+    if any(bridge.get(key) != value for key, value in expected_guards.items()):
+        raise ContractError("audio bridge stage authorization guards changed")
+    if bridge.get("real_execution_authorized_in_this_commit") is not False:
+        raise ContractError("audio bridge real execution must remain unauthorized")
 
     datasets = _require(config, "datasets", "config")
     if not isinstance(datasets, dict) or not datasets:
@@ -209,6 +257,10 @@ def validate_config(config: Mapping[str, Any]) -> List[str]:
         for key, value in receipt.items():
             if key.endswith("sha256") and (not isinstance(value, str) or not HEX64.match(value)):
                 unresolved.append(f"{context}.receipt.{key}={value!r}")
+        if dataset_key == "gsc_v2" and receipt.get("archive_sha256") != (
+            "af14739ee7dc311471de98f5f9d2c9191b18aedfe957f4a6ff791c709868ff58"
+        ):
+            raise ContractError("GSC v0.02 immutable archive SHA-256 changed")
 
         languages = dataset["languages"]
         if not isinstance(languages, dict) or not languages:
@@ -385,6 +437,7 @@ class MetadataRecord:
     source_word: str
     speaker_id: str
     source_clip_family: str
+    source_audio_relpath: str
     original_split: str
     metadata_source: str
     metadata_row: int
@@ -478,6 +531,9 @@ def _iter_mswc_csv(entry: Mapping[str, Any], path: Path) -> Iterator[MetadataRec
                 source_word=word,
                 speaker_id=speaker,
                 source_clip_family=family,
+                source_audio_relpath=(
+                    f"{word}/{word}_{Path(family).stem}.wav"
+                ),
                 original_split=entry["original_split"],
                 metadata_source=str(path),
                 metadata_row=row_number,
@@ -519,6 +575,7 @@ def _iter_normalized_csv(entry: Mapping[str, Any], path: Path) -> Iterator[Metad
                 source_word=row["source_word"].strip(),
                 speaker_id=row["speaker_id"].strip(),
                 source_clip_family=row["source_clip_family"].strip(),
+                source_audio_relpath=row.get("source_audio_relpath", "").strip(),
                 original_split=row["original_split"].strip(),
                 metadata_source=str(path),
                 metadata_row=row_number,
@@ -761,11 +818,15 @@ def _manifest_row(mapped: MappedRecord, component: str, split: str) -> List[str]
         "true" if mapped.admitted else "false",
         record.speaker_id,
         record.source_clip_family,
+        record.source_audio_relpath,
         component,
         split,
         record.original_split,
         record.entry_id,
         str(record.metadata_row),
+        "",
+        "",
+        "",
     ]
 
 
@@ -781,11 +842,15 @@ MANIFEST_FIELDS = [
     "mapping_admitted",
     "speaker_id",
     "source_clip_family",
+    "source_audio_relpath",
     "isolation_component_id",
     "proposed_split",
     "original_split",
     "metadata_entry_id",
     "metadata_row",
+    "crop_start_sample",
+    "speech_start_sample",
+    "speech_end_sample",
 ]
 
 
@@ -861,12 +926,18 @@ def run_feasibility(
 
     output_handle = None
     output_path = None
+    temporary_output_path = None
     if write_proposal:
         if output_dir is None:
             raise ContractError("--write-proposal requires an output directory")
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = output_dir / "metadata_split_proposal.csv"
-        output_handle = output_path.open("w", encoding="utf-8", newline="")
+        descriptor, temporary_name = tempfile.mkstemp(
+            prefix=".metadata_split_proposal.", suffix=".tmp", dir=output_dir
+        )
+        os.close(descriptor)
+        temporary_output_path = Path(temporary_name)
+        output_handle = temporary_output_path.open("w", encoding="utf-8", newline="")
 
     manifest_hash = hashlib.sha256()
     header_line = _csv_line(MANIFEST_FIELDS)
@@ -911,6 +982,16 @@ def run_feasibility(
     finally:
         if output_handle is not None:
             output_handle.close()
+    if temporary_output_path is not None and output_path is not None:
+        if output_path.exists():
+            if sha256_file(output_path) != sha256_file(temporary_output_path):
+                temporary_output_path.unlink(missing_ok=True)
+                raise ContractError(
+                    f"existing proposal differs from deterministic output: {output_path}"
+                )
+            temporary_output_path.unlink()
+        else:
+            temporary_output_path.replace(output_path)
 
     speaker_overlap = sum(
         1 for node, split_set in identity_splits.items() if node.startswith("speaker\x1f") and len(split_set) > 1
@@ -1061,9 +1142,18 @@ def run_feasibility(
 
     if write_proposal and output_dir is not None:
         report_path = output_dir / "feasibility_report.json"
-        with report_path.open("w", encoding="utf-8") as handle:
-            json.dump(report, handle, ensure_ascii=False, indent=2, sort_keys=True)
-            handle.write("\n")
+        report_bytes = (
+            json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+        ).encode("utf-8")
+        if report_path.exists():
+            if report_path.read_bytes() != report_bytes:
+                raise ContractError(
+                    f"existing feasibility report differs from deterministic output: {report_path}"
+                )
+        else:
+            temporary_report = report_path.with_name(f".{report_path.name}.tmp")
+            temporary_report.write_bytes(report_bytes)
+            temporary_report.replace(report_path)
     return report
 
 

@@ -80,11 +80,12 @@ The config freezes:
 - per-language positive, protected, and unknown-candidate rules with review status and semantic risk;
 - future mono PCM WAV, 16 kHz, 16-bit, exactly 16,000-sample contract and transform receipts;
 - global isolation by both `speaker_id` and `source_clip_family`;
-- deterministic 60/20/20 proposal with seed `20260812`;
+- deterministic four-way 60/15/10/15 proposal with seed `20260812` for
+  `train / validation_selection / validation_calibration / test`;
 - equal language/equal class weights, no replacement, five clips per speaker/class/split cap, and smallest-supported-class ceilings;
 - no audio download/transform, canonical split, training, or evaluation authorization.
 
-Known immutable receipts in the config include MSWC repository revision `0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218` and the Spanish/German metadata bundle hashes. GSC currently has only the official v0.02 archive ETag/size/date receipt; its archive SHA-256 remains `UNKNOWN_metadata_intake_required`, which validator reports rather than inventing.
+Known immutable receipts now include MSWC revision `0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218`, the Spanish/German split-metadata archive hashes and six CSV hashes, and GSC raw v0.02 archive SHA-256 `af14739ee7dc311471de98f5f9d2c9191b18aedfe957f4a6ff791c709868ff58` plus ETag/size/date.
 
 ## 4. Metadata-only feasibility implementation
 
@@ -95,11 +96,11 @@ The CLI accepts only a local config and a checksummed local metadata index. It h
 Supported adapters:
 
 - `mswc_csv`: first-party `LINK,WORD,VALID,SPEAKER,GENDER`; the basename of `LINK` removes the extracted-word directory and recovers the original Common Voice source clip-family; invalid rows are excluded.
-- `normalized_csv`: GSC or another pre-audited metadata inventory with `source_record_id,dataset_key,dataset_version,language,source_word,speaker_id,source_clip_family,original_split`.
+- `normalized_csv`: GSC or another pre-audited metadata inventory with `source_record_id,dataset_key,dataset_version,language,source_word,speaker_id,source_clip_family,source_audio_relpath,original_split`.
 
 Every metadata-index entry must include an exact file SHA-256, dataset version, source revision, language and original split. Missing speaker, family, version, revision, file, or checksum fails closed.
 
-The template `config/multilingual_three_class/metadata_index.template.json` is intentionally non-runnable until every absolute path and `REPLACE_WITH_64_HEX_SHA256` value is replaced with a verified receipt.
+The old manual `metadata_index.template.json` remains a non-runnable historical template. DATA-20260812-03 supersedes manual substitution with a guarded deterministic producer that emits `intake/metadata_index.json` from the acquired official GSC/MSWC trees.
 
 ### 4.2 Global isolation algorithm
 
@@ -131,7 +132,7 @@ Default dry-run writes nothing and prints a JSON feasibility report containing:
 
 The lexical gate can now proceed under the Management-provisional engineering policy. Feasibility or intake must still remain NO-GO when any of these hard gates fail:
 
-- GSC obtains an exact metadata/archive receipt and reconstructable class/speaker inventory;
+- real S1 generates and independently verifies the complete GSC normalized inventory and seven-entry GSC/MSWC metadata index;
 - real metadata shows nonzero post-grouping/post-cap support for all three classes in all splits;
 - speaker and Common Voice family overlap is not exactly zero;
 - an input path/checksum/version/source revision, speaker ID, or family ID is missing;
@@ -186,7 +187,9 @@ Observed receipt:
 - approved-unknown original-split counts verified exactly for both `es` and `de`;
 - lexical engineering gate: `PASS_MANAGEMENT_PROVISIONAL`;
 - proposed-split overlap: speaker `0`, source-family `0`;
-- post-five-per-speaker/class balance ceilings: Spanish train/val/test `167 / 46 / 70`; German `357 / 112 / 126`;
+- the earlier three-way post-cap figures are superseded by the four-split
+  proposal contract; support must be recomputed from the pinned metadata before
+  any downstream admission decision;
 - English support and common-language ceiling: `0`, because no GSC metadata was supplied;
 - final status: `NO_GO`, as expected from the missing English receipt and all downstream authorization/QC gates.
 
@@ -199,7 +202,7 @@ Assumptions for the commands below:
 - repository checkout is `/SERVER/PATH/Drone`;
 - authorized, already-local metadata exists under `/SERVER/PATH/pinned_metadata`;
 - no audio archive is accessed;
-- the operator has replaced every template path/checksum and independently reviewed the resulting index.
+- the generated metadata-index/bootstrap receipts and every registered artifact hash have passed independent review.
 
 ### Stage S0 — local code/config verification
 
@@ -215,65 +218,23 @@ shasum -a 256 config/multilingual_three_class/es_de_v1.yaml
 
 Expected receipts: checkout commit, clean/scoped status, compile success, test count/pass result, config file hash, canonical config hash, and unresolved receipt list.
 
-### Stage S1 — prepare and verify the local metadata index
+### Stages S1-S3 — superseded by the guarded bridge
 
-```bash
-cd /SERVER/PATH/Drone
-cp config/multilingual_three_class/metadata_index.template.json /SERVER/PATH/pinned_metadata/es_de_metadata_index.json
-shasum -a 256 /SERVER/PATH/pinned_metadata/*.csv
-shasum -a 256 /SERVER/PATH/pinned_metadata/es_de_metadata_index.json
-```
+Manual template copying and ad hoc proposal generation are superseded by
+`docs/technical_spec/multilingual_audio_materialization_bridge_2026w33.md`.
+The executable order is now S0 plan/config/space, S1 official acquisition plus
+metadata bootstrap/index/proposal freeze, S2 audio materialization/QC, and S3
+frozen manifest/consumer validation. The orchestrator derives all intake paths;
+its CLI does not require nonexistent proposal paths before S1.
 
-After `cp`, the operator must replace every placeholder path and SHA-256 using the independently pinned local metadata. The intake command will reject an unedited template, a URL, a checksum mismatch, or a version/revision mismatch.
+## 7. Guarded future acquisition bridge
 
-Expected receipts: per-file SHA-256, index SHA-256, absolute local paths, adapter, dataset/release/source revision, language and original split. A shell glob listing is not itself a manifest; the reviewed JSON index is the receipt.
-
-### Stage S2 — default dry-run, no proposal file
-
-```bash
-cd /SERVER/PATH/Drone
-mkdir -p /SERVER/PATH/receipts/es_de_three_class_v1
-python scripts/multilingual_three_class_intake.py \
-  --config config/multilingual_three_class/es_de_v1.yaml \
-  --metadata-index /SERVER/PATH/pinned_metadata/es_de_metadata_index.json \
-  > /SERVER/PATH/receipts/es_de_three_class_v1/dry_run_report.json
-python scripts/validate_multilingual_three_class_intake.py \
-  --config config/multilingual_three_class/es_de_v1.yaml \
-  --report /SERVER/PATH/receipts/es_de_three_class_v1/dry_run_report.json
-shasum -a 256 /SERVER/PATH/receipts/es_de_three_class_v1/dry_run_report.json
-```
-
-Expected receipts: dry-run report SHA; `canonical_split_created=false`; config/index/virtual manifest hashes; input receipts; three-class support; per-word/speaker/family counts; post-cap ceilings; overlap counts exactly zero; all shortage/NO-GO reasons.
-
-### Stage S3 — optional non-canonical metadata proposal, separately authorized
-
-```bash
-cd /SERVER/PATH/Drone
-python scripts/multilingual_three_class_intake.py \
-  --config config/multilingual_three_class/es_de_v1.yaml \
-  --metadata-index /SERVER/PATH/pinned_metadata/es_de_metadata_index.json \
-  --write-proposal \
-  --output-dir /SERVER/PATH/receipts/es_de_three_class_v1/proposal
-python scripts/validate_multilingual_three_class_intake.py \
-  --config config/multilingual_three_class/es_de_v1.yaml \
-  --report /SERVER/PATH/receipts/es_de_three_class_v1/proposal/feasibility_report.json
-shasum -a 256 /SERVER/PATH/receipts/es_de_three_class_v1/proposal/metadata_split_proposal.csv /SERVER/PATH/receipts/es_de_three_class_v1/proposal/feasibility_report.json
-```
-
-Expected receipts: the two output hashes, internal `proposal_manifest_sha256` matching the CSV bytes, zero overlap assertions, and `canonical_split_created=false`. This stage still does not authorize audio download, conversion, canonical split creation, training, or evaluation.
-
-## 7. Future audio download plan only
-
-No download entrypoint is implemented. If Management later authorizes audio intake, a separate task must first freeze:
-
-1. exact official URL and representation (MSWC hosted WAV or publisher Opus, never silently mixed);
-2. archive size, release/revision, license text hash and expected SHA-256;
-3. quarantine destination and available capacity;
-4. downloader/version/retry/resume behavior;
-5. post-download archive hash and file inventory;
-6. a separate transform authorization with header-level QC and per-output receipts.
-
-Metadata feasibility does not authorize any of those steps.
+The repository now contains a default-dry-run official-source acquisition and
+metadata-bootstrap implementation. Its presence is not execution authority.
+Real S1 still requires `--execute`, `DRONE_W33_DATA_DOWNLOAD_APPROVED=YES`, and
+`DRONE_W33_SPLIT_FREEZE_APPROVED=YES`; later S2/S3 and any training remain
+separately gated. Exact commands and expected receipts are maintained in the
+bridge specification above.
 
 ## 8. Admission gates and decisions still required
 

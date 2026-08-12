@@ -1,0 +1,129 @@
+{
+  "schema_version": "drone.multilingual_acquisition_plan.v0",
+  "plan_version": "es-de-w33-audio-bridge-v0",
+  "default_mode": "dry-run",
+  "execution_guard": {
+    "cli_flag": "--execute",
+    "environment": "DRONE_W33_DATA_DOWNLOAD_APPROVED=YES"
+  },
+  "no_reidentification": true,
+  "redistribution_policy": "do_not_redistribute_source_or_derived_audio_packages_without_separate_rights_review",
+  "space_estimate": {
+    "temporary_and_extracted_multiplier": 2.5,
+    "content_addressed_audio_bytes": "UNKNOWN_until_frozen_proposal_count_and_header_probe",
+    "receipt_bytes": "UNKNOWN_small_relative_to_audio",
+    "minimum_free_space_rule": "expected_download_bytes_times_2.5_plus_content_addressed_audio_estimate"
+  },
+  "sources": [
+    {
+      "dataset_key": "gsc_v2",
+      "dataset_name": "Google Speech Commands",
+      "release": "raw_v0.02",
+      "official_page": "https://www.tensorflow.org/datasets/catalog/speech_commands",
+      "mode": "direct_archive",
+      "license_receipt": {
+        "license_id": "CC-BY-4.0",
+        "terms_url": "https://creativecommons.org/licenses/by/4.0/",
+        "attribution_required": true,
+        "attribution_source": "Google Speech Commands project and contributors",
+        "no_reidentification": false
+      },
+      "assets": [
+        {
+          "asset_id": "gsc-v2-raw-v0.02",
+          "url": "https://storage.googleapis.com/download.tensorflow.org/data/speech_commands_v0.02.tar.gz",
+          "filename": "speech_commands_v0.02.tar.gz",
+          "archive_sha256": "af14739ee7dc311471de98f5f9d2c9191b18aedfe957f4a6ff791c709868ff58",
+          "size_bytes": 2428923189,
+          "expected_etag": "6b74f3901214cb2c2934e98196829835",
+          "expected_last_modified": "Wed, 11 Apr 2018 19:41:55 GMT",
+          "checksum_receipt_url": "https://github.com/tensorflow/datasets/blob/master/tensorflow_datasets/datasets/speech_commands/checksums.tsv",
+          "extract_kind": "tar",
+          "expected_tree": {
+            "kind": "gsc_v2",
+            "minimum_word_directories": 35,
+            "required_files": ["validation_list.txt", "testing_list.txt"]
+          }
+        }
+      ]
+    },
+    {
+      "dataset_key": "mswc",
+      "dataset_name": "MLCommons Multilingual Spoken Words Corpus",
+      "release": "1.0",
+      "revision": "0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218",
+      "official_page": "https://huggingface.co/datasets/MLCommons/ml_spoken_words",
+      "mode": "pinned_hf_tree",
+      "license_receipt": {
+        "license_id": "CC-BY-4.0",
+        "terms_url": "https://creativecommons.org/licenses/by/4.0/",
+        "attribution_required": true,
+        "attribution_source": "MLCommons MSWC, Common Voice contributors, and corpus paper",
+        "no_reidentification": true,
+        "no_reidentification_source": "https://huggingface.co/datasets/MLCommons/ml_spoken_words/blob/0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218/README.md"
+      },
+      "metadata_assets": [
+        {
+          "asset_id": "mswc-es-splits-1.0",
+          "asset_role": "split_metadata",
+          "language": "es",
+          "url": "https://huggingface.co/datasets/MLCommons/ml_spoken_words/resolve/0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218/data/splits/es/splits.tar.gz?download=true",
+          "filename": "mswc-es-splits.tar.gz",
+          "archive_sha256": "d78b2c6ce54edeb8fa8d2b87b70989cfb98b042925b10fec2879dfb2d27cc6c2",
+          "size_bytes": 51330879,
+          "extract_kind": "tar",
+          "source_path": "data/splits/es/splits.tar.gz",
+          "expected_tree": {
+            "kind": "mswc_split_metadata",
+            "required_file_sha256": {
+              "train.csv": "926bad99d81dabb0c17e9df6f34fa9db64a0f7b6b70cf957577dee40e32836a5",
+              "dev.csv": "621d1b17e285c21515f1e9b4b4b1b13c4a8e44fb45f999960c211647bfa515a0",
+              "test.csv": "81571a8d5c876247e1993e97f53837674cc0637a9c8ca4f7a73c473a99934b53",
+              "version.txt": "42f75458f61c04a7832dcbe77932a6f2c72bb3634e881f6bad0d67cdbe5de824"
+            }
+          }
+        },
+        {
+          "asset_id": "mswc-de-splits-1.0",
+          "asset_role": "split_metadata",
+          "language": "de",
+          "url": "https://huggingface.co/datasets/MLCommons/ml_spoken_words/resolve/0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218/data/splits/de/splits.tar.gz?download=true",
+          "filename": "mswc-de-splits.tar.gz",
+          "archive_sha256": "012c26fdb5a2cbaeb1a750ec5c494cbff47c0d47240a5fc8c245fbc879819ae5",
+          "size_bytes": 149381352,
+          "extract_kind": "tar",
+          "source_path": "data/splits/de/splits.tar.gz",
+          "expected_tree": {
+            "kind": "mswc_split_metadata",
+            "required_file_sha256": {
+              "train.csv": "7915f4ddd4c85250e51d681bad813c2b157519463a94bfd8b204d42c32dfdfd9",
+              "dev.csv": "c3b4ac22c183a6143e80f5b180ad179e85341bccbb5a60c59c277b6afa3ec9ba",
+              "test.csv": "79f56b3665bd8bf5ead154e3998b3e746f3d0dc603e0f90b7b80a3166f2bc89e",
+              "version.txt": "42f75458f61c04a7832dcbe77932a6f2c72bb3634e881f6bad0d67cdbe5de824"
+            }
+          }
+        }
+      ],
+      "trees": [
+        {
+          "language": "es",
+          "api_url": "https://huggingface.co/api/datasets/MLCommons/ml_spoken_words/tree/0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218/data/wav/es?recursive=true&expand=true",
+          "asset_index_sha256": "a16401e8d93eb4c7047a0edfd5ca2c1c24af24993d29380c13beb33deb5e6c50",
+          "archive_count": 22,
+          "archive_total_bytes": 15040133986,
+          "format": "wav_16khz",
+          "allowed_path_prefix": "data/wav/es/"
+        },
+        {
+          "language": "de",
+          "api_url": "https://huggingface.co/api/datasets/MLCommons/ml_spoken_words/tree/0bc9df68e92fd6bb54176bf7eb29e2b9e97cb218/data/wav/de?recursive=true&expand=true",
+          "asset_index_sha256": "cefb7e9a632ccd3d75680507c0ef8f37b8c7d3c276ac57e3fa165c7d4ba74296",
+          "archive_count": 42,
+          "archive_total_bytes": 25566926807,
+          "format": "wav_16khz",
+          "allowed_path_prefix": "data/wav/de/"
+        }
+      ]
+    }
+  ]
+}

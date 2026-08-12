@@ -86,9 +86,10 @@ class ThreeClassIntakeTests(unittest.TestCase):
             tuple(config["model_contract"]["canonical_classes"]), CANONICAL_CLASSES
         )
         self.assertFalse(config["model_contract"]["source_words_are_model_outputs"])
-        self.assertIn(
-            "datasets.gsc_v2.receipt.archive_sha256='UNKNOWN_metadata_intake_required'",
-            unresolved,
+        self.assertEqual(unresolved, [])
+        self.assertEqual(
+            config["datasets"]["gsc_v2"]["receipt"]["archive_sha256"],
+            "af14739ee7dc311471de98f5f9d2c9191b18aedfe957f4a6ff791c709868ff58",
         )
 
     def test_invalid_output_schema_is_rejected(self) -> None:
@@ -117,7 +118,12 @@ class ThreeClassIntakeTests(unittest.TestCase):
             )
             for language in ("es", "de"):
                 for canonical_class in CANONICAL_CLASSES:
-                    for split in ("train", "val", "test"):
+                    for split in (
+                        "train",
+                        "validation_selection",
+                        "validation_calibration",
+                        "test",
+                    ):
                         self.assertEqual(
                             first["support"][language][canonical_class][split][
                                 "not_admitted_samples"

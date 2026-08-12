@@ -1,8 +1,8 @@
 {
   "schema_version": "talk-to-me-drone.multilingual-three-class-intake.v1",
-  "task_id": "DATA-20260812-02",
+  "task_id": "DATA-20260812-03",
   "contract_id": "es_de_three_class_v1",
-  "status": "implementation_ready_metadata_only_no_go_for_audio_or_training",
+  "status": "audio_bridge_implementation_ready_no_go_for_real_execution_or_training",
   "evidence_boundary": {
     "source_receipts": "Verified Source Fact at the recorded revision",
     "surface_mapping": "Audit candidate; not native-approved unless explicitly stated",
@@ -81,7 +81,7 @@
     "sample_count": 16000,
     "bit_depth": 16,
     "decode_rule": "pin decoder and version; preserve input checksum",
-    "channel_rule": "reject unknown channel count; deterministic arithmetic-mean downmix only after approval",
+    "channel_rule": "reject unknown channel count; deterministic arithmetic-mean float64 downmix with lineage receipt",
     "resample_rule": "resample only when native rate differs; pin implementation and version",
     "crop_rule": "crop only when the entire aligned word remains in-window; otherwise invalidate label",
     "pad_rule": "deterministic right-pad with zeros; record input length and pad samples",
@@ -98,8 +98,8 @@
   },
   "split_policy": {
     "proposal_only": true,
-    "split_names": ["train", "val", "test"],
-    "ratios": {"train": 0.6, "val": 0.2, "test": 0.2},
+    "split_names": ["train", "validation_selection", "validation_calibration", "test"],
+    "ratios": {"train": 0.6, "validation_selection": 0.15, "validation_calibration": 0.1, "test": 0.15},
     "seed": 20260812,
     "global_group_keys": ["speaker_id", "source_clip_family"],
     "identity_namespace": "dataset_key",
@@ -142,6 +142,16 @@
       "source_clip_family",
       "original_split"
     ],
+    "required_materializable_proposal_fields": [
+      "source_audio_relpath",
+      "isolation_component_id",
+      "proposed_split"
+    ],
+    "optional_overlength_boundary_fields": [
+      "crop_start_sample",
+      "speech_start_sample",
+      "speech_end_sample"
+    ],
     "fail_closed_on": [
       "missing_or_mismatched_checksum",
       "missing_dataset_version_or_source_revision",
@@ -151,9 +161,27 @@
       "network_url_in_metadata_index"
     ]
   },
+  "audio_bridge": {
+    "acquisition_plan": "config/multilingual_three_class/server_audio_bridge_v0.json",
+    "metadata_index_schema": "talk-to-me-drone.metadata-index.v1",
+    "metadata_bootstrap_receipt_schema": "drone.multilingual_metadata_bootstrap_receipt.v0",
+    "gsc_speaker_rule": "filename prefix before _nohash_",
+    "gsc_source_family_duplicate_rule": "exact raw WAV byte SHA-256",
+    "mswc_source_family_rule": "official LINK source clip family",
+    "mswc_speaker_rule": "copy official SPEAKER field without inference or re-identification",
+    "manifest_schema": "drone.multilingual_audio_manifest.v0",
+    "validation_receipt_schema": "drone.multilingual_manifest_validation_receipt.v0",
+    "lineage_schema": "drone.multilingual_audio_lineage.v0",
+    "manifest_required_field_count_from_baseline_consumer": 21,
+    "download_execution_guard": "--execute plus DRONE_W33_DATA_DOWNLOAD_APPROVED=YES",
+    "proposal_freeze_guard": "DRONE_W33_SPLIT_FREEZE_APPROVED=YES",
+    "audio_transform_guard": "DRONE_W33_AUDIO_TRANSFORM_APPROVED=YES",
+    "manifest_freeze_guard": "DRONE_W33_MANIFEST_FREEZE_APPROVED=YES",
+    "real_execution_authorized_in_this_commit": false
+  },
   "downstream_hard_gates": {
-    "management_license_and_no_reidentification_acceptance": false,
-    "gsc_immutable_archive_and_metadata_receipt": false,
+    "management_license_and_no_reidentification_acceptance": true,
+    "gsc_immutable_archive_and_metadata_receipt": true,
     "audio_header_and_boundary_qc": false,
     "audio_download_authorization": false,
     "audio_transform_authorization": false,
@@ -181,7 +209,7 @@
         "source_clip_family": "one isolated source clip; duplicate-cluster audit remains separate"
       },
       "receipt": {
-        "archive_sha256": "UNKNOWN_metadata_intake_required",
+        "archive_sha256": "af14739ee7dc311471de98f5f9d2c9191b18aedfe957f4a6ff791c709868ff58",
         "http_etag": "6b74f3901214cb2c2934e98196829835",
         "content_length_bytes": 2428923189,
         "last_modified": "2018-04-11",

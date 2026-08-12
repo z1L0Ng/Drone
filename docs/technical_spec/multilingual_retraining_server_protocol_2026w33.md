@@ -240,3 +240,7 @@ before setting either guard or creating the tmux session.
 Next gate: Management reviews the commit and adapter contract, then coordinates
 the Dataset-owner manifest handoff. Only a later explicit task may run server
 preflight, create the tmux session, or train.
+
+The Dataset-owner producer, guarded acquisition/materialization stages, exact
+manifest/receipt paths, and server commands are specified in
+`docs/technical_spec/multilingual_audio_materialization_bridge_2026w33.md`.
