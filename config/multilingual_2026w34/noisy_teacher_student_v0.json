@@ -1,0 +1,84 @@
+{
+  "version": "2026w34-noisy-teacher-student-v0",
+  "labels": [
+    "emergency",
+    "movement",
+    "unknown"
+  ],
+  "splits": [
+    "train",
+    "validation_selection",
+    "validation_calibration",
+    "test"
+  ],
+  "audio": {
+    "sample_rate_hz": 16000,
+    "num_samples": 16000,
+    "channels": 1,
+    "duration_seconds": 1.0
+  },
+  "frontend": {
+    "type": "logmel",
+    "n_fft": 1024,
+    "hop_length": 512,
+    "center": false,
+    "n_mels": 256,
+    "fmin_hz": 50.0,
+    "fmax_hz": null,
+    "power": 2.0,
+    "top_db": 80.0,
+    "max_frames": 32,
+    "pad_value_db": 0.0
+  },
+  "model": {
+    "profile": "xiao_bottleneck256_tflm",
+    "input_shape": [
+      256,
+      32,
+      1
+    ],
+    "num_classes": 3,
+    "output_activation": "softmax",
+    "initialization": "fresh_random",
+    "checkpoint_input": null
+  },
+  "training": {
+    "seed": 0,
+    "max_epochs": 50,
+    "batch_size": 32,
+    "learning_rate": 0.0001,
+    "optimizer": "adam",
+    "early_stopping_patience": 10,
+    "selection_rule": "macro_f1_then_emergency_recall_then_nll_then_earlier_epoch"
+  },
+  "distillation": {
+    "classification_weight": 1.0,
+    "logit_weight": 1.0,
+    "embedding_weight": 1.0,
+    "temperature": 2.0
+  },
+  "noise": {
+    "snr_db": -10.0,
+    "probability": 1.0,
+    "prosody": "disabled",
+    "mixing": "deterministic_same_utterance"
+  },
+  "scopes": {
+    "mixed_en_es_de": {
+      "languages": ["en", "es", "de"],
+      "sampler": "language_class_word_speaker_balanced"
+    },
+    "en_only": {
+      "languages": ["en"],
+      "sampler": "class_word_speaker_balanced"
+    },
+    "es_only": {
+      "languages": ["es"],
+      "sampler": "class_word_speaker_balanced"
+    },
+    "de_only": {
+      "languages": ["de"],
+      "sampler": "class_word_speaker_balanced"
+    }
+  }
+}
