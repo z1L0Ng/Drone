@@ -34,11 +34,11 @@ We summarize four kinds of evaluation evidence. First, we test the speech module
     \end{tabular}
 \end{table}
 
-Table~\ref{tab:snr_results} shows how the speech module changes as rotor noise becomes stronger. Accuracy decreases as the SNR moves from -10~dB to -20~dB, while emergency recall remains above 0.81 across the tested conditions. This trend is important for the article's framing: spoken drone interaction is shaped by the acoustic environment, so the safety net should begin with a speech-derived category that is explicit about what the audio system can and cannot separate under noise.
+Table~\ref{tab:snr_results} shows how the speech module changes as rotor noise becomes stronger. Accuracy decreases as the SNR moves from -10~dB to -20~dB, while emergency recall remains at or above 0.81 across the tested conditions. This trend is important for the article's framing: spoken drone interaction is shaped by the acoustic environment, so the safety net should begin with a speech-derived category that is explicit about what the audio system can and cannot separate under noise.
 
 \begin{table}[t]
     \centering
-    \caption{Comparison with transcript-first and compact command-recognition baselines on rotor-noisy one-second clips.}
+    \caption{Comparison with transcript-first and compact command-recognition baselines on rotor-noisy one-second clips at -10~dB SNR.}
     \label{tab:baseline_comparison}
     \footnotesize
     \setlength{\tabcolsep}{3pt}
@@ -53,7 +53,7 @@ Table~\ref{tab:snr_results} shows how the speech module changes as rotor noise b
     \end{tabular}
 \end{table}
 
-Table~\ref{tab:baseline_comparison} explains why the system is framed around speech processing for a safety net rather than raw transcripts or ordinary command recognition. The transcript-first pipeline performs poorly on the short noisy windows because it must first recover usable text before the safety-net category can be inferred. The compact command-recognition baseline is closer to the proposed path, but it still treats the audio problem as ordinary label selection. The drone-side speech processor instead makes the output match the interaction need: separating emergency speech, movement-related speech, and unsupported input before later drone-facing decisions are considered.
+Table~\ref{tab:baseline_comparison} explains why the system is framed around speech processing for a safety net rather than raw transcripts or ordinary command recognition at the -10~dB comparison point. The transcript-first pipeline performs poorly on the short noisy windows because it must first recover usable text before the safety-net category can be inferred. The compact command-recognition baseline is closer to the proposed path, but it still treats the audio problem as ordinary label selection. The drone-side speech processor instead makes the output match the interaction need: separating emergency speech, movement-related speech, and unsupported input before later drone-facing decisions are considered.
 
 The embedded runtime result checks whether this pipeline can run locally. In a dual-core onboard timing run over 120 one-second windows, more than 95\% of clips were processed at approximately the one-second window rate after the first update, with no dropped or overrun windows.
 

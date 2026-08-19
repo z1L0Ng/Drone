@@ -1,0 +1,63 @@
+abort
+ascend
+back off
+backward
+careful
+cease
+come
+danger
+descend
+down
+duck
+end
+faster
+fly
+follow
+forward
+freeze
+get back
+get down
+go
+go back
+go forward
+go left
+go right
+halt
+help
+help me
+hold
+hold on
+hold position
+hover
+inch forward
+land
+launch
+left
+look out
+move
+move away
+move down
+move up
+nudge left
+off
+on
+pause
+right
+rotate
+rotate clockwise
+rotate counter clockwise
+slow down
+slower
+speed up
+start
+stay here
+stop
+take off
+touch down
+turn
+turn left
+turn right
+up
+wait
+warning
+watch out
