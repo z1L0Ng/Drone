@@ -532,7 +532,7 @@ def write_json(path: Path, value: Any) -> None:
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def append_jsonl(path: Path, values: Sequence[Mapping[str, Any]]) -> None:
+def write_jsonl(path: Path, values: Sequence[Mapping[str, Any]]) -> None:
     with path.open("a", encoding="utf-8") as handle:
         for value in values:
             handle.write(json.dumps(value, ensure_ascii=False) + "\n")
