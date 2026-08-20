@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 import numpy as np
+import tensorflow as tf
 
 
 LABELS = ("emergency", "movement", "unknown")
@@ -266,7 +267,7 @@ class NoiseBank:
         return (clean + noise * (signal_rms / target_ratio / noise_rms)).astype(np.float32)
 
 
-class ManifestSequence:
+class ManifestSequence(tf.keras.utils.Sequence):
     def __init__(
         self,
         tf,
@@ -281,6 +282,7 @@ class ManifestSequence:
         training: bool,
         seed: int,
     ):
+        super().__init__()
         self.tf = tf
         self.records = tuple(records)
         self.audio_root = audio_root
