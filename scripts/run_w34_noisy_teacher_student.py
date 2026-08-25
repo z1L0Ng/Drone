@@ -119,6 +119,33 @@ def load_audio(path: Path) -> np.ndarray:
     return waveform
 
 
+def exclude_silent_records(
+    records: Sequence[Mapping[str, Any]],
+    audio_root: Path,
+    languages: Sequence[str],
+) -> tuple[tuple[Mapping[str, Any], ...], list[dict[str, Any]]]:
+    selected_languages = set(languages)
+    kept: list[Mapping[str, Any]] = []
+    excluded: list[dict[str, Any]] = []
+    for row in records:
+        if row["language"] not in selected_languages:
+            kept.append(row)
+            continue
+        path = audio_root / str(row["relative_audio_path"])
+        if np.any(load_audio(path)):
+            kept.append(row)
+            continue
+        excluded.append({
+            "language": row["language"],
+            "label": row["label"],
+            "source_word": row["source_word"],
+            "split": row["split"],
+            "relative_audio_path": row["relative_audio_path"],
+            "reason": "zero_energy_audio",
+        })
+    return tuple(kept), excluded
+
+
 def logmel(waveform: np.ndarray, frontend: Mapping[str, Any]) -> np.ndarray:
     os.environ.setdefault("NUMBA_CACHE_DIR", "/tmp/numba_cache")
     import librosa
@@ -694,8 +721,9 @@ def run_scope(args: argparse.Namespace) -> None:
     manifest = Path(args.manifest).resolve()
     receipt = Path(args.manifest_validation_receipt).resolve()
     records = load_records(manifest, receipt)
-    require_cells(records, scope.languages)
     audio_root = Path(args.audio_root).resolve()
+    records, exclusions = exclude_silent_records(records, audio_root, scope.languages)
+    require_cells(records, scope.languages)
     noise_bank = NoiseBank(Path(args.noise_root).resolve(), float(config["noise"]["snr_db"]))
     frontend = config["frontend"]
     output_root = Path(args.output_root).resolve()
@@ -721,14 +749,24 @@ def run_scope(args: argparse.Namespace) -> None:
         },
     })
     write_json(scope_dir / "status.json", {"status": "running", "scope": args.scope, "seed": args.seed})
+    write_json(scope_dir / "data_exclusions.json", exclusions)
     try:
         import tensorflow as tf
 
         set_seed(stable_number(f"{args.seed}|{args.scope}|setup"))
-        teacher_model, teacher_info = fit_teacher(
-            tf, config, scope, records, audio_root, frontend,
-            scope_dir / "teacher", stable_number(f"{args.seed}|{args.scope}|teacher"),
-        )
+        if args.teacher_checkpoint:
+            teacher_model = make_model(tf, config, stable_number(f"{args.seed}|{args.scope}|teacher"))
+            teacher_model.load_weights(Path(args.teacher_checkpoint).resolve())
+            teacher_info = dict(read_json(Path(args.teacher_selection).resolve()))
+            teacher_dir = scope_dir / "teacher"
+            teacher_dir.mkdir()
+            teacher_model.save_weights(teacher_dir / "selected.weights.h5")
+            write_json(teacher_dir / "selection.json", teacher_info)
+        else:
+            teacher_model, teacher_info = fit_teacher(
+                tf, config, scope, records, audio_root, frontend,
+                scope_dir / "teacher", stable_number(f"{args.seed}|{args.scope}|teacher"),
+            )
         student_model, student_info = fit_student(
             tf, config, scope, records, audio_root, frontend, noise_bank, teacher_model,
             scope_dir / "student", stable_number(f"{args.seed}|{args.scope}|student"),
@@ -798,6 +836,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-root", required=True)
     parser.add_argument("--scope", choices=("mixed_en_es_de", "en_only", "es_only", "de_only"), required=True)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--teacher-checkpoint")
+    parser.add_argument("--teacher-selection")
     return parser.parse_args()
 
 
@@ -805,4 +845,6 @@ if __name__ == "__main__":
     args = parse_args()
     if args.seed != 0:
         raise SystemExit("W34 is authorized only for seed 0")
+    if bool(args.teacher_checkpoint) != bool(args.teacher_selection):
+        raise SystemExit("--teacher-checkpoint and --teacher-selection must be provided together")
     run_scope(args)
